@@ -16,6 +16,10 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # Install required packages here
 RUN apt-get update && apt-get install -yq \
   locales \
+  git \
+  python3 \
+  python3-pip \
+  vim \
   && rm -rf /var/lib/apt/lists/*
 
 # Setup locale
@@ -23,5 +27,3 @@ RUN locale-gen en_US.UTF-8
 RUN update-locale LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8
-
-# Do further setup tasks here

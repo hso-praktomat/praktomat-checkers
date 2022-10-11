@@ -1,0 +1,7 @@
+#!/bin/bash
+
+TAG=skogsbaer/praktomat-checker-base:latest
+
+cd $(dirname $0)
+docker build --tag $TAG . || exit 1
+docker push $TAG
