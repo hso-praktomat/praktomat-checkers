@@ -16,6 +16,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # Install required packages here
 RUN apt-get update && apt-get install -yq \
   locales \
+  tzdata \
   git \
   python3 \
   python3-pip \
