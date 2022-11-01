@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python3 /check.py --kind python-wypp 4
+python3 /check.py python-wypp --assignment 4

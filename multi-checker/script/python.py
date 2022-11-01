@@ -6,6 +6,11 @@ import os
 from utils import *
 from common import *
 
+@dataclass
+class PythonOptions(Options):
+    assignment: str
+    wypp: str
+
 def runWypp(studentFile, flag, opts):
     wyppPath = opts.wypp
     env = {'PYTHONPATH': wyppPath + '/python/src:' + wyppPath + '/python/site-lib'}
@@ -16,7 +21,7 @@ def runWypp(studentFile, flag, opts):
     return (res.exitcode == 0)
 
 def check(opts: Options):
-    p = f'aufgabe_{opts.exercise.zfill(2)}.py'
+    p = f'aufgabe_{opts.assignment.zfill(2)}.py'
     studentFile = findFile(p, opts.sourceDir)
     if not studentFile:
         pyFilesList = run(f'find {opts.sourceDir} -name "*.py"', captureStdout=splitLines, onError='ignore').stdout
@@ -26,7 +31,7 @@ def check(opts: Options):
 Folgende Dateien mit der Endung .py wurden gefunden:
 
 {pyFiles}''')
-        sys.exit (FILE_NOT_FOUND_EXIT_CODE)
+        sys.exit(OK_WITH_WARNINGS_EXIT_CODE)
     fixEncoding(studentFile)
     print()
     print(f'## Überprüfe dass {p} beim Laden keinen Fehler verursacht ...')

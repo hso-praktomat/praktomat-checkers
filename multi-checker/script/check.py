@@ -10,36 +10,48 @@ def parseArgs():
                         help='Directories with student submission')
     parser.add_argument('--test-dir', metavar='DIR', type=str,
                         help='Directories with tests')
-    parser.add_argument('--kind', metavar='K', type=str,
-                        help='Assignment kind (python-wypp or haskell)')
-    parser.add_argument('--wypp', metavar='DIR', type=str,
-                        help='Path to wypp')
-    parser.add_argument('--debug', help='Enable debug output')
-    parser.add_argument('exercise', metavar='X', type=str, help='Identifier for exercise')
+    subparsers = parser.add_subparsers(help='Commands', dest='cmd')
+    parser.add_argument('--debug', help='Enable debug output',
+                         action='store_true', default=False)
+    py = subparsers.add_parser('python-wypp', help='Check python assignment')
+    py.add_argument('--wypp', metavar='DIR', type=str, help='Path to wypp')
+    py.add_argument('--assignment', metavar='X', type=str, help='Identifier for assignment')
+    hs = subparsers.add_parser('haskell', help='Check haskell assignment')
+    hs.add_argument('--sheet', metavar='X', type=str, help='Identifier for sheet')
     return parser.parse_args()
+
+def getSheetFromEnv():
+    title = os.environ.get('TASK_TITLE')
+    i = title.rindex(' ')
+    return title[i+1:].zfill(2)
 
 if __name__ == '__main__':
     args = parseArgs()
+    if args.debug:
+        enableDebug()
     testDir = args.test_dir
     submissionDir = args.submission_dir or '.'
     submissionDir = submissionDir.rstrip('/')
-    exercise = args.exercise
-    kind = args.kind
-    wypp = args.wypp
-    if not exercise:
-        bug('exercise not given on commandline')
-    if not kind:
-        bug('kind not given on commandline')
-    if not wypp:
-        wypp = '/wypp'
-    opts = Options(exercise, submissionDir, testDir, wypp)
-    debug(f'Options: {opts}')
-    if kind == 'python-wypp':
-        debug('Running python checks')
+    cmd = args.cmd
+    if not cmd:
+        bug('command not given on commandline')
+    if cmd == 'python-wypp':
+        wypp = args.wypp
+        if not wypp:
+            wypp = '/wypp'
+        assignment = args.assignment
+        if not assignment:
+            bug('assignment not given on commandline')
+        opts = python.PythonOptions(submissionDir, testDir, assignment, wypp)
+        debug(f'Running python checks, options: {opts}')
         python.check(opts)
-    elif kind == 'haskell':
+    elif cmd == 'haskell':
         debug('Running haskell checks')
+        sheet = args.sheet
+        if not sheet:
+            sheet = getSheetFromEnv()
+        opts = haskell.HaskellOptions(submissionDir, testDir, sheet)
         haskell.check(opts)
     else:
-        bug(f'invalid kind: {kind}')
+        bug(f'invalid kind: {cmd}')
 

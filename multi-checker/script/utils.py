@@ -10,6 +10,18 @@ def abort(msg: str):
     print('FEHLER: ' + msg)
     sys.exit(1)
 
+def readFile(name):
+    with open(name, 'r', encoding='utf-8') as f:
+        return f.read()
+
+def asList(x):
+    if type(x) == list:
+        return x
+    if type(x) == tuple:
+        return list(x)
+    else:
+        return [x]
+
 # Adapted from https://github.com/skogsbaer/check-assignments/blob/main/src/fixEncodingCmd.py
 replacements = ['ä', 'ö', 'ü', 'Ä', 'Ö', 'Ü', 'ß']
 def fixEncoding(path):
@@ -39,4 +51,5 @@ def enableDebug():
     _DEBUG = True
 
 def debug(msg):
-    print(f'[DEBUG] {msg}')
+    if _DEBUG:
+        print(f'[DEBUG] {msg}')
