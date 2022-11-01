@@ -1,1 +1,2 @@
-python-wypp-checker/docker/check.py
+python-wypp-checker/docker/*.py
+__pycache__

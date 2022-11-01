@@ -9,10 +9,10 @@ courses. Such tests can be found, for example, [here](https://git.hs-offenburg.d
 
 At the moment, there are the following checkers:
 
-* python-wypp-checker: to be used with python submissions using
-[WYPP](https://github.com/skogsbaer/write-your-python-program). The checks
-make sure that the code loads successfully and that user-written tests
-pass. Currently, there is no support for external unit tests.
+* multi-checker: to be used with python and haskell submissions.
+  * Python submission use [WYPP](https://github.com/skogsbaer/write-your-python-program).
+    The checks make sure that the code loads successfully and that user-written tests
+    pass. Currently, there is no support for external unit tests.
 
 ## How it works
 
