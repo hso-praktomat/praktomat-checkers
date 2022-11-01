@@ -18,3 +18,5 @@ trap "rm -f script.py" EXIT
 cp ../scripts/check-python-wypp.py check.py
 docker build --tag $TAG . || exit 1
 docker push $TAG
+echo
+echo "Successfully build and pushed image with tag $TAG"

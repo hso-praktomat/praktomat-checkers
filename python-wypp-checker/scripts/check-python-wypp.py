@@ -4,6 +4,8 @@ from shell import *
 import sys
 import os
 
+FILE_NOT_FOUND_EXIT_CODE = 121
+
 @dataclass
 class Options:
     exerciseNo: str
@@ -55,7 +57,7 @@ def main(opts: Options):
 Folgende Dateien mit der Endung .py wurden gefunden:
 
 {pyFiles}''')
-        return
+        sys.exit (FILE_NOT_FOUND_EXIT_CODE)
     fixEncoding(studentFile)
     print()
     print(f'## Überprüfe dass {p} beim Laden keinen Fehler verursacht ...')
