@@ -2,6 +2,8 @@
 
 This repository contains checkers for praktomat when used with
 [safe-docker](https://github.com/nomeata/safe-docker).
+The checkers are independent from concrete tests for specific
+courses. Such tests can be found, for example, [here](https://git.hs-offenburg.de/swehr/praktomat-tests).
 
 ## Checkers
 
