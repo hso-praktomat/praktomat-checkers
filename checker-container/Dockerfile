@@ -7,7 +7,7 @@ RUN useradd -m praktomat
 RUN chmod 1777 /home
 
 # Setup CheckStyle
-ADD https://github.com/checkstyle/checkstyle/releases/download/checkstyle-8.14/checkstyle-8.14-all.jar /opt/praktomat-addons/checkstyle-8.14-all.jar
+ADD https://github.com/checkstyle/checkstyle/releases/download/checkstyle-10.3.4/checkstyle-10.3.4-all.jar /opt/praktomat-addons/checkstyle.jar
 
 # Setup timezone
 ENV TZ Europe/Berlin
@@ -16,6 +16,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # Install required packages here
 RUN apt-get update && apt-get install -yq \
   locales \
+  tzdata \
   git \
   python3 \
   python3-pip \
