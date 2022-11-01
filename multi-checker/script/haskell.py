@@ -125,6 +125,7 @@ def checkTest(assignment, ctx, testFile, libDir):
         --ghci-options -i{libDir}
         --ghci-options -e --ghci-options {testModName}.tutorMain'''
     debug(f'Executing tests {testFile} for {srcFile} ...')
+    debug(f'Command: {cmd}')
     result = run(cmd, onError='ignore', stderrToStdout=True, captureStdout=True)
     testResult = getTestResult(testFile, result.stdout)
     ctx.results.append(testResult)
@@ -174,7 +175,7 @@ def outputResults(ctx, ex):
     printWithTitle('Compile output', ctx.compileOutput)
     for testCtx in ctx.tests:
         for testRes in testCtx.results:
-            title = f'Output for test of assignment {testCtx.assignment} ({testRes.testFile})'
+            title = f'Output for test of assignment {testCtx.assignment.num} ({testRes.testFile})'
             printWithTitle(title, testRes.testOutput)
             debug(testRes)
     if notOkTotal > 0 or hasErrors:
@@ -190,6 +191,9 @@ def doCheck(srcDir, testDir, sheet):
     hsFiles = run(f'find {srcDir} -name "*.hs"', captureStdout=splitLines).stdout
     for x in hsFiles:
         target = x.removeprefix(srcDir).lstrip('/')
+        targetDir = dirname(target)
+        if targetDir:
+            mkdir(targetDir, createParents=True)
         cp(x, target)
     # do the checks
     for a in ex.assignments:
