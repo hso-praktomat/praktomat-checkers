@@ -11,11 +11,11 @@ if [ "$1" == "--build-base" ]; then
     echo "Done building docker base image"
 fi
 
-TAG=skogsbaer/python-wypp-checker:latest
+TAG=skogsbaer/praktomat-multi-checker:latest
 
 cd $(dirname $0)
-trap "rm -f script.py" EXIT
-cp ../scripts/check-python-wypp.py check.py
+trap "rm -rf checker" EXIT
+cp -r ../script/ checker
 docker build --tag $TAG . || exit 1
 docker push $TAG
 echo

@@ -21,6 +21,17 @@ RUN apt-get update && apt-get install -yq \
   python3 \
   python3-pip \
   vim \
+  g++ \
+  gcc \
+  libc6-dev \
+  libffi-dev \
+  libgmp-dev \
+  make \
+  xz-utils \
+  zlib1g-dev \
+  gnupg \
+  netbase \
+  curl \
   && rm -rf /var/lib/apt/lists/*
 
 # Setup locale
