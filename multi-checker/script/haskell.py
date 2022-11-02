@@ -117,17 +117,20 @@ def getTestResult(testFile, out):
     else:
         return TestResult(testFile, out, True)
 
-def checkTest(assignment, ctx, testFile, libDir):
+def checkTest(assignment: Assignment, ctx: TestContext, testFile: str, incDirs: list[str]):
     prjName = 'ap' + str(assignment.sheet)
     testModName = removeExt(basename(testFile))
     srcFile = assignment.src
+    incOpts = []
+    for d in incDirs:
+        incOpts.append(f'--ghci-options -i{d}')
     cmd = f'''stack ghci "{srcFile}" "{testFile}" --flag {prjName}:test-mode
-        --ghci-options -i{libDir}
+        {" ".join(incOpts)}
         --ghci-options -e --ghci-options {testModName}.tutorMain'''
     debug(f'Executing tests {testFile} for {srcFile} ...')
     debug(f'Command: {cmd}')
     result = run(cmd, onError='ignore', stderrToStdout=True, captureStdout=True)
-    testResult = getTestResult(testFile, result.stdout)
+    testResult = getTestResult(testFile, 'Command: ' + cmd + '\n\n' + result.stdout)
     ctx.results.append(testResult)
 
 def outputResults(ctx, ex):
@@ -165,7 +168,7 @@ def outputResults(ctx, ex):
         print(f'Assignment {testCtx.assignment.num}: {shortResStr}')
     print(f'\nTotal points: {totalPoints:.1f} (preliminary, subject to change!)')
     def printWithTitle(title, msg):
-        delim = '================================================================================='
+        delim = 2 * '=============================================================================='
         print()
         print(delim)
         print(title)
@@ -184,10 +187,10 @@ def outputResults(ctx, ex):
         sys.exit(0)
 
 def doCheck(srcDir, testDir, sheet):
-    exDir = pjoin(testDir, 'ex' + sheet)
-    cp(pjoin(exDir, 'package.yaml'), '.')
+    sheetDir = pjoin(testDir, 'sheet-' + sheet)
+    cp(pjoin(sheetDir, 'package.yaml'), '.')
     cp(pjoin(testDir, 'stack.yaml'), '.')
-    ex = parseExercise(sheet, pjoin(exDir, 'exercise.yaml'))
+    ex = parseExercise(sheet, pjoin(sheetDir, 'exercise.yaml'))
     hsFiles = run(f'find {srcDir} -name "*.hs"', captureStdout=splitLines).stdout
     for x in hsFiles:
         target = x.removeprefix(srcDir).lstrip('/')
@@ -206,7 +209,7 @@ def doCheck(srcDir, testDir, sheet):
         testCtx = TestContext(assignment=a, sheet=sheet, results=[])
         ctx.tests.append(testCtx)
         for t in a.tests:
-            checkTest(a, testCtx, pjoin(exDir, t), pjoin(testDir, 'lib'))
+            checkTest(a, testCtx, pjoin(sheetDir, t), [pjoin(testDir, 'lib'), sheetDir])
     outputResults(ctx, ex)
 
 def check(opts: Options):

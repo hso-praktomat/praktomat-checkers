@@ -42,6 +42,10 @@ expectFail(f'python3 ../script/check.py python-wypp --wypp {wyppDir} --assignmen
 
 haskellTestDir = '/Users/swehr/devel/praktomat-tests/haskell-advanced-prog'
 
-expectFail(f'python3 ../script/check.py --submission-dir {haskellTestDir}/ex01/solution/ --test-dir {haskellTestDir} haskell --sheet 01', 121)
+expectFail(f'python3 ../script/check.py --submission-dir {haskellTestDir}/sheet-01/solution/ --test-dir {haskellTestDir} haskell --sheet 01', 121)
+expectOk(f'python3 ../script/check.py --submission-dir {haskellTestDir}/sheet-02/solution/ --test-dir {haskellTestDir} haskell --sheet 02')
+expectOk(f'python3 ../script/check.py --submission-dir {haskellTestDir}/sheet-03/solution/ --test-dir {haskellTestDir} haskell --sheet 03')
+expectOk(f'python3 ../script/check.py --submission-dir {haskellTestDir}/sheet-04/solution/ --test-dir {haskellTestDir} haskell --sheet 04')
+expectOk(f'python3 ../script/check.py --submission-dir {haskellTestDir}/sheet-05/solution/ --test-dir {haskellTestDir} haskell --sheet 05')
 print()
 info(f'{testCount} tests were run successfully!')
