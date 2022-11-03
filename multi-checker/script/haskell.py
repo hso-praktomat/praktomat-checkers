@@ -3,6 +3,7 @@ from common import *
 from utils import *
 from shell import *
 import yaml
+import re
 
 @dataclass
 class HaskellOptions(Options):
@@ -11,11 +12,13 @@ class HaskellOptions(Options):
 @dataclass
 class Assignment:
     sheet: str
-    num: int
+    id: str
     points: int
     src: str         # the name of the source .hs file
     tests: list[str] # test files, can be empty
-    def parse(sheet: str, v: dict, num: int, defSrc: str):
+    testOkRequired: bool
+    testScript: Optional[str]
+    def parse(sheet: str, v: dict, id: int, defSrc: str):
         if v:
             src = v.get('src', defSrc)
             tests = asList(v.get('test', [])) + asList(v.get('tests', []))
@@ -24,11 +27,17 @@ class Assignment:
                 points = int(points)
             except ValueError:
                 bug('error parsing exercise.yaml: points must be a number')
+            testOkRequired = v.get('test-ok-required', False)
+            testScript = v.get('test-script')
         else:
             src = defSrc
             tests = []
             points = 0
-        return Assignment(sheet, num, points, src, tests)
+            testOkRequired = False
+            testScript = None
+        return Assignment(sheet, id, points, src, tests, testOkRequired, testScript)
+
+assignmentIdRe = re.compile(r'\d+[a-z]?')
 
 @dataclass
 class Exercise:
@@ -38,11 +47,9 @@ class Exercise:
         defSrc = ymlDict.get('src')
         assignments = []
         for k, v in ymlDict.items():
-            try:
-                num = int(k)
-            except ValueError:
+            if type(k) != str or not assignmentIdRe.match(k):
                 continue # not an assignment
-            a = Assignment.parse(sheet, v, num, defSrc)
+            a = Assignment.parse(sheet, v, k, defSrc)
             assignments.append(a)
         return Exercise(sheet, assignments)
 
@@ -76,6 +83,9 @@ class TestResult:
     totalTests: int = 0
     testErrors: int = 0
     testFailures: int = 0
+    @property
+    def isSuccess(self):
+        return not self.error and self.testErrors == 0 and self.testFailures == 0
 
 def parseExercise(sheet, yamlPath):
     s = readFile(yamlPath)
@@ -117,6 +127,28 @@ def getTestResult(testFile, out):
     else:
         return TestResult(testFile, out, True)
 
+def abortIfTestOkRequired(assignment: Assignment, result: TestResult):
+    if assignment.testOkRequired and not result.isSuccess:
+        print(f'Test for assignment {assignment.id} is required to succeed but failed!')
+        print()
+        print(result.testOutput)
+        print()
+        abort(f'Aborting')
+
+def checkScript(assignment: Assignment, ctx: TestContext, sheetDir: str):
+    script = assignment.testScript
+    if not script:
+        return
+    scriptPath = pjoin(sheetDir, script)
+    if not isFile(scriptPath):
+        abort(f'Script {scriptPath} does not exist')
+    debug(f'Running {scriptPath}')
+    scriptResult = run(scriptPath, onError='ignore', stderrToStdout=True, captureStdout=True)
+    numErrors = 0 if (scriptResult.exitcode == 0) else 1
+    testResult = TestResult(script, scriptResult.stdout, False, totalTests=1, testErrors=numErrors)
+    ctx.results.append(testResult)
+    abortIfTestOkRequired(assignment, testResult)
+
 def checkTest(assignment: Assignment, ctx: TestContext, testFile: str, incDirs: list[str]):
     prjName = 'ap' + str(assignment.sheet)
     testModName = removeExt(basename(testFile))
@@ -132,18 +164,22 @@ def checkTest(assignment: Assignment, ctx: TestContext, testFile: str, incDirs: 
     result = run(cmd, onError='ignore', stderrToStdout=True, captureStdout=True)
     testResult = getTestResult(testFile, 'Command: ' + cmd + '\n\n' + result.stdout)
     ctx.results.append(testResult)
+    abortIfTestOkRequired(assignment, testResult)
 
-def outputResults(ctx, ex):
+def outputResults(ctx):
     print('Compile status: ' + ('OK' if ctx.compileStatus else 'FAIL'))
     notOkTotal = 0
     hasErrors = False
     totalPoints = 0
+    possibleTotalPoints = 0
     print('Test results:')
     for testCtx in ctx.tests:
         res = testCtx.summarizeResults()
+        assPoints = testCtx.assignment.points
+        possibleTotalPoints += assPoints
         if res.error:
-            zero = '0.0 points,'
-            shortResStr = f'{zero:12} ERROR'
+            zero = f'0.0/{assPoints:.1f} points,'
+            shortResStr = f'{zero:15} ERROR'
             hasErrors = True
         else:
             if res.totalTests > 0:
@@ -152,21 +188,20 @@ def outputResults(ctx, ex):
                 ok = res.totalTests - notOk
                 ratio = ok / res.totalTests
                 percentage = round(100 * ratio)
-                assignmentPoints = testCtx.assignment.points
-                if assignmentPoints > 0:
-                    points = round(ratio * assignmentPoints, 1)
+                if assPoints > 0:
+                    points = round(ratio * assPoints, 1)
                     totalPoints = totalPoints + points
-                    pointsStr = f'{points:.1f} points,'
+                    pointsStr = f'{points:.1f}/{assPoints:.1f} points,'
                 else:
-                    pointsStr = '??? points,'
+                    pointsStr = f'???/{assPoints} points,'
                 percentageStr = f'{percentage}% OK,'
                 rest = f'({res.totalTests} tests, {res.testErrors} errors, {res.testFailures} failures)'
-                shortResStr = f'{pointsStr:12} {percentageStr:10} {rest}'
+                shortResStr = f'{pointsStr:15} {percentageStr:10} {rest}'
             else:
-                q = '??? points,'
-                shortResStr = f'{q:12} no tests'
-        print(f'Assignment {testCtx.assignment.num}: {shortResStr}')
-    print(f'\nTotal points: {totalPoints:.1f} (preliminary, subject to change!)')
+                q = f'???/{assPoints:.1f} points,'
+                shortResStr = f'{q:15} no tests'
+        print(f'Assignment {testCtx.assignment.id}: {shortResStr}')
+    print(f'\nTotal points: {totalPoints:.1f}/{possibleTotalPoints:.1f} (preliminary, subject to change!)')
     def printWithTitle(title, msg):
         delim = 2 * '=============================================================================='
         print()
@@ -178,7 +213,7 @@ def outputResults(ctx, ex):
     printWithTitle('Compile output', ctx.compileOutput)
     for testCtx in ctx.tests:
         for testRes in testCtx.results:
-            title = f'Output for test of assignment {testCtx.assignment.num} ({testRes.testFile})'
+            title = f'Output for test of assignment {testCtx.assignment.id} ({testRes.testFile})'
             printWithTitle(title, testRes.testOutput)
             debug(testRes)
     if notOkTotal > 0 or hasErrors:
@@ -210,7 +245,8 @@ def doCheck(srcDir, testDir, sheet):
         ctx.tests.append(testCtx)
         for t in a.tests:
             checkTest(a, testCtx, pjoin(sheetDir, t), [pjoin(testDir, 'lib'), sheetDir])
-    outputResults(ctx, ex)
+        checkScript(a, testCtx, sheetDir)
+    outputResults(ctx)
 
 def check(opts: Options):
     srcDir = abspath(opts.sourceDir)

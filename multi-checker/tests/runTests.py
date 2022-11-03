@@ -47,5 +47,6 @@ expectOk(f'python3 ../script/check.py --submission-dir {haskellTestDir}/sheet-02
 expectOk(f'python3 ../script/check.py --submission-dir {haskellTestDir}/sheet-03/solution/ --test-dir {haskellTestDir} haskell --sheet 03')
 expectOk(f'python3 ../script/check.py --submission-dir {haskellTestDir}/sheet-04/solution/ --test-dir {haskellTestDir} haskell --sheet 04')
 expectOk(f'python3 ../script/check.py --submission-dir {haskellTestDir}/sheet-05/solution/ --test-dir {haskellTestDir} haskell --sheet 05')
+expectOk(f'python3 ../script/check.py --submission-dir {haskellTestDir}/sheet-06/solution/ --test-dir {haskellTestDir} haskell --sheet 06')
 print()
 info(f'{testCount} tests were run successfully!')
