@@ -93,14 +93,15 @@ def parseExercise(sheet, yamlPath):
     return Exercise.parse(sheet, ymlDict)
 
 def checkCompile(ctx: CheckCtx):
-    debug('Running "stack test"')
-    result = run('stack test', onError='ignore', stderrToStdout=True, captureStdout=True)
+    cmd = 'stack test --only-locals'
+    debug(f'Running "{cmd}"')
+    result = run(cmd, onError='ignore', stderrToStdout=True, captureStdout=True)
     out = result.stdout
     if result.exitcode == 0:
         ctx.compileOutput = out
         ctx.compileStatus = True
     else:
-        abort(f'"stack test" failed\n\n{out}')
+        abort(f'"{cmd}" failed\n\n{out}')
 
 haskellTestRe = re.compile(r'^Cases:\s*(\d+)\s*Tried:\s*(\d+)\s*Errors:\s*(\d+)\s*Failures:\s*(\d+)')
 magicLine = "__START_TEST__"

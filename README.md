@@ -13,6 +13,18 @@ At the moment, there are the following checkers:
   * Python submission use [WYPP](https://github.com/skogsbaer/write-your-python-program).
     The checks make sure that the code loads successfully and that user-written tests
     pass. Currently, there is no support for external unit tests.
+  * Haskell submissions are checked for compile errors (via `stack test`) and instructors
+    can also provide unit tests to be run against student's submission. The
+    [praktomat-tests](https://git.hs-offenburg.de/swehr/praktomat-tests) repository contains
+    examples for such unit tests.
+
+  See `multi-checker/tests/runTests.py` for examples showcasing these checkers.
+
+  In principle, multi-checker could be separated into a python and a haskell checker.
+  But the checker script (files in `multi-checker/scripts/`) shares some logic between
+  both languages, so we created only one checker for simplicity.
+
+
 
 ## How it works
 
@@ -39,6 +51,8 @@ are available for tweaking:
 * `PRAKTOMAT_CHECKER_WRITABLE` can be used to make the filesystem of a
  container writable when running a checker. Otherwise, it's read-only.
  However, the directory containing the submission is always writable, regardless of this setting.
+* `PRAKTOMAT_CHECKER_EXTERNAL_DIR` can be set to a directory on the host system. This directory
+  is made available to the checker scripts as `/external`.
 
 ## How to write a new checker
 

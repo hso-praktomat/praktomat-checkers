@@ -25,11 +25,13 @@ def getSheetFromEnv():
     i = title.rindex(' ')
     return title[i+1:].zfill(2)
 
+DEFAULT_TEST_DIR = '/external/praktomat-tests/haskell-advanced-prog'
+
 if __name__ == '__main__':
     args = parseArgs()
     if args.debug:
         enableDebug()
-    testDir = args.test_dir
+    testDir = args.test_dir or DEFAULT_TEST_DIR
     submissionDir = args.submission_dir or '.'
     submissionDir = submissionDir.rstrip('/')
     cmd = args.cmd

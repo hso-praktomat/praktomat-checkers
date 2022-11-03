@@ -12,6 +12,7 @@ RUN stack --resolver lts-18.28 install happy primitive safe syb vector
 RUN stack --resolver lts-18.28 install haskell-src-exts
 RUN stack --resolver lts-18.28 install haskell-src-meta
 RUN stack --resolver lts-18.28 install main-tester
+RUN stack --resolver lts-18.28 install call-stack HUnit
 
 # Python
 # Packages
