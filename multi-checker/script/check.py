@@ -37,6 +37,16 @@ if __name__ == '__main__':
     cmd = args.cmd
     if not cmd:
         bug('command not given on commandline')
+    debug(f'Running checks with args={args}')
+    if isDebug():
+        print('Current user: ', end='')
+        run('whoami')
+        print('Ulimits:')
+        run('ulimit -a')
+        print('Environment:')
+        run('env')
+        print('Block size: ', end='')
+        run('stat -fc %s .')
     if cmd == 'python-wypp':
         wypp = args.wypp
         if not wypp:
@@ -48,11 +58,11 @@ if __name__ == '__main__':
         debug(f'Running python checks, options: {opts}')
         python.check(opts)
     elif cmd == 'haskell':
-        debug('Running haskell checks')
         sheet = args.sheet
         if not sheet:
             sheet = getSheetFromEnv()
         opts = haskell.HaskellOptions(submissionDir, testDir, sheet)
+        debug(f'Running haskell checks, options: {opts}')
         haskell.check(opts)
     else:
         bug(f'invalid kind: {cmd}')

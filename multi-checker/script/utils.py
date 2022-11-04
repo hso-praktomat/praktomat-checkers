@@ -50,6 +50,9 @@ def enableDebug():
     global _DEBUG
     _DEBUG = True
 
+def isDebug():
+    return _DEBUG
+
 def debug(msg):
     if _DEBUG:
         print(f'[DEBUG] {msg}')

@@ -101,7 +101,10 @@ def checkCompile(ctx: CheckCtx):
         ctx.compileOutput = out
         ctx.compileStatus = True
     else:
-        abort(f'"{cmd}" failed\n\n{out}')
+        print(f'"{cmd}" failed\n\n{out}')
+        findOut = run("find . -type f | xargs ls -l", onError='ignore', stderrToStdout=True, captureStdout=True).stdout
+        debug(f"Directory listing:\n{findOut}")
+        abort("Aborting")
 
 haskellTestRe = re.compile(r'^Cases:\s*(\d+)\s*Tried:\s*(\d+)\s*Errors:\s*(\d+)\s*Failures:\s*(\d+)')
 magicLine = "__START_TEST__"
@@ -252,6 +255,7 @@ def doCheck(srcDir, testDir, sheet):
 def check(opts: Options):
     srcDir = abspath(opts.sourceDir)
     testDir = abspath(opts.testDir)
-    with tempDir() as d:
+    with tempDir(dir='.') as d:
         with workingDir(d):
+            debug(f"Running Haskell checks from directory {d}")
             doCheck(srcDir, testDir, opts.sheet)
