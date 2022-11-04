@@ -47,6 +47,8 @@ class Exercise:
         defSrc = ymlDict.get('src')
         assignments = []
         for k, v in ymlDict.items():
+            if type(k) == int:
+                k = str(k)
             if type(k) != str or not assignmentIdRe.match(k):
                 continue # not an assignment
             a = Assignment.parse(sheet, v, k, defSrc)
@@ -229,7 +231,9 @@ def doCheck(srcDir, testDir, sheet):
     sheetDir = pjoin(testDir, 'sheet-' + sheet)
     cp(pjoin(sheetDir, 'package.yaml'), '.')
     cp(pjoin(testDir, 'stack.yaml'), '.')
-    ex = parseExercise(sheet, pjoin(sheetDir, 'exercise.yaml'))
+    exFile = pjoin(sheetDir, 'exercise.yaml')
+    ex = parseExercise(sheet, exFile)
+    debug(f'Exercise (file: {exFile}): {ex}')
     hsFiles = run(f'find {srcDir} -name "*.hs"', captureStdout=splitLines).stdout
     for x in hsFiles:
         target = x.removeprefix(srcDir).lstrip('/')

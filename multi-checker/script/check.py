@@ -46,7 +46,7 @@ if __name__ == '__main__':
         print('Environment:')
         run('env')
         print('Block size: ', end='')
-        run('stat -fc %s .')
+        run('stat -fc %s .', onError='ignore')
     if cmd == 'python-wypp':
         wypp = args.wypp
         if not wypp:
