@@ -53,6 +53,22 @@ are available for tweaking:
  However, the directory containing the submission is always writable, regardless of this setting.
 * `PRAKTOMAT_CHECKER_EXTERNAL_DIR` can be set to a directory on the host system. This directory
   is made available to the checker scripts as `/external`.
+* `PRAKTOMAT_CHECKER_ENABLE_NETWORK=True` enables network in the checker
+  container.
+
+Safe-docker enforces several restrictions:
+
+* The checker script finish within 60 seconds. (Setting
+  `TEST_TIMEOUT` in local.py der Praktomat-Instanz)
+* The checker script must not use more than 1GB of resident size.
+  (Setting `TEST_MAXMEM`)
+* The checker script must not create files of size greater than 512MB.
+  (Setting `TEST_MAXFILESIZE`)
+* The checker script has an upper limt of 8192 on the number of open
+  files. (Setting `TEST_MAXFILENUMBER`)
+* Only files within the current directory are readable.
+* Environment variable `HOME` is set to the directory holding the
+  submission. You might change this in the checker script.
 
 ## How to write a new checker
 
