@@ -227,6 +227,14 @@ def outputResults(ctx):
     else:
         sys.exit(0)
 
+pragmaRe = re.compile(r'^\s*{-# OPTIONS_GHC -Wno.*$', re.MULTILINE)
+def checkHsFile(path):
+    content = open(path).read()
+    m = pragmaRe.search(content)
+    if m:
+        abort(f'Source file {path} contains illegal pragma: {m.group(0)}')
+
+BLACKLIST = ['package.yaml', 'stack.yaml']
 def doCheck(srcDir, testDir, sheet):
     sheetDir = pjoin(testDir, 'sheet-' + sheet)
     cp(pjoin(sheetDir, 'package.yaml'), '.')
@@ -234,13 +242,15 @@ def doCheck(srcDir, testDir, sheet):
     exFile = pjoin(sheetDir, 'exercise.yaml')
     ex = parseExercise(sheet, exFile)
     debug(f'Exercise (file: {exFile}): {ex}')
-    hsFiles = run(f'find {srcDir} -name "*.hs"', captureStdout=splitLines).stdout
-    for x in hsFiles:
-        target = x.removeprefix(srcDir).lstrip('/')
-        targetDir = dirname(target)
-        if targetDir:
-            mkdir(targetDir, createParents=True)
-        cp(x, target)
+    # copy files
+    for x in ls(srcDir):
+        name = basename(x)
+        if name.startswith('.') or name in BLACKLIST or name.endswith('.cabal'):
+            continue
+        if name.endswith('.hs'):
+            checkHsFile(x)
+        print(f'x={x}')
+        cp(x, '.')
     # do the checks
     for a in ex.assignments:
         if not isFile(a.src):
