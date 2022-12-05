@@ -237,8 +237,6 @@ def checkHsFile(path):
 BLACKLIST = ['package.yaml', 'stack.yaml']
 def doCheck(srcDir, testDir, sheet):
     sheetDir = pjoin(testDir, 'sheet-' + sheet)
-    cp(pjoin(sheetDir, 'package.yaml'), '.')
-    cp(pjoin(testDir, 'stack.yaml'), '.')
     exFile = pjoin(sheetDir, 'exercise.yaml')
     ex = parseExercise(sheet, exFile)
     debug(f'Exercise (file: {exFile}): {ex}')
@@ -249,8 +247,9 @@ def doCheck(srcDir, testDir, sheet):
             continue
         if name.endswith('.hs'):
             checkHsFile(x)
-        print(f'x={x}')
         cp(x, '.')
+    cp(pjoin(sheetDir, 'package.yaml'), '.')
+    cp(pjoin(testDir, 'stack.yaml'), '.')
     # do the checks
     for a in ex.assignments:
         if not isFile(a.src):
