@@ -1,0 +1,8 @@
+1:
+  src: my_solution_01.py
+  points: 3
+  test: my_tests_01.py
+2:
+  src: my_solution_02.py
+  points: 3
+  test: my_tests_02.py

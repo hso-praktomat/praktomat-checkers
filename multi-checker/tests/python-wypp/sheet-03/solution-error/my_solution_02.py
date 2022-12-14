@@ -1,0 +1,1 @@
+def # syntax error

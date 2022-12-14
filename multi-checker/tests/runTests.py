@@ -33,12 +33,24 @@ def expectFail(cmd: str, ecode=None):
             fail(f'Command should fail with exit code {ecode} but failed with {res.exitcode}: {cmd}')
     info('OK')
 
+def printHeader(title):
+    print()
+    delim = 80*'='
+    print(delim)
+    print(title)
+    print(delim)
+    print()
+
+printHeader('Running Python Tests')
+
 wyppDir = '$HOME/devel/write-your-python-program/'
 
-expectOk(f'python3 ../script/check.py --submission-dir python-wypp/ python-wypp --wypp {wyppDir} --assignment 1')
-expectOk(f'python3 ../script/check.py python-wypp --wypp {wyppDir} --assignment 1')
-expectFail(f'python3 ../script/check.py --submission-dir python-wypp/ python-wypp --wypp {wyppDir} --assignment 2')
-expectFail(f'python3 ../script/check.py python-wypp --wypp {wyppDir} --assignment 2')
+expectOk(f'python3 ../script/check.py --submission-dir python-wypp/ python-wypp --wypp {wyppDir} --sheet 01 --assignment 1')
+expectOk(f'python3 ../script/check.py python-wypp --wypp {wyppDir} --sheet 01 --assignment 1')
+expectFail(f'python3 ../script/check.py --submission-dir python-wypp/ python-wypp --wypp {wyppDir} --sheet 01 --assignment 2')
+expectFail(f'python3 ../script/check.py python-wypp --wypp {wyppDir} --sheet 01 --assignment 2')
+
+printHeader('Running Haskell Tests')
 
 haskellTestDir = '/Users/swehr/devel/praktomat-tests/haskell-advanced-prog'
 
