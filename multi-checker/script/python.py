@@ -187,21 +187,18 @@ def checkAssignments(opts: Options, ex: Exercise, allAss: list[Assignment]):
 def sheetDir(opts: Options):
     return pjoin(opts.testDir, 'sheet-' + opts.sheet)
 
-def getExercise(opts: Options) -> Optional[Exercise]:
+def check(opts: Options):
     sheet = opts.sheet
     exFile = pjoin(sheetDir(opts), 'exercise.yaml')
     if isFile(exFile):
-        return parseExercise(sheet, exFile)
+        ex = parseExercise(sheet, exFile)
     else:
-        return None
-
-def check(opts: Options):
-    ex = getExercise(opts)
+        ex = None
     ass = opts.assignment
     with workingDir(opts.sourceDir):
         if ex is None:
             if ass is None:
-                configError(f'Option --assignment not given, no exercise file found')
+                configError(f'Option --assignment not given, exercise file {exFile} not found')
             p = f'aufgabe_{opts.assignment.zfill(2)}.py'
             checkFileLoadsOk(opts, p)
         else:
