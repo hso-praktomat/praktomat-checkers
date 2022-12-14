@@ -5,15 +5,21 @@ from shell import *
 import re
 from exercise import *
 
+CompileStatus = Literal['OK', 'FAIL', 'OK_BUT_SOME_MISSING']
 @dataclass
 class CheckCtx:
-    needsCompile: bool
-    compileStatus: bool
+    compileTitle: str
+    compileStatus: CompileStatus
     compileOutput: Optional[str]
     tests: list[TestContext]
     @staticmethod
-    def empty(needsCompile: bool) -> CheckCtx:
-        return CheckCtx(needsCompile, False, None, [])
+    def empty(t: str) -> CheckCtx:
+        return CheckCtx(t, False, None, [])
+    def appendCompileOutput(self, s: str):
+        if self.compileOutput:
+            self.compileOutput = self.compileOutput + '\n' + s
+        else:
+            self.compileOutput = s
 
 @dataclass
 class TestContext:
@@ -43,10 +49,9 @@ class TestResult:
     def isSuccess(self):
         return not self.error and self.testErrors == 0 and self.testFailures == 0
 
-def outputResults(ctx):
+def outputResultsAndExit(ctx):
     # FIXME: no compile abstract!
-    if ctx.needsCompile:
-        print('Compile status: ' + ('OK' if ctx.compileStatus else 'FAIL'))
+    print(ctx.compileTitle + ' status: ' + ctx.compileStatus)
     notOkTotal = 0
     hasErrors = False
     totalPoints = 0
@@ -89,17 +94,22 @@ def outputResults(ctx):
         print(delim)
         print()
         print(msg)
-    if ctx.needsCompile:
-        printWithTitle('Compile output', ctx.compileOutput)
+    printWithTitle(ctx.compileTitle + ' output', ctx.compileOutput)
     for testCtx in ctx.tests:
         for testRes in testCtx.results:
             title = f'Output for test of assignment {testCtx.assignment.id} ({testRes.testFile})'
             printWithTitle(title, testRes.testOutput)
             debug(testRes)
-    if notOkTotal > 0 or hasErrors:
-        sys.exit(OK_WITH_WARNINGS_EXIT_CODE)
-    else:
-        sys.exit(0)
+    match ctx.compileStatus:
+        case 'FAIL':
+            sys.exit(1)
+        case 'OK_BUT_SOME_MISSING':
+            sys.exit(OK_WITH_WARNINGS_EXIT_CODE)
+        case 'OK':
+            if notOkTotal > 0 or hasErrors:
+                sys.exit(OK_WITH_WARNINGS_EXIT_CODE)
+            else:
+                sys.exit(0)
 
 def abortIfTestOkRequired(assignment: Assignment, result: TestResult):
     if assignment.testOkRequired and not result.isSuccess:

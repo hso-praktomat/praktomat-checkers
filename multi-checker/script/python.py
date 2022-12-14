@@ -17,55 +17,74 @@ class PythonOptions(Options):
     assignment: Optional[str]
     wypp: str
 
-def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, testFile: Optional[str]=None,
-            capture: bool=False):
+def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, testFile: Optional[str]=None):
     thisDir = abspath('.')
     env = {'PYTHONPATH': wyppPath + '/python/src:' + wyppPath + '/python/site-lib:' + thisDir}
-    print()
     args = ['python3', wyppPath + '/python/src/runYourProgram.py']
     if testFile:
         args = args + ['--test-file', testFile]
     args = args + ['--check-runnable' if onlyRunnable else '--check', studentFile]
-    if capture:
-        res = run(args, onError='ignore', env=env, stderrToStdout=True, captureStdout=True)
-    else:
-        res = run(args, onError='ignore', env=env)
-    print()
+    res = run(args, onError='ignore', env=env, stderrToStdout=True, captureStdout=True)
     return res
 
-def checkFileLoadsOk(opts: Options, p: str):
+LoadStudentCodeStatus = Literal['ok', 'fail', 'not_found']
+
+@dataclass
+class LoadStudentCodeResult:
+    status: LoadStudentCodeStatus
+    output: str
+
+def loadStudentCode(opts: Options, p: str) -> LoadStudentCodeResult:
     """
     Checks that the student file loads ok and that the student are successful.
-    Executed from within sourcde dir.
+    Executed from within source dir.
     """
+    _out = ''
+    def printOut(s='', emptyNewline=True):
+        nonlocal _out
+        if s or emptyNewline:
+            _out = _out + s + '\n'
+    def mkResult(status: LoadStudentCodeStatus) -> LoadStudentCodeResult:
+        return LoadStudentCodeResult(status, _out)
     studentFile = findFile(p, '.')
     if not studentFile:
         pyFilesList = run(f'find . -name "*.py"', captureStdout=splitLines, onError='ignore').stdout
         pyFiles = '\n'.join(pyFilesList)
-        print(f'''FEHLER: Datei {p} nicht in Abgabe enthalten.
-
-Folgende Dateien mit der Endung .py wurden gefunden:
+        printOut(f'''ERROR: File {p} not part of the submission. I found the following files:
 
 {pyFiles}''')
-        sys.exit(OK_WITH_WARNINGS_EXIT_CODE)
+        return mkResult('not_found')
     fixEncoding(studentFile)
-    print()
-    print(f'## Überprüfe dass {p} beim Laden keinen Fehler verursacht ...')
+    printOut()
+    printOut(f'## Checking that {p} loads successfully ...')
     runRes = runWypp(studentFile, opts.wypp, onlyRunnable=True)
+    printOut(runRes.stdout, emptyNewline=False)
     if runRes.exitcode == 0:
-        print(f'## OK: {p} erfolgreich geladen')
+        printOut(f'## OK: {p} loads successfully')
     else:
-        abort(f'''Datei {p} konnte nicht geladen werden.
-Weiter oben finden Sie die Fehlermeldungen.''')
-    print()
-    print(f'## Führe Tests in {p} aus ...')
+        printOut(f'''File {p} could not be loaded.
+You find more error messages above.''')
+        return mkResult('fail')
+    printOut()
+    printOut(f'## Executing tests in {p} ...')
     testRes = runWypp(studentFile, opts.wypp, onlyRunnable=False)
+    printOut(testRes.stdout, emptyNewline=False)
     if testRes.exitcode == 0:
-        print(f'## OK: keine Testfehler in {p}')
+        printOut(f'## OK: no test failures in {p}')
     else:
-        abort(f'''Datei {p} enthält fehlerhafte Tests
-Falls Sie einen Test nicht zum Laufen bringen, müssen
-Sie diesen Test auskommentieren.''')
+        printOut(f'''File {p} contains test failures!
+If you cannot make a test succeed, you have to comment it out.''')
+        return mkResult('fail')
+    return mkResult('ok')
+
+def checkFileLoadsOk(opts: Options, p: str):
+    res = loadStudentCode(opts, p)
+    print(res.output)
+    match res.status:
+        case 'not_found':
+            sys.exit(OK_WITH_WARNINGS_EXIT_CODE)
+        case 'fail':
+            sys.exit(1)
 
 class PythonTestResult:
     @staticmethod
@@ -131,26 +150,39 @@ def checkTutorTests(opts: Options, testCtx: TestContext, a: Assignment):
     """
     for t in a.tests:
         testPath = pjoin(sheetDir(opts), t)
-        testOut = runWypp(a.src, opts.wypp, onlyRunnable=False, testFile=testPath, capture=True)
+        testOut = runWypp(a.src, opts.wypp, onlyRunnable=False, testFile=testPath)
         testRes = getTestResult(t, testOut)
         testCtx.results.append(testRes)
         abortIfTestOkRequired(a, testRes)
     pass
 
 def checkAssignments(opts: Options, ex: Exercise, allAss: list[Assignment]):
+    """
+    Checks the given assignments by checking if the code loads successfully and
+    if it passes the tutor tests.
+    Executed from within the source dir.
+    """
     allFiles = []
     for a in allAss:
         if a.src not in allFiles:
             allFiles.append(a.src)
+    ctx = CheckCtx.empty('Load and student tests')
     for p in allFiles:
-        checkFileLoadsOk(opts, p)
-    ctx = CheckCtx.empty(False)
+        res = loadStudentCode(opts, p)
+        ctx.appendCompileOutput(res.output)
+        match res.status:
+            case 'fail':
+                ctx.compileStatus = 'FAIL'
+            case 'ok':
+                ctx.compileStatus = 'OK'
+            case 'not_found':
+                ctx.compileStatus = 'OK_BUT_SOME_MISSING'
     for a in allAss:
         testCtx = TestContext(assignment=a, sheet=ex.sheet, results=[])
         ctx.tests.append(testCtx)
         checkTutorTests(opts, testCtx, a)
         checkScript(a, testCtx, sheetDir(opts))
-    outputResults(ctx)
+    outputResultsAndExit(ctx)
 
 def sheetDir(opts: Options):
     return pjoin(opts.testDir, 'sheet-' + opts.sheet)
@@ -169,7 +201,7 @@ def check(opts: Options):
     with workingDir(opts.sourceDir):
         if ex is None:
             if ass is None:
-                configError(f'Option --assignment not found, no exercise file found')
+                configError(f'Option --assignment not given, no exercise file found')
             p = f'aufgabe_{opts.assignment.zfill(2)}.py'
             checkFileLoadsOk(opts, p)
         else:

@@ -41,14 +41,26 @@ def printHeader(title):
     print(delim)
     print()
 
+checkScript = '../script/check.py'
+
 printHeader('Running Python Tests')
 
 wyppDir = '$HOME/devel/write-your-python-program/'
 
-expectOk(f'python3 ../script/check.py --submission-dir python-wypp/ python-wypp --wypp {wyppDir} --sheet 01 --assignment 1')
-expectOk(f'python3 ../script/check.py python-wypp --wypp {wyppDir} --sheet 01 --assignment 1')
-expectFail(f'python3 ../script/check.py --submission-dir python-wypp/ python-wypp --wypp {wyppDir} --sheet 01 --assignment 2')
-expectFail(f'python3 ../script/check.py python-wypp --wypp {wyppDir} --sheet 01 --assignment 2')
+expectOk(f'python3 {checkScript} --submission-dir python-wypp/ python-wypp --wypp {wyppDir} --sheet 01 --assignment 1')
+expectOk(f'python3 {checkScript} python-wypp --wypp {wyppDir} --sheet 01 --assignment 1')
+expectFail(f'python3 {checkScript} --submission-dir python-wypp/ python-wypp --wypp {wyppDir} --sheet 01 --assignment 2')
+expectFail(f'python3 {checkScript} python-wypp --wypp {wyppDir} --sheet 01 --assignment 2')
+
+pythonTests = [('solution-good', 0), ('solution-partial', 121), ('solution-partial-missing', 121),
+               ('solution-fail', 121), ('solution-error', 1)]
+
+for d, ecode in pythonTests:
+    cmd = f'python3 {checkScript} --test-dir python-wypp/ --submission-dir python-wypp/sheet-03/{d}/ python-wypp --wypp {wyppDir} --sheet 03'
+    if ecode == 0:
+        expectOk(cmd)
+    else:
+        expectFail(cmd, ecode)
 
 printHeader('Running Haskell Tests')
 

@@ -17,7 +17,7 @@ def checkCompile(ctx: CheckCtx):
     out = result.stdout
     if result.exitcode == 0:
         ctx.compileOutput = out
-        ctx.compileStatus = True
+        ctx.compileStatus = 'OK'
     else:
         print(f'"{cmd}" failed\n\n{out}')
         findOut = run("find . -type f | xargs ls -l", onError='ignore', stderrToStdout=True, captureStdout=True).stdout
@@ -94,7 +94,7 @@ def doCheck(srcDir, testDir, sheet):
         if not isFile(a.src):
             print(f'ERROR: File {a.src} not included in submission')
             sys.exit(OK_WITH_WARNINGS_EXIT_CODE)
-    ctx = CheckCtx.empty(True)
+    ctx = CheckCtx.empty('Compile')
     checkCompile(ctx)
     for a in ex.assignments:
         testCtx = TestContext(assignment=a, sheet=sheet, results=[])
@@ -102,7 +102,7 @@ def doCheck(srcDir, testDir, sheet):
         for t in a.tests:
             checkTest(a, testCtx, pjoin(sheetDir, t), [pjoin(testDir, 'lib'), sheetDir])
         checkScript(a, testCtx, sheetDir)
-    outputResults(ctx)
+    outputResultsAndExit(ctx)
 
 def check(opts: Options):
     with tempDir(dir='.') as d:
