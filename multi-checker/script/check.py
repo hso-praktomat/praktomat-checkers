@@ -26,20 +26,26 @@ def getSheetFromEnv():
     i = title.rindex(' ')
     return title[i+1:].zfill(2)
 
-DEFAULT_TEST_DIR = '/external/praktomat-tests/haskell-advanced-prog'
+_DEFAULT_TEST_DIR = '/external/praktomat-tests'
+
+def getDefaultTestDir(cmd):
+    if cmd == 'python-wypp':
+        return pjoin(_DEFAULT_TEST_DIR, 'python-prog1')
+    else:
+        return pjoin(_DEFAULT_TEST_DIR, 'haskell-advanced-prog')
 
 if __name__ == '__main__':
     args = parseArgs()
     if args.debug:
         enableDebug()
-    testDir = args.test_dir or DEFAULT_TEST_DIR
+    cmd = args.cmd
+    if not cmd:
+        bug('command not given on commandline')
+    testDir = args.test_dir or getDefaultTestDir(cmd)
     testDir = abspath(testDir)
     submissionDir = args.submission_dir or '.'
     submissionDir = submissionDir.rstrip('/')
     submissionDir = abspath(submissionDir)
-    cmd = args.cmd
-    if not cmd:
-        bug('command not given on commandline')
     debug(f'Running checks with args={args}')
     if isDebug():
         print('Current user: ', end='')
