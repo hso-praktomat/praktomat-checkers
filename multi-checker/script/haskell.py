@@ -92,7 +92,8 @@ def doCheck(srcDir, testDir, sheet):
     # do the checks
     for a in ex.assignments:
         if not isFile(a.src):
-            print(f'ERROR: File {a.src} not included in submission')
+            print(f'ERROR: File {a.src} not included in submission. I found the following .hs files:')
+            run(f'find . -name "*.hs"')
             sys.exit(OK_WITH_WARNINGS_EXIT_CODE)
     ctx = CheckCtx.empty('Compile')
     checkCompile(ctx)
