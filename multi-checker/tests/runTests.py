@@ -73,6 +73,7 @@ expectOk(f'python3 {checkScript} --submission-dir {haskellTestDir}/sheet-02/solu
 expectOk(f'python3 {checkScript} --submission-dir {haskellTestDir}/sheet-03/solution/ --test-dir {haskellTestDir} haskell --sheet 03')
 expectOk(f'python3 {checkScript} --submission-dir {haskellTestDir}/sheet-04/solution/ --test-dir {haskellTestDir} haskell --sheet 04')
 expectOk(f'python3 {checkScript} --submission-dir {haskellTestDir}/sheet-05/solution/ --test-dir {haskellTestDir} haskell --sheet 05')
+expectFail(f'python3 {checkScript} --submission-dir haskell/sheet-05-divide-by-zero/ --test-dir {haskellTestDir} haskell --sheet 05', 121)
 expectOk(f'python3 {checkScript} --submission-dir {haskellTestDir}/sheet-06/solution/ --test-dir {haskellTestDir} haskell --sheet 06')
 print()
 info(f'{testCount} tests were run successfully!')

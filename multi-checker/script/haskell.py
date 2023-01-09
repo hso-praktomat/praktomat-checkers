@@ -41,11 +41,11 @@ def getTestResult(testFile, out):
                 lastTestLine = line
     if lastTestLine:
         m = haskellTestRe.match(lastTestLine)
-        # cases = int(m.group(1))
+        cases = int(m.group(1))
         tried = int(m.group(2))
-        errors = int(m.group(3))
+        errors = int(m.group(3)) + (cases - tried)
         failures = int(m.group(4))
-        return TestResult(testFile, out, False, tried, errors, failures)
+        return TestResult(testFile, out, False, cases, errors, failures)
     else:
         return TestResult(testFile, out, True)
 
