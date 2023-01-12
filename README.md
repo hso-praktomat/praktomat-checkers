@@ -34,11 +34,11 @@ communicates the result of the checker back to praktomat.
 
 The shell script runs either in the same environment as praktomat (same
 machine or same docker container) or it runs inside an extra docker container.
-[Safe-docker](https://github.com/nomeata/safe-docker) takes care of the
+[safe-docker](https://github.com/nomeata/safe-docker) takes care of the
 latter case.
 
 When runing praktomat via docker (see
-https://git.hs-offenburg.de/hbraun/praktomat-docker), you enable
+https://github.com/hso-praktomat/praktomat-docker), you enable
 execution inside an extra docker container by setting
 the environment variable `PRAKTOMAT_CHECKER_IMAGE` to the docker
 image the checker script should run in. Two more environment variables
