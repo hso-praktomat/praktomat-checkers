@@ -94,7 +94,8 @@ def outputResultsAndExit(ctx):
         print(delim)
         print()
         print(msg)
-    printWithTitle(ctx.compileTitle + ' output', ctx.compileOutput)
+    if ctx.compileOutput:
+        printWithTitle(ctx.compileTitle + ' output', ctx.compileOutput)
     for testCtx in ctx.tests:
         for testRes in testCtx.results:
             title = f'Output for test of assignment {testCtx.assignment.id} ({testRes.testFile})'
@@ -129,6 +130,6 @@ def checkScript(assignment: Assignment, ctx: TestContext, sheetDir: str):
     debug(f'Running {scriptPath}')
     scriptResult = run(scriptPath, onError='ignore', stderrToStdout=True, captureStdout=True)
     numErrors = 0 if (scriptResult.exitcode == 0) else 1
-    testResult = TestResult(script, scriptResult.stdout, False, totalTests=1, testErrors=numErrors)
+    testResult = TestResult(script, scriptResult.stdout, False, totalTests=1, testFailures=numErrors)
     ctx.results.append(testResult)
     abortIfTestOkRequired(assignment, testResult)

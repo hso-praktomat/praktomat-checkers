@@ -21,13 +21,9 @@ RUN pip3 install libPyshell
 
 # WYPP
 RUN mkdir /wypp
-RUN git clone https://github.com/skogsbaer/write-your-python-program.git /wypp
+ADD ./git-clone /git-clone
+RUN bash /git-clone https://github.com/skogsbaer/write-your-python-program.git 1a76459988009c3e0878390cfa13e783663900a7 /wypp
 RUN rm -rf /wypp/.git
-
-# Tick trick track
-RUN mkdir /ttt
-RUN git clone https://github.com:skogsbaer/tick-trick-track.git /ttt
-RUN rm -rf /ttt/.git
 
 # Our checker scripts
 ADD checker /checker
