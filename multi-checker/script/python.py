@@ -161,22 +161,34 @@ def checkAssignments(opts: Options, ex: Exercise, allAss: list[Assignment]):
     Checks the given assignments by checking if the code loads successfully and
     if it passes the tutor tests.
     Executed from within the source dir.
+
+    This function is called if an exercise.yaml file exists.
     """
     allFiles = []
     for a in allAss:
-        if a.src not in allFiles:
+        if a.src is not None and a.src not in allFiles:
             allFiles.append(a.src)
     ctx = CheckCtx.empty('Load and student tests')
+    compileStatus = 'OK'
+    missing = 0
     for p in allFiles:
         res = loadStudentCode(opts, p)
         ctx.appendCompileOutput(res.output)
         match res.status:
             case 'fail':
-                ctx.compileStatus = 'FAIL'
+                compileStatus = 'FAIL'
             case 'ok':
-                ctx.compileStatus = 'OK'
+                pass
             case 'not_found':
-                ctx.compileStatus = 'OK_BUT_SOME_MISSING'
+                missing = missing + 1
+                print(f'File {p} missing')
+    if compileStatus == 'OK' and missing > 0:
+        if missing == len(allFiles):
+            compileStatus = 'FAIL'
+            print('All files missing')
+        else:
+            compileStatus = 'OK_BUT_SOME_MISSING'
+    ctx.compileStatus = compileStatus
     for a in allAss:
         testCtx = TestContext(assignment=a, sheet=ex.sheet, results=[])
         ctx.tests.append(testCtx)
