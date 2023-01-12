@@ -24,5 +24,10 @@ RUN mkdir /wypp
 RUN git clone https://github.com/skogsbaer/write-your-python-program.git /wypp
 RUN rm -rf /wypp/.git
 
+# Tick trick track
+RUN mkdir /ttt
+RUN git clone https://github.com:skogsbaer/tick-trick-track.git /ttt
+RUN rm -rf /ttt/.git
+
 # Our checker scripts
 ADD checker /checker
