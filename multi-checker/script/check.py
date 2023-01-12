@@ -3,6 +3,7 @@ from common import *
 import python
 import haskell
 import argparse
+import re
 
 def parseArgs():
     parser = argparse.ArgumentParser(description='Checker for haskell assignments')
@@ -21,10 +22,16 @@ def parseArgs():
     hs.add_argument('--sheet', metavar='X', type=str, help='Identifier for sheet')
     return parser.parse_args()
 
+_numRe = re.compile(r'\b\d+\b')
 def getSheetFromEnv():
-    title = os.environ.get('TASK_TITLE')
-    i = title.rindex(' ')
-    return title[i+1:].zfill(2)
+    title = os.environ.get('TASK_TITLE').strip()
+    m = _numRe.search(title)
+    if m:
+        return m.group(0).zfill(2)
+    else:
+        for x in ["/", "\\", " ", "\t"]:
+            title = title.replace(x, "_")
+        return title.lower()
 
 _DEFAULT_TEST_DIR = '/external/praktomat-tests'
 
