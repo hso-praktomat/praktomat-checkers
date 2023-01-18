@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python3 /checker/check.py python-wypp --assignment 4
+python3 /checker/check.py python --assignment 4
