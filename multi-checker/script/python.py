@@ -182,7 +182,7 @@ def getTestResult(testFile, runRes: RunResult):
     return TestResult(testFile=testFile, testOutput=runRes.stdout, error=(runRes.exitcode != 0),
             totalTests=0, testFailures=0, testErrors=0)
 
-def checkTutorTests(opts: Options, testCtx: TestContext, a: Assignment, srcDir: str):
+def checkTutorTests(opts: Options, testCtx: TestContext, a: Assignment, srcDir: Optional[str]):
     """
     Checks the tutor tests. Executed from within the source dir.
     """

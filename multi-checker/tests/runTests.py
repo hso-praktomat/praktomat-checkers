@@ -68,6 +68,7 @@ expectFail(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {
 expectFail(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}sheet-abschlussprojekt/solution-simple python --wypp {wyppDir} --sheet abschlussprojekt', 121)
 expectOk(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}sheet-abschlussprojekt/solution python --wypp {wyppDir} --sheet abschlussprojekt')
 expectOk(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}sheet-10/solution python --sheet 10')
+expectOk(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}sheet-10/solution/subdir python --sheet 10')
 
 printHeader('Running Haskell Tests')
 
