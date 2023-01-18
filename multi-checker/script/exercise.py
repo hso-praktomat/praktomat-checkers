@@ -26,6 +26,14 @@ class YamlDict:
         return YamlDict([d] + self.__dicts)
 
 @dataclass
+class PythonAssignmentConfig:
+    wypp: bool
+    @staticmethod
+    def parse(v: YamlDict):
+        b = v.get('python-wypp', True)
+        return PythonAssignmentConfig(b)
+
+@dataclass
 class Assignment:
     sheet: str
     id: str
@@ -34,6 +42,8 @@ class Assignment:
     tests: list[str] # test files, can be empty
     testOkRequired: bool
     testScript: Optional[str]
+    pythonConfig: PythonAssignmentConfig
+    @staticmethod
     def parse(sheet: str, v: YamlDict, id: int):
         src = v.get('src')
         tests = asList(v.get('test', [])) + asList(v.get('tests', []))
@@ -44,7 +54,8 @@ class Assignment:
             bug('error parsing exercise.yaml: points must be a number')
         testOkRequired = v.get('test-ok-required', False)
         testScript = v.get('test-script')
-        return Assignment(sheet, id, points, src, tests, testOkRequired, testScript)
+        py = PythonAssignmentConfig.parse(v)
+        return Assignment(sheet, id, points, src, tests, testOkRequired, testScript, py)
 
 assignmentIdRe = re.compile(r'\d+[a-z]?')
 
@@ -66,4 +77,6 @@ class Exercise:
 def parseExercise(sheet, yamlPath):
     s = readFile(yamlPath)
     ymlDict = yaml.load(s, Loader=yaml.FullLoader)
-    return Exercise.parse(sheet, YamlDict(ymlDict))
+    ex = Exercise.parse(sheet, YamlDict(ymlDict))
+    debug(f"Parsed exercise from {yamlPath} for sheet {sheet}: {ex}")
+    return ex

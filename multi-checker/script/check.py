@@ -14,7 +14,7 @@ def parseArgs():
     subparsers = parser.add_subparsers(help='Commands', dest='cmd')
     parser.add_argument('--debug', help='Enable debug output',
                          action='store_true', default=False)
-    py = subparsers.add_parser('python-wypp', help='Check python assignment')
+    py = subparsers.add_parser('python-wypp', help='Check python assignment') # FIXME: should be only 'python'
     py.add_argument('--wypp', metavar='DIR', type=str, help='Path to wypp')
     py.add_argument('--sheet', metavar='X', type=str, help='Identifier for sheet')
     py.add_argument('--assignment', metavar='X', type=str, help='Identifier for assignment')

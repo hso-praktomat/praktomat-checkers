@@ -7,6 +7,7 @@ from utils import *
 from common import *
 from exercise import *
 from testContext import *
+from typing import *
 
 def configError(s):
     abort('Config error: ' + s)
@@ -17,14 +18,42 @@ class PythonOptions(Options):
     assignment: Optional[str]
     wypp: str
 
-def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, testFile: Optional[str]=None):
+def prepareEnv(testEnv: Optional[dict], pyPath: Optional[str]):
+    if testEnv is None:
+        testEnv = {}
+    else:
+        testEnv = testEnv.copy()
+    if pyPath:
+        key = 'PYTHONPATH'
+        oldPyPath = os.getenv(key)
+        if oldPyPath:
+            pyPath = pyPath + ':' + oldPyPath
+        testEnv[key] = pyPath
+    return testEnv
+
+def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, testFile: Optional[str]=None, testEnv: dict=None):
     thisDir = abspath('.')
-    env = {'PYTHONPATH': wyppPath + '/python/src:' + wyppPath + '/python/site-lib:' + thisDir}
+    pyPath = wyppPath + '/python/site-lib:' + thisDir
+    testEnv = prepareEnv(testEnv, pyPath)
     args = ['python3', wyppPath + '/python/src/runYourProgram.py']
     if testFile:
         args = args + ['--test-file', testFile]
     args = args + ['--check-runnable' if onlyRunnable else '--check', studentFile]
-    res = run(args, onError='ignore', env=env, stderrToStdout=True, captureStdout=True)
+    debug(f'Command: {" ".join(args)}')
+    res = run(args, onError='ignore', env=testEnv, stderrToStdout=True, captureStdout=True)
+    return res
+
+def runUnittest(testFile: str, srcDir: Optional[str], testEnv: dict=None):
+    if not isFile(testFile):
+        abort(f'Test file {testFile} does not exist')
+    pyPath = dirname(testFile)
+    if srcDir:
+        pyPath = pyPath + ':' + srcDir # important: testDir must come first so that the test module is taken from the testDir
+    testEnv = prepareEnv(testEnv, pyPath)
+    testMod = removeExt(basename(testFile))
+    args = ['python3', '-m', 'unittest', testMod]
+    debug(f'Command: {" ".join(args)}')
+    res = run(args, onError='ignore', env=testEnv, stderrToStdout=True, captureStdout=True)
     return res
 
 LoadStudentCodeStatus = Literal['ok', 'fail', 'not_found']
@@ -33,8 +62,9 @@ LoadStudentCodeStatus = Literal['ok', 'fail', 'not_found']
 class LoadStudentCodeResult:
     status: LoadStudentCodeStatus
     output: str
+    srcDir: Optional[str]
 
-def loadStudentCode(opts: Options, p: str) -> LoadStudentCodeResult:
+def loadStudentCode(opts: Options, p: str, checkLoad: bool) -> LoadStudentCodeResult:
     """
     Checks that the student file loads ok and that the student are successful.
     Executed from within source dir.
@@ -44,8 +74,9 @@ def loadStudentCode(opts: Options, p: str) -> LoadStudentCodeResult:
         nonlocal _out
         if s or emptyNewline:
             _out = _out + s + '\n'
+    _srcDir = None
     def mkResult(status: LoadStudentCodeStatus) -> LoadStudentCodeResult:
-        return LoadStudentCodeResult(status, _out)
+        return LoadStudentCodeResult(status, _out, _srcDir)
     studentFile = findFile(p, '.')
     if not studentFile:
         pyFilesList = run(f'find . -name "*.py"', captureStdout=splitLines, onError='ignore').stdout
@@ -54,7 +85,11 @@ def loadStudentCode(opts: Options, p: str) -> LoadStudentCodeResult:
 
 {pyFiles}''')
         return mkResult('not_found')
+    _srcDir = dirname(studentFile)
     fixEncoding(studentFile)
+    if not checkLoad:
+        printOut(f'Only checking that file {studentFile} exists, not loading.')
+        return mkResult('ok')
     printOut()
     printOut(f'## Checking that {p} loads successfully ...')
     runRes = runWypp(studentFile, opts.wypp, onlyRunnable=True)
@@ -78,7 +113,7 @@ If you cannot make a test succeed, you have to comment it out.''')
     return mkResult('ok')
 
 def checkFileLoadsOk(opts: Options, p: str):
-    res = loadStudentCode(opts, p)
+    res = loadStudentCode(opts, p, True)
     print(res.output)
     match res.status:
         case 'not_found':
@@ -107,8 +142,9 @@ class PythonTestResult:
     def parseUnitResult(testFile: str, s: str):
         # Ran 3 tests in 0.000s
         # FAILED (errors=1)
-        # FAILED (failures=1, errors=1)
+        # FAILED (failures=1, errors=1, skipped=1)
         # OK
+        # OK (skipped=5)
         total = -1
         errors = 0
         failures = 0
@@ -130,6 +166,8 @@ class PythonTestResult:
                 errors = getKv(l, 'errors')
                 failures = getKv(l, 'failures')
                 skipped = getKv(l, 'skipped')
+            if l.startswith('OK'):
+                skipped = getKv(l, 'skipped')
         if total > 0:
             return TestResult(testFile=testFile, testOutput=s, error=False,
                     totalTests=(total - skipped), testFailures=failures, testErrors=errors)
@@ -144,13 +182,17 @@ def getTestResult(testFile, runRes: RunResult):
     return TestResult(testFile=testFile, testOutput=runRes.stdout, error=(runRes.exitcode != 0),
             totalTests=0, testFailures=0, testErrors=0)
 
-def checkTutorTests(opts: Options, testCtx: TestContext, a: Assignment):
+def checkTutorTests(opts: Options, testCtx: TestContext, a: Assignment, srcDir: str):
     """
     Checks the tutor tests. Executed from within the source dir.
     """
     for t in a.tests:
+        testEnv = {'CHECK_ASSIGNMENT': a.id, 'CHECK_TEST': t}
         testPath = pjoin(sheetDir(opts), t)
-        testOut = runWypp(a.src, opts.wypp, onlyRunnable=False, testFile=testPath)
+        if a.pythonConfig.wypp:
+            testOut = runWypp(a.src, opts.wypp, onlyRunnable=False, testFile=testPath, testEnv=testEnv)
+        else:
+            testOut = runUnittest(testPath, srcDir, testEnv=testEnv)
         testRes = getTestResult(t, testOut)
         testCtx.results.append(testRes)
         abortIfTestOkRequired(a, testRes)
@@ -166,13 +208,16 @@ def checkAssignments(opts: Options, ex: Exercise, allAss: list[Assignment]):
     """
     allFiles = []
     for a in allAss:
-        if a.src is not None and a.src not in allFiles:
-            allFiles.append(a.src)
+        if a.src is not None and a.src not in [x[0] for x in allFiles]:
+            allFiles.append((a.src, a.pythonConfig.wypp))
     ctx = CheckCtx.empty('Load and student tests')
     compileStatus = 'OK'
     missing = 0
-    for p in allFiles:
-        res = loadStudentCode(opts, p)
+    srcDirDict = {} # a.src -> directory where file is found
+    for p, checkLoad in allFiles:
+        res = loadStudentCode(opts, p, checkLoad)
+        if res.srcDir:
+            srcDirDict[p] = res.srcDir
         ctx.appendCompileOutput(res.output)
         match res.status:
             case 'fail':
@@ -192,7 +237,7 @@ def checkAssignments(opts: Options, ex: Exercise, allAss: list[Assignment]):
     for a in allAss:
         testCtx = TestContext(assignment=a, sheet=ex.sheet, results=[])
         ctx.tests.append(testCtx)
-        checkTutorTests(opts, testCtx, a)
+        checkTutorTests(opts, testCtx, a, srcDirDict.get(a.src))
         checkScript(a, testCtx, sheetDir(opts))
     outputResultsAndExit(ctx)
 
