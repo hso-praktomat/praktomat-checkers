@@ -47,27 +47,27 @@ printHeader('Running Python Tests')
 
 wyppDir = '$HOME/devel/write-your-python-program/'
 pythonTestDir = '$HOME/devel/praktomat-tests/python-prog1/'
-expectOk(f'python3 {checkScript} --submission-dir python-wypp/ python-wypp --wypp {wyppDir} --sheet 01 --assignment 1')
-expectOk(f'python3 {checkScript} python-wypp --wypp {wyppDir} --sheet 01 --assignment 1')
-expectFail(f'python3 {checkScript} --submission-dir python-wypp/ python-wypp --wypp {wyppDir} --sheet 01 --assignment 2')
-expectFail(f'python3 {checkScript} python-wypp --wypp {wyppDir} --sheet 01 --assignment 2')
+expectOk(f'python3 {checkScript} --submission-dir python-wypp/ python --wypp {wyppDir} --sheet 01 --assignment 1')
+expectOk(f'python3 {checkScript} python --wypp {wyppDir} --sheet 01 --assignment 1')
+expectFail(f'python3 {checkScript} --submission-dir python-wypp/ python --wypp {wyppDir} --sheet 01 --assignment 2')
+expectFail(f'python3 {checkScript} python --wypp {wyppDir} --sheet 01 --assignment 2')
 
 pythonTests = [('solution-good', 0), ('solution-partial', 121), ('solution-partial-missing', 121),
                ('solution-fail', 121), ('solution-error', 1)]
 
 for d, ecode in pythonTests:
-    cmd = f'python3 {checkScript} --test-dir python-wypp/ --submission-dir python-wypp/sheet-03/{d}/ python-wypp --wypp {wyppDir} --sheet 03'
+    cmd = f'python3 {checkScript} --test-dir python-wypp/ --submission-dir python-wypp/sheet-03/{d}/ python --wypp {wyppDir} --sheet 03'
     if ecode == 0:
         expectOk(cmd)
     else:
         expectFail(cmd, ecode)
 
-expectOk(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}/sheet-09/solution/ python-wypp --wypp {wyppDir} --sheet 09')
+expectOk(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}/sheet-09/solution/ python --wypp {wyppDir} --sheet 09')
 
-expectFail(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}sheet-abschlussprojekt/solution-fail python-wypp --wypp {wyppDir} --sheet abschlussprojekt')
-expectFail(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}sheet-abschlussprojekt/solution-simple python-wypp --wypp {wyppDir} --sheet abschlussprojekt', 121)
-expectOk(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}sheet-abschlussprojekt/solution python-wypp --wypp {wyppDir} --sheet abschlussprojekt')
-expectOk(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}sheet-10/solution python-wypp --sheet 10')
+expectFail(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}sheet-abschlussprojekt/solution-fail python --wypp {wyppDir} --sheet abschlussprojekt')
+expectFail(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}sheet-abschlussprojekt/solution-simple python --wypp {wyppDir} --sheet abschlussprojekt', 121)
+expectOk(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}sheet-abschlussprojekt/solution python --wypp {wyppDir} --sheet abschlussprojekt')
+expectOk(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}sheet-10/solution python --sheet 10')
 
 printHeader('Running Haskell Tests')
 

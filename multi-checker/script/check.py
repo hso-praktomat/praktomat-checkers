@@ -14,7 +14,7 @@ def parseArgs():
     subparsers = parser.add_subparsers(help='Commands', dest='cmd')
     parser.add_argument('--debug', help='Enable debug output',
                          action='store_true', default=False)
-    py = subparsers.add_parser('python-wypp', help='Check python assignment') # FIXME: should be only 'python'
+    py = subparsers.add_parser('python', help='Check python assignment')
     py.add_argument('--wypp', metavar='DIR', type=str, help='Path to wypp')
     py.add_argument('--sheet', metavar='X', type=str, help='Identifier for sheet')
     py.add_argument('--assignment', metavar='X', type=str, help='Identifier for assignment')
@@ -36,7 +36,7 @@ def getSheetFromEnv():
 _DEFAULT_TEST_DIR = '/external/praktomat-tests'
 
 def getDefaultTestDir(cmd):
-    if cmd == 'python-wypp':
+    if cmd == 'python':
         return pjoin(_DEFAULT_TEST_DIR, 'python-prog1')
     else:
         return pjoin(_DEFAULT_TEST_DIR, 'haskell-advanced-prog')
@@ -63,7 +63,7 @@ if __name__ == '__main__':
         run('env')
         print('Block size: ', end='')
         run('stat -fc %s .', onError='ignore')
-    if cmd == 'python-wypp':
+    if cmd == 'python':
         wypp = args.wypp
         if not wypp:
             wypp = '/wypp'
