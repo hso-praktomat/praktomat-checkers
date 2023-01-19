@@ -43,12 +43,14 @@ def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, testFile: Optio
     res = run(args, onError='ignore', env=testEnv, stderrToStdout=True, captureStdout=True)
     return res
 
-def runUnittest(testFile: str, srcDir: Optional[str], testEnv: dict=None):
+def runUnittest(testFile: str, searchDirs: list[Optional[str]], testEnv: dict=None):
     if not isFile(testFile):
         abort(f'Test file {testFile} does not exist')
+    # important: testDir must come first so that the test module is taken from the testDir
     pyPath = dirname(testFile)
-    if srcDir:
-        pyPath = pyPath + ':' + srcDir # important: testDir must come first so that the test module is taken from the testDir
+    for d in searchDirs:
+        if d:
+            pyPath = pyPath + ':' + d
     testEnv = prepareEnv(testEnv, pyPath)
     testMod = removeExt(basename(testFile))
     args = ['python3', '-m', 'unittest', testMod]
@@ -192,7 +194,7 @@ def checkTutorTests(opts: Options, testCtx: TestContext, a: Assignment, srcDir: 
         if a.pythonConfig.wypp:
             testOut = runWypp(a.src, opts.wypp, onlyRunnable=False, testFile=testPath, testEnv=testEnv)
         else:
-            testOut = runUnittest(testPath, srcDir, testEnv=testEnv)
+            testOut = runUnittest(testPath, [opts.wypp + '/python/site-lib', srcDir], testEnv=testEnv)
         testRes = getTestResult(t, testOut)
         testCtx.results.append(testRes)
         abortIfTestOkRequired(a, testRes)
