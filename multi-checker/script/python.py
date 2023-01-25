@@ -244,7 +244,7 @@ def checkAssignments(opts: Options, ex: Exercise, allAss: list[Assignment]):
     outputResultsAndExit(ctx)
 
 def sheetDir(opts: Options):
-    return pjoin(opts.testDir, 'sheet-' + opts.sheet)
+    return getSheetDir(opts.testDir, opts.sheet)
 
 def check(opts: Options):
     sheet = opts.sheet

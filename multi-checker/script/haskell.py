@@ -75,7 +75,7 @@ def checkHsFile(path):
 
 BLACKLIST = ['package.yaml', 'stack.yaml']
 def doCheck(srcDir, testDir, sheet):
-    sheetDir = pjoin(testDir, 'sheet-' + sheet)
+    sheetDir = getSheetDir(testDir, sheet)
     exFile = pjoin(sheetDir, 'exercise.yaml')
     ex = parseExercise(sheet, exFile)
     debug(f'Exercise (file: {exFile}): {ex}')

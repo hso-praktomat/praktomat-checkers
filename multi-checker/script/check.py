@@ -22,16 +22,34 @@ def parseArgs():
     hs.add_argument('--sheet', metavar='X', type=str, help='Identifier for sheet')
     return parser.parse_args()
 
+# "Labortest 2, Gruppe A" -> ["labortest_2", labortest_2_gruppe_a"]
+def candsFromTitle(origTitle: str) -> list[str]:
+    comps = []
+    for x in origTitle.split(','):
+        x = x.strip()
+        x = replaceAll(["/", "\\", " ", "\t"], "_", x)
+        x = x.lower()
+        comps.append(x)
+    cands = []
+    for i in range(len(comps)):
+        c = "_".join(comps[:i+1])
+        cands.append(c)
+    cands.reverse()
+    return cands
+
 _numRe = re.compile(r'\b\d+\b')
-def getSheetFromEnv():
-    title = os.environ.get('TASK_TITLE').strip()
-    m = _numRe.search(title)
+def getSheetFromEnv(testDir):
+    origTitle = os.environ.get('TASK_TITLE').strip()
+    cands = candsFromTitle(origTitle)
+    m = _numRe.search(origTitle)
     if m:
-        return m.group(0).zfill(2)
-    else:
-        for x in ["/", "\\", " ", "\t"]:
-            title = title.replace(x, "_")
-        return title.lower()
+        cands.append(m.group(0).zfill(2))
+    for c in cands: # first search for the more specific
+        d = getSheetDir(testDir, c)
+        if isDir(d):
+            return c
+    return cands[-1]  # prefer the more generic
+
 
 _DEFAULT_TEST_DIR = '/external/praktomat-tests'
 
@@ -69,7 +87,7 @@ if __name__ == '__main__':
             wypp = '/wypp'
         sheet = args.sheet
         if not sheet:
-            sheet = getSheetFromEnv()
+            sheet = getSheetFromEnv(testDir)
         assignment = args.assignment
         opts = python.PythonOptions(submissionDir, testDir, sheet, assignment, wypp)
         debug(f'Running python checks, options: {opts}')
@@ -77,7 +95,7 @@ if __name__ == '__main__':
     elif cmd == 'haskell':
         sheet = args.sheet
         if not sheet:
-            sheet = getSheetFromEnv()
+            sheet = getSheetFromEnv(testDir)
         opts = haskell.HaskellOptions(submissionDir, testDir, sheet)
         debug(f'Running haskell checks, options: {opts}')
         haskell.check(opts)
