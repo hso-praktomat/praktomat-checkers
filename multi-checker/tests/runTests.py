@@ -64,6 +64,10 @@ for d, ecode in pythonTests:
 
 expectOk(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}/sheet-09/solution/ python --wypp {wyppDir} --sheet 09')
 
+expectOk(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}/sheet-labortest_2/solution/ python --wypp {wyppDir} --sheet labortest_2')
+expectFail(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}/sheet-labortest_2/solution-partial/ python --wypp {wyppDir} --sheet labortest_2', 121)
+expectFail(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}/sheet-labortest_2/solution-nofiles/ python --wypp {wyppDir} --sheet labortest_2', 1)
+
 expectFail(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}sheet-abschlussprojekt/solution-fail python --wypp {wyppDir} --sheet abschlussprojekt')
 expectFail(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}sheet-abschlussprojekt/solution-simple python --wypp {wyppDir} --sheet abschlussprojekt', 121)
 expectOk(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}sheet-abschlussprojekt/solution python --wypp {wyppDir} --sheet abschlussprojekt')
