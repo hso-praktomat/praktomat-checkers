@@ -192,7 +192,10 @@ def checkTutorTests(opts: Options, testCtx: TestContext, a: Assignment, srcDir: 
         testEnv = {'CHECK_ASSIGNMENT': a.id, 'CHECK_TEST': t}
         testPath = pjoin(sheetDir(opts), t)
         if a.pythonConfig.wypp:
-            testOut = runWypp(a.src, opts.wypp, onlyRunnable=False, testFile=testPath, testEnv=testEnv)
+            src = a.src
+            if srcDir:
+                src = pjoin(srcDir, a.src)
+            testOut = runWypp(src, opts.wypp, onlyRunnable=False, testFile=testPath, testEnv=testEnv)
         else:
             testOut = runUnittest(testPath, [opts.wypp + '/python/site-lib', srcDir], testEnv=testEnv)
         testRes = getTestResult(t, testOut)
