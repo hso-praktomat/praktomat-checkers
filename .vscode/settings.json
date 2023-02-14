@@ -1,6 +1,6 @@
 {
     "python.linting.enabled": false,
     "python.autoComplete.extraPaths": [
-        "/Users/swehr/.vscode/extensions/stefanwehr.write-your-python-program-1.0.1/python/src/"
+        "/Users/swehr/.vscode/extensions/stefanwehr.write-your-python-program-1.0.4/python/src/"
     ]
 }

@@ -10,7 +10,7 @@ class Options:
     testDir: Optional[str]
 
 def getSheetDir(testDir, sheet):
-    return pjoin(testDir, 'sheet-' + sheet)
+    return pjoin(testDir, sheet)
 
 def replaceAll(l: list[str], repl: str, s: str) -> str:
     for x in l:
