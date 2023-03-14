@@ -57,9 +57,14 @@ def outputResultsAndExit(ctx):
     totalPoints = 0
     possibleTotalPoints = 0
     print('Test results:')
+    maxAssignmentIdLen = max([len(testCtx.assignment.id) for testCtx in ctx.tests])
+    maxPoints = max([testCtx.assignment.points for testCtx in ctx.tests])
+    maxPointsLen = len(f'{maxPoints:.1f}')
     for testCtx in ctx.tests:
         res = testCtx.summarizeResults()
         assPoints = testCtx.assignment.points
+        assPointsFmt = f'{assPoints:.1f}'
+        space1 = (maxPointsLen - len(assPointsFmt)) * ' '
         possibleTotalPoints += assPoints
         if res.error:
             zero = f'0.0/{assPoints:.1f} points,'
@@ -75,16 +80,22 @@ def outputResultsAndExit(ctx):
                 if assPoints > 0:
                     points = round(ratio * assPoints, 1)
                     totalPoints = totalPoints + points
-                    pointsStr = f'{points:.1f}/{assPoints:.1f} points,'
+                    pointsFmt = f'{points:.1f}'
+                    space = (maxPointsLen - len(pointsFmt)) * ' '
+                    pointsStr = f'{space}{pointsFmt}/{assPointsFmt} {space1}points,'
                 else:
-                    pointsStr = f'???/{assPoints} points,'
+                    space = (maxPointsLen - 1) * ' '
+                    pointsStr = f'{space}?/{assPoints} {space1}points,'
                 percentageStr = f'{percentage}% OK,'
                 rest = f'({res.totalTests} tests, {res.testErrors} errors, {res.testFailures} failures)'
                 shortResStr = f'{pointsStr:15} {percentageStr:10} {rest}'
             else:
-                q = f'???/{assPoints:.1f} points,'
+                space = (maxPointsLen - 1) * ' '
+                q = f'{space}?/{assPointsFmt} {space1}points,'
                 shortResStr = f'{q:15} no tests'
-        print(f'Assignment {testCtx.assignment.id}: {shortResStr}')
+        id = testCtx.assignment.id
+        space = (maxAssignmentIdLen - len(id)) * ' '
+        print(f'Assignment {id}:{space} {shortResStr}')
     print(f'\nTotal points: {totalPoints:.1f}/{possibleTotalPoints:.1f} (preliminary, subject to change!)')
     def printWithTitle(title, msg):
         delim = 2 * '=============================================================================='
