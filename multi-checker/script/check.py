@@ -20,7 +20,8 @@ def parseArgs():
     py.add_argument('--assignment', metavar='X', type=str, help='Identifier for assignment')
     hs = subparsers.add_parser('haskell', help='Check haskell assignment')
     hs.add_argument('--sheet', metavar='X', type=str, help='Identifier for sheet')
-    return parser.parse_args()
+    (known, _other) = parser.parse_known_args()
+    return known
 
 # "Labortest 2, Gruppe A" -> ["labortest_2", labortest_2_gruppe_a"]
 def candsFromTitle(origTitle: str) -> list[str]:
