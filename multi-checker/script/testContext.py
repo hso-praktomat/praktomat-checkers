@@ -12,6 +12,7 @@ class CheckCtx:
     compileStatus: CompileStatus
     compileOutput: Optional[str]
     tests: list[TestContext]
+    styleResult: Optional[StyleResult]=None
     @staticmethod
     def empty(t: str) -> CheckCtx:
         return CheckCtx(t, False, None, [])
@@ -48,6 +49,11 @@ class TestResult:
     @property
     def isSuccess(self):
         return not self.error and self.testErrors == 0 and self.testFailures == 0
+
+@dataclass
+class StyleResult:
+    hasErrors: bool
+    styleOutput: Optional[str]
 
 def outputResultsAndExit(ctx):
     # FIXME: no compile abstract!
@@ -96,6 +102,9 @@ def outputResultsAndExit(ctx):
         id = testCtx.assignment.id
         space = (maxAssignmentIdLen - len(id)) * ' '
         print(f'Assignment {id}:{space} {shortResStr}')
+    if ctx.styleResult != None:
+        styleStatusShort = "ERROR" if ctx.styleResult.hasErrors else "OK"
+        print('\nCoding style: ' + styleStatusShort)
     print(f'\nTotal points: {totalPoints:.1f}/{possibleTotalPoints:.1f} (preliminary, subject to change!)')
     def printWithTitle(title, msg):
         delim = 2 * '=============================================================================='
@@ -112,6 +121,8 @@ def outputResultsAndExit(ctx):
             title = f'Output for test of assignment {testCtx.assignment.id} ({testRes.testFile})'
             printWithTitle(title, testRes.testOutput)
             debug(testRes)
+    if ctx.styleResult != None and ctx.styleResult.styleOutput != None:
+        printWithTitle('Output of style check', ctx.styleResult.styleOutput)
     match ctx.compileStatus:
         case 'FAIL':
             sys.exit(1)

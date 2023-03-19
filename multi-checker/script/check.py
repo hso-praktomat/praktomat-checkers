@@ -2,6 +2,7 @@ from utils import *
 from common import *
 import python
 import haskell
+import java
 import argparse
 import re
 
@@ -20,6 +21,11 @@ def parseArgs():
     py.add_argument('--assignment', metavar='X', type=str, help='Identifier for assignment')
     hs = subparsers.add_parser('haskell', help='Check haskell assignment')
     hs.add_argument('--sheet', metavar='X', type=str, help='Identifier for sheet')
+    java = subparsers.add_parser('java', help='Check Java assignment')
+    java.add_argument('--sheet', metavar='X', type=str, help='Identifier for sheet')
+    java.add_argument('--checkstyle', metavar='JAR', type=str,
+                        help='Path to the CheckStyle JAR file',
+                        default='/opt/praktomat-addons/checkstyle.jar')
     (known, _other) = parser.parse_known_args()
     return known
 
@@ -57,6 +63,8 @@ _DEFAULT_TEST_DIR = '/external/praktomat-tests'
 def getDefaultTestDir(cmd):
     if cmd == 'python':
         return pjoin(_DEFAULT_TEST_DIR, 'python-prog1')
+    elif cmd == 'java':
+        return pjoin(_DEFAULT_TEST_DIR, 'java-aud')
     else:
         return pjoin(_DEFAULT_TEST_DIR, 'haskell-advanced-prog')
 
@@ -100,6 +108,13 @@ if __name__ == '__main__':
         opts = haskell.HaskellOptions(submissionDir, testDir, sheet)
         debug(f'Running haskell checks, options: {opts}')
         haskell.check(opts)
+    elif cmd == 'java':
+        sheet = args.sheet
+        if not sheet:
+            sheet = getSheetFromEnv(testDir)
+        opts = java.JavaOptions(submissionDir, testDir, sheet, args.checkstyle)
+        debug(f'Running Java checks, options: {opts}')
+        java.check(opts)
     else:
         bug(f'invalid kind: {cmd}')
 
