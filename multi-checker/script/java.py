@@ -112,8 +112,15 @@ def check(opts: JavaOptions):
         if not isFile(a.src):
             print(f'ERROR: File {a.src} not included in submission. I found the following .java files:')
             run('find . -name "*.java"')
-    cp(defaultBuildFile, opts.sourceDir)
-    srcDir = pjoin(opts.sourceDir, 'src')
+    projectDir = opts.sourceDir
+    for pDir in ls(opts.sourceDir):
+        if not isDir(pDir):
+            continue
+        for entry in ls(pDir):
+            if entry.endswith('src'):
+                projectDir = pDir
+    cp(defaultBuildFile, projectDir)
+    srcDir = pjoin(projectDir, 'src')
     ctx = CheckCtx.empty('Compile')
     checkCompile(ctx, srcDir)
     testDir = pjoin(sheetDir, 'test-src')
