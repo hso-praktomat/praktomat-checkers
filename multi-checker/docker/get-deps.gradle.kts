@@ -3,16 +3,16 @@ plugins {
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-	testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")
-	implementation("org.junit.jupiter:junit-jupiter:5.9.0")
+    implementation("org.junit.jupiter:junit-jupiter:5.9.0")
 }
 
 tasks.register<Copy>("getDeps") {
-    from(sourceSets.main.get().runtimeClasspath)
+    val mainSource = sourceSets.main.get()
+    from(mainSource.compileClasspath, mainSource.runtimeClasspath)
     into("runtime/")
 
     doFirst {
