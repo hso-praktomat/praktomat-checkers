@@ -20,7 +20,7 @@ defaultBuildFile = pjoin(os.path.realpath(os.path.dirname(__file__)), 'build.gra
 checkstyleConfig = pjoin(os.path.realpath(os.path.dirname(__file__)), 'checkstyle.xml')
 
 def execGradle(task: str, studentDir: str, testDir: str='test-src', testFilter: str='*'):
-    buildFile = pjoin(studentDir, '..', 'build.gradle.kts')
+    buildFile = abspath(pjoin(studentDir, '..', 'build.gradle.kts'))
     cmd = [
         'gradle',
         '-b',
@@ -56,8 +56,7 @@ gradleTestRe = re.compile(r'^(\d+) tests completed, (\d+) failed$')
 
 def getTestResult(testFilter: str, out: str, srcDir: str):
     out = out.replace('\r', '\n')
-    buildDir = pjoin(srcDir, '..', '_build')
-    testResultDir = pjoin(buildDir, 'test-results', 'test')
+    testResultDir = abspath(pjoin(srcDir, '..', '_build', 'test-results', 'test'))
     tests = 0
     failures = 0
     errors = 0
