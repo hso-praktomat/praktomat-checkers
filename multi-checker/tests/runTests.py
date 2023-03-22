@@ -101,7 +101,7 @@ if runJavaTests:
     printHeader('Running Java Tests')
 
     javaTestDir = '$HOME/devel/praktomat-tests/java-aud'
-    expectOk(f'python3 {checkScript} --submission-dir {javaTestDir}/01-intro/solution --test-dir {javaTestDir} java --sheet 01-intro')
+    expectOk(f'python3 {checkScript} --submission-dir {javaTestDir}/01-intro/solution --test-dir {javaTestDir} java --checkstyle ./checkstyle-10.3.4-all.jar --sheet 01-intro')
 
 print()
 info(f'{testCount} tests were run successfully!')

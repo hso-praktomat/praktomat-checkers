@@ -31,10 +31,8 @@ def execGradle(task: str, studentDir: str, testDir: str='test-src', testFilter: 
         '-PtestDir=' + testDir,
         '-PstudentDir=' + studentDir,
         task,
-        #'--rerun-tasks',
         '--no-parallel',
         '--max-workers=1',
-        #'--no-daemon',
         '--warning-mode=none',
         '-Dorg.gradle.welcome=never'
     ]
@@ -107,7 +105,24 @@ def checkStyle(ctx: CheckCtx, srcDir: str, checkstylePath: str, config: str=chec
     cmd += sourceFiles
     debug(f'Running "{cmd}"')
     result = run(cmd, onError='ignore', stderrToStdout=True, captureStdout=True)
-    ctx.styleResult = StyleResult(hasErrors='ERROR' in result.stdout, styleOutput=result.stdout.replace('\r', '\n'))
+    hasErrors = 'ERROR' in result.stdout or result.exitcode != 0
+    if hasErrors:
+        print('Checking code style FAILED')
+        print()
+        print(result.stdout)
+        print()
+        print('Here are the style rules to follow:')
+        print('- Naming conventions')
+        print('  - All identifiers except for constants in camel case, do not use underscores to separate words')
+        print('  - Names of classes, interfaces, records and enums start with an uppercase letters')
+        print('  - Names of methods and variables start with a lowercase letter')
+        print('  - Names of constants are written in SCREAMING_CASE')
+        print('- Indentation')
+        print('  - Indent a block with four spaces')
+        print('  - Do NOT use tabs, this might require to change the settings of your IDE')
+        print()
+        abort('Aborting')
+    ctx.styleResult = StyleResult(hasErrors=hasErrors, styleOutput=result.stdout.replace('\r', '\n'))
 
 def checkFilesExist(ex: Exercise, prjDir: str):
     missing = 0
@@ -143,6 +158,7 @@ def check(opts: JavaOptions):
     cp(defaultBuildFile, projectDir)
     srcDir = pjoin(projectDir, 'src')
     exResult = checkFilesExist(ex, projectDir)
+    checkStyle(ctx, srcDir, opts.checkstylePath)
     checkCompile(ctx, srcDir, exResult)
     testDir = pjoin(sheetDir, 'test-src')
     for a in ex.assignments:
@@ -150,5 +166,4 @@ def check(opts: JavaOptions):
         ctx.tests.append(testCtx)
         for testFilter in a.tests:
             checkTest(a, srcDir, testDir, testFilter, testCtx)
-    checkStyle(ctx, srcDir, opts.checkstylePath)
     outputResultsAndExit(ctx)

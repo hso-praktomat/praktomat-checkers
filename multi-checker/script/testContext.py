@@ -116,13 +116,13 @@ def outputResultsAndExit(ctx):
         print(msg)
     if ctx.compileOutput:
         printWithTitle(ctx.compileTitle + ' output', ctx.compileOutput)
+    if ctx.styleResult != None and ctx.styleResult.styleOutput != None:
+        printWithTitle('Output of style check', ctx.styleResult.styleOutput)
     for testCtx in ctx.tests:
         for testRes in testCtx.results:
             title = f'Output for test of assignment {testCtx.assignment.id} ({testRes.testFile})'
             printWithTitle(title, testRes.testOutput)
             debug(testRes)
-    if ctx.styleResult != None and ctx.styleResult.styleOutput != None:
-        printWithTitle('Output of style check', ctx.styleResult.styleOutput)
     match ctx.compileStatus:
         case 'FAIL':
             sys.exit(1)
