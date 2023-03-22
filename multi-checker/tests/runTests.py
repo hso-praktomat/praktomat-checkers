@@ -5,6 +5,7 @@ import sys
 
 runPythonTests = True
 runHaskellTests = True
+runJavaTests = True
 
 def fail(msg: str):
     print(msg)
@@ -94,5 +95,13 @@ if runHaskellTests:
     expectOk(f'python3 {checkScript} --submission-dir {haskellTestDir}/04/solution/ --test-dir {haskellTestDir} haskell --sheet 04')
     expectOk(f'python3 {checkScript} --submission-dir {haskellTestDir}/05/solution/ --test-dir {haskellTestDir} haskell --sheet 05')
     expectOk(f'python3 {checkScript} --submission-dir {haskellTestDir}/06/solution/ --test-dir {haskellTestDir} haskell --sheet 06')
-    print()
-    info(f'{testCount} tests were run successfully!')
+
+
+if runJavaTests:
+    printHeader('Running Java Tests')
+
+    javaTestDir = '$HOME/devel/praktomat-tests/java-aud'
+    expectOk(f'python3 {checkScript} --submission-dir {javaTestDir}/01-intro/solution --test-dir {javaTestDir} java --sheet 01-intro')
+
+print()
+info(f'{testCount} tests were run successfully!')

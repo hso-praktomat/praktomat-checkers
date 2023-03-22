@@ -9,6 +9,8 @@ from exercise import *
 from testContext import *
 import xml.etree.ElementTree as ET
 
+GRADLE_OFFLINE = True # Should be True
+
 # Checking Java code using Gradle
 
 @dataclass
@@ -29,23 +31,25 @@ def execGradle(task: str, studentDir: str, testDir: str='test-src', testFilter: 
         '-PtestDir=' + testDir,
         '-PstudentDir=' + studentDir,
         task,
-        '--rerun-tasks',
+        #'--rerun-tasks',
         '--no-parallel',
         '--max-workers=1',
-        '--no-daemon',
-        '--offline',
+        #'--no-daemon',
         '--warning-mode=none',
         '-Dorg.gradle.welcome=never'
     ]
+    if GRADLE_OFFLINE:
+        cmd.append('--offline')
     debug(f'Running "{cmd}"')
-    return run(cmd, onError='ignore', stderrToStdout=True, captureStdout=True)
+    result = run(cmd, onError='ignore', stderrToStdout=True, captureStdout=True)
+    return result
 
-def checkCompile(ctx: CheckCtx, srcDir: str):
+def checkCompile(ctx: CheckCtx, srcDir: str, exResult: CompileStatus):
     result = execGradle('compileJava', studentDir=srcDir)
     out = result.stdout
     if result.exitcode == 0:
         ctx.compileOutput = out
-        ctx.compileStatus = 'OK'
+        ctx.compileStatus = exResult
     else:
         print(f'Compiling failed\n\n{out}')
         findOut = run('find . -type f | xargs ls -l', onError='ignore', stderrToStdout=True, captureStdout=True).stdout
@@ -54,30 +58,34 @@ def checkCompile(ctx: CheckCtx, srcDir: str):
 
 gradleTestRe = re.compile(r'^(\d+) tests completed, (\d+) failed$')
 
-def getTestResult(testFilter: str, out: str, srcDir: str):
+def getTestResult(testFilter: str, exitCode: int, out: str, srcDir: str):
     out = out.replace('\r', '\n')
     testResultDir = abspath(pjoin(srcDir, '..', '_build', 'test-results', 'test'))
     tests = 0
     failures = 0
     errors = 0
-    for file in ls(testResultDir, '*.xml'):
-        tree = ET.parse(file)
-        root = tree.getroot()
-        if root.tag != 'testsuite':
-            continue
-        tests += int(root.get('tests', '0'))
-        failures += int(root.get('skipped', '0'))
-        failures += int(root.get('failures', '0'))
-        errors += int(root.get('errors', '0'))
-    if tests == 0:
-        return TestResult(testFilter, out, True)
+    if exitCode == 0:
+        for file in ls(testResultDir, '*.xml'):
+            tree = ET.parse(file)
+            root = tree.getroot()
+            if root.tag != 'testsuite':
+                continue
+            tests += int(root.get('tests', '0'))
+            failures += int(root.get('skipped', '0'))
+            failures += int(root.get('failures', '0'))
+            errors += int(root.get('errors', '0'))
+        if tests == 0:
+            return TestResult(testFilter, out, True)
+        else:
+            return TestResult(testFilter, out, False, totalTests=tests,
+                              testFailures=failures, testErrors=errors)
     else:
-        return TestResult(testFilter, out, False, totalTests=tests, testFailures=failures, testErrors=errors)
+        return TestResult(testFilter, out, False)
 
 def checkTest(assignment: Assignment, srcDir: str, testDir: str, testFilter: str, ctx: TestContext):
     debug(f'Running tests maching {testFilter} ...')
     result = execGradle('test', studentDir=srcDir, testDir=testDir, testFilter=testFilter)
-    testResult = getTestResult(testFilter, result.stdout, srcDir)
+    testResult = getTestResult(testFilter, result.exitcode, result.stdout, srcDir)
     ctx.results.append(testResult)
     abortIfTestOkRequired(assignment, testResult)
 
@@ -101,16 +109,29 @@ def checkStyle(ctx: CheckCtx, srcDir: str, checkstylePath: str, config: str=chec
     result = run(cmd, onError='ignore', stderrToStdout=True, captureStdout=True)
     ctx.styleResult = StyleResult(hasErrors='ERROR' in result.stdout, styleOutput=result.stdout.replace('\r', '\n'))
 
+def checkFilesExist(ex: Exercise, prjDir: str):
+    missing = 0
+    for a in ex.assignments:
+        srcFile = pjoin(prjDir, a.src)
+        if not isFile(srcFile):
+            print(f'ERROR: File {srcFile} not included in submission.')
+            missing = missing + 1
+    if missing > 0:
+        print(f'I found the following .java files:')
+        run(f'find {prjDir} -name "*.java"')
+        if missing == len(ex.assignments):
+            abort('All files missing, aborting')
+        return 'OK_BUT_SOME_MISSING'
+    else:
+        return 'OK'
+
 def check(opts: JavaOptions):
     sheetDir = getSheetDir(opts.testDir, opts.sheet)
     exFile = pjoin(sheetDir, 'exercise.yaml')
     ex = parseExercise(opts.sheet, exFile)
     debug(f'Exercise (file: {exFile}): {ex}')
+    ctx = CheckCtx.empty('Compile')
     # do the checks
-    for a in ex.assignments:
-        if not isFile(a.src):
-            print(f'ERROR: File {a.src} not included in submission. I found the following .java files:')
-            run('find . -name "*.java"')
     projectDir = opts.sourceDir
     for pDir in ls(opts.sourceDir):
         if not isDir(pDir):
@@ -118,10 +139,11 @@ def check(opts: JavaOptions):
         for entry in ls(pDir):
             if entry.endswith('src'):
                 projectDir = pDir
+    debug(f'projectDir={projectDir}')
     cp(defaultBuildFile, projectDir)
     srcDir = pjoin(projectDir, 'src')
-    ctx = CheckCtx.empty('Compile')
-    checkCompile(ctx, srcDir)
+    exResult = checkFilesExist(ex, projectDir)
+    checkCompile(ctx, srcDir, exResult)
     testDir = pjoin(sheetDir, 'test-src')
     for a in ex.assignments:
         testCtx = TestContext(assignment=a, sheet=opts.sheet, results=[])

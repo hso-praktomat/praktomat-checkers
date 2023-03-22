@@ -74,7 +74,7 @@ class Exercise:
             assignments.append(a)
         return Exercise(sheet, assignments)
 
-def parseExercise(sheet, yamlPath):
+def parseExercise(sheet, yamlPath) -> Exercise:
     s = readFile(yamlPath)
     ymlDict = yaml.load(s, Loader=yaml.FullLoader)
     ex = Exercise.parse(sheet, YamlDict(ymlDict))
