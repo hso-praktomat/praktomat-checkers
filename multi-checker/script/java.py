@@ -105,11 +105,16 @@ def checkStyle(ctx: CheckCtx, srcDir: str, checkstylePath: str, config: str=chec
     cmd += sourceFiles
     debug(f'Running "{cmd}"')
     result = run(cmd, onError='ignore', stderrToStdout=True, captureStdout=True)
-    hasErrors = 'ERROR' in result.stdout or result.exitcode != 0
+    out = result.stdout
+    # remove absolute paths from output
+    if srcDir and srcDir[0] == '/':
+        x = srcDir.rstrip('/') + '/'
+        out = out.replace(x, '')
+    hasErrors = 'ERROR' in out or result.exitcode != 0
     if hasErrors:
         print('Checking code style FAILED')
         print()
-        print(result.stdout)
+        print(out)
         print()
         print('Here are the style rules to follow:')
         print('- Naming conventions')
