@@ -155,6 +155,7 @@ def check(opts: JavaOptions):
             if entry.endswith('src'):
                 projectDir = pDir
     debug(f'projectDir={projectDir}')
+    fixEncodingRecursively(projectDir, 'java')
     cp(defaultBuildFile, projectDir)
     srcDir = pjoin(projectDir, 'src')
     exResult = checkFilesExist(ex, projectDir)
