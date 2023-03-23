@@ -56,13 +56,13 @@ def checkCompile(ctx: CheckCtx, srcDir: str, exResult: CompileStatus):
 
 gradleTestRe = re.compile(r'^(\d+) tests completed, (\d+) failed$')
 
-def getTestResult(testFilter: str, exitCode: int, out: str, srcDir: str):
+def getTestResult(testFilter: str, out: str, srcDir: str):
     out = out.replace('\r', '\n')
     testResultDir = abspath(pjoin(srcDir, '..', '_build', 'test-results', 'test'))
-    tests = 0
-    failures = 0
-    errors = 0
-    if exitCode == 0:
+    if isDir(testResultDir):
+        tests = 0
+        failures = 0
+        errors = 0
         for file in ls(testResultDir, '*.xml'):
             tree = ET.parse(file)
             root = tree.getroot()
@@ -73,17 +73,17 @@ def getTestResult(testFilter: str, exitCode: int, out: str, srcDir: str):
             failures += int(root.get('failures', '0'))
             errors += int(root.get('errors', '0'))
         if tests == 0:
-            return TestResult(testFilter, out, True)
+            return TestResult(testFilter, out, error=True)
         else:
-            return TestResult(testFilter, out, False, totalTests=tests,
+            return TestResult(testFilter, out, error=False, totalTests=tests,
                               testFailures=failures, testErrors=errors)
     else:
-        return TestResult(testFilter, out, False)
+        return TestResult(testFilter, out, error=True)
 
 def checkTest(assignment: Assignment, srcDir: str, testDir: str, testFilter: str, ctx: TestContext):
     debug(f'Running tests maching {testFilter} ...')
     result = execGradle('test', studentDir=srcDir, testDir=testDir, testFilter=testFilter)
-    testResult = getTestResult(testFilter, result.exitcode, result.stdout, srcDir)
+    testResult = getTestResult(testFilter, result.stdout, srcDir)
     ctx.results.append(testResult)
     abortIfTestOkRequired(assignment, testResult)
 

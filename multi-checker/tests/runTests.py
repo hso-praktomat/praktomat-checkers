@@ -103,8 +103,11 @@ if runJavaTests:
     javaTestDir = '$HOME/devel/praktomat-tests/java-aud'
     expectOk(f'python3 {checkScript} --submission-dir {javaTestDir}/01-intro/solution --test-dir {javaTestDir} java --checkstyle ./checkstyle-10.3.4-all.jar --sheet 01-intro')
 
-    # Submission with BOM and iso encoding
-    expectOk(f'python3 {checkScript} --submission-dir java-aud/AuD_Assignment_01/ --test-dir {javaTestDir} java --checkstyle ./checkstyle-10.3.4-all.jar --sheet 01-intro')
+    # Submission with BOM and iso encoding and with failing tests
+    expectFail(f'python3 {checkScript} --submission-dir java-aud/passed-with-warnings/AuD_Assignment_01/ --test-dir {javaTestDir} java --checkstyle ./checkstyle-10.3.4-all.jar --sheet 01-intro', 121)
+
+    # Submission with checkstyle errors
+    expectFail(f'python3 {checkScript} --submission-dir java-aud/fail/AuD_Assignment_01/ --test-dir {javaTestDir} java --checkstyle ./checkstyle-10.3.4-all.jar --sheet 01-intro')
 
 print()
 info(f'{testCount} tests were run successfully!')
