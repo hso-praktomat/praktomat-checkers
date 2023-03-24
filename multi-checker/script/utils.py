@@ -64,6 +64,12 @@ def findFile(p: str, sourceDir: str) -> Optional[str]:
                 return cand
     return None
 
+def removeLeading(full: str, leading: str):
+    if full.startswith(leading):
+        return full[len(leading)+1:]
+    else:
+        return full
+
 _DEBUG = False
 
 def enableDebug():

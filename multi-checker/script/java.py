@@ -130,16 +130,23 @@ def checkStyle(ctx: CheckCtx, srcDir: str, checkstylePath: str, config: str=chec
     ctx.styleResult = StyleResult(hasErrors=hasErrors, styleOutput=result.stdout.replace('\r', '\n'))
 
 def checkFilesExist(ex: Exercise, prjDir: str):
-    missing = 0
+    missing = []
+    prjDir.rstrip('/') + '/'
     for a in ex.assignments:
         srcFile = pjoin(prjDir, a.src)
         if not isFile(srcFile):
-            print(f'ERROR: File {srcFile} not included in submission.')
-            missing = missing + 1
-    if missing > 0:
-        print(f'I found the following .java files:')
-        run(f'find {prjDir} -name "*.java"')
-        if missing == len(ex.assignments):
+            missing.append(a.src)
+    if missing:
+        print('ERROR: The following files are missing in your submission:')
+        for f in missing:
+            print(f'- {f}')
+        print()
+        print(f'The following .java files are present:')
+        files = run(f'find {prjDir} -name "*.java"', captureStdout=splitLines).stdout
+        for f in files:
+            print('- ' + removeLeading(f, prjDir))
+        if len(missing) == len(ex.assignments):
+            print()
             abort('All files missing, aborting')
         return 'OK_BUT_SOME_MISSING'
     else:
