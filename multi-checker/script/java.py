@@ -141,10 +141,13 @@ def checkFilesExist(ex: Exercise, prjDir: str):
         for f in missing:
             print(f'- {f}')
         print()
-        print(f'The following .java files are present:')
         files = run(f'find {prjDir} -name "*.java"', captureStdout=splitLines).stdout
-        for f in files:
-            print('- ' + removeLeading(f, prjDir))
+        if files:
+            print(f'The following .java files are present:')
+            for f in files:
+                print('- ' + removeLeading(f, prjDir))
+        else:
+            print(f'No java files found in your submission')
         if len(missing) == len(ex.assignments):
             print()
             abort('All files missing, aborting')
