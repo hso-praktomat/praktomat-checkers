@@ -14,17 +14,6 @@ RUN stack --resolver lts-18.28 install haskell-src-meta
 RUN stack --resolver lts-18.28 install main-tester
 RUN stack --resolver lts-18.28 install call-stack HUnit
 
-# Python
-# Packages
-RUN pip3 install pyyaml
-RUN pip3 install libPyshell
-
-# WYPP
-RUN mkdir /wypp
-ADD ./git-clone /git-clone
-RUN bash /git-clone https://github.com/skogsbaer/write-your-python-program.git 1a76459988009c3e0878390cfa13e783663900a7 /wypp
-RUN rm -rf /wypp/.git
-
 # Install Gradle
 RUN apt-get update && apt-get install -yq \
   openjdk-17-jdk \
@@ -42,6 +31,17 @@ RUN ln -s /opt/gradle/gradle-${GRADLE_VERSION}/bin/* /usr/local/bin
 COPY ./get-deps.gradle.kts /get-gradle-deps/build.gradle.kts
 RUN cd /get-gradle-deps && gradle --no-daemon getDeps
 RUN rm -rf /get-gradle-deps
+
+# Python
+# Packages
+RUN pip3 install pyyaml
+RUN pip3 install libPyshell==0.1.6
+
+# WYPP
+RUN mkdir /wypp
+ADD ./git-clone /git-clone
+RUN bash /git-clone https://github.com/skogsbaer/write-your-python-program.git 1a76459988009c3e0878390cfa13e783663900a7 /wypp
+RUN rm -rf /wypp/.git
 
 # Our checker scripts
 ADD checker /checker
