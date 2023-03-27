@@ -134,7 +134,7 @@ def checkFilesExist(ex: Exercise, prjDir: str):
     prjDir.rstrip('/') + '/'
     for a in ex.assignments:
         srcFile = pjoin(prjDir, a.src)
-        if not isFile(srcFile):
+        if not isFile(srcFile) and a.src not in missing:
             missing.append(a.src)
     if missing:
         print('ERROR: The following files are missing in your submission:')
