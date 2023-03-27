@@ -23,8 +23,10 @@ repositories {
 }
 
 dependencies {
-    testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")
-    implementation("org.junit.jupiter:junit-jupiter:5.9.0")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
+    testImplementation("junit:junit:4.13.2")
+    implementation("org.junit.jupiter:junit-jupiter:5.9.2")
+    implementation("junit:junit:4.13.2")
 }
 
 tasks.withType<JavaCompile> {
