@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="de.hso.aud.ex01_01.test.ArrayUtilsTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2023-03-25T09:37:00" hostname="balzary.local" time="0.013">
+  <properties/>
+  <testcase name="testEverySecond()" classname="de.hso.aud.ex01_01.test.ArrayUtilsTest" time="0.013"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
