@@ -6,6 +6,7 @@ import re
 from exercise import *
 
 CompileStatus = Literal['OK', 'FAIL', 'OK_BUT_SOME_MISSING']
+
 @dataclass
 class CheckCtx:
     compileTitle: str

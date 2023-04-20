@@ -26,6 +26,8 @@ def parseArgs():
     java.add_argument('--checkstyle', metavar='JAR', type=str,
                         help='Path to the CheckStyle JAR file',
                         default='/opt/praktomat-addons/checkstyle.jar')
+    java.add_argument('--gradle-online', action='store_true', default=False,
+                      help='Use gradle in online mode, default is offline')
     (known, _other) = parser.parse_known_args()
     return known
 
@@ -112,7 +114,8 @@ if __name__ == '__main__':
         sheet = args.sheet
         if not sheet:
             sheet = getSheetFromEnv(testDir)
-        opts = java.JavaOptions(submissionDir, testDir, sheet, args.checkstyle)
+        offline = not args.gradle_online
+        opts = java.JavaOptions(submissionDir, testDir, sheet, args.checkstyle, offline)
         debug(f'Running Java checks, options: {opts}')
         java.check(opts)
     else:

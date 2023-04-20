@@ -9,19 +9,18 @@ from exercise import *
 from testContext import *
 import xml.etree.ElementTree as ET
 
-GRADLE_OFFLINE = True # Should be True
-
 # Checking Java code using Gradle
 
 @dataclass
 class JavaOptions(Options):
     sheet: str
     checkstylePath: str
+    gradleOffline: bool
 
 defaultBuildFile = pjoin(os.path.realpath(os.path.dirname(__file__)), 'build.gradle.kts')
 checkstyleConfig = pjoin(os.path.realpath(os.path.dirname(__file__)), 'checkstyle.xml')
 
-def execGradle(task: str, studentDir: str, testDir: str='test-src', testFilter: str='*'):
+def execGradle(task: str, offline: bool, studentDir: str, testDir: str='test-src', testFilter: str='*'):
     buildFile = abspath(pjoin(studentDir, '..', 'build.gradle.kts'))
     cmd = [
         'gradle',
@@ -36,14 +35,14 @@ def execGradle(task: str, studentDir: str, testDir: str='test-src', testFilter: 
         '--warning-mode=none',
         '-Dorg.gradle.welcome=never'
     ]
-    if GRADLE_OFFLINE:
+    if offline:
         cmd.append('--offline')
     debug(f'Running "{cmd}"')
     result = run(cmd, onError='ignore', stderrToStdout=True, captureStdout=True)
     return result
 
-def checkCompile(ctx: CheckCtx, srcDir: str, exResult: CompileStatus):
-    result = execGradle('compileJava', studentDir=srcDir)
+def checkCompile(ctx: CheckCtx, opts: JavaOptions, srcDir: str, exResult: CompileStatus):
+    result = execGradle('compileJava', opts.gradleOffline, studentDir=srcDir)
     out = result.stdout
     if result.exitcode == 0:
         ctx.compileOutput = out
@@ -80,9 +79,9 @@ def getTestResult(testFilter: str, out: str, srcDir: str):
     else:
         return TestResult(testFilter, out, error=True)
 
-def checkTest(assignment: Assignment, srcDir: str, testDir: str, testFilter: str, ctx: TestContext):
+def checkTest(opts: JavaOptions, assignment: Assignment, srcDir: str, testDir: str, testFilter: str, ctx: TestContext):
     debug(f'Running tests maching {testFilter} ...')
-    result = execGradle('test', studentDir=srcDir, testDir=testDir, testFilter=testFilter)
+    result = execGradle('test', opts.gradleOffline, studentDir=srcDir, testDir=testDir, testFilter=testFilter)
     testResult = getTestResult(testFilter, result.stdout, srcDir)
     ctx.results.append(testResult)
     abortIfTestOkRequired(assignment, testResult)
@@ -175,11 +174,11 @@ def check(opts: JavaOptions):
     srcDir = pjoin(projectDir, 'src')
     exResult = checkFilesExist(ex, projectDir)
     checkStyle(ctx, srcDir, opts.checkstylePath)
-    checkCompile(ctx, srcDir, exResult)
+    checkCompile(ctx, opts, srcDir, exResult)
     testDir = pjoin(sheetDir, 'test-src')
     for a in ex.assignments:
         testCtx = TestContext(assignment=a, sheet=opts.sheet, results=[])
         ctx.tests.append(testCtx)
         for testFilter in a.tests:
-            checkTest(a, srcDir, testDir, testFilter, testCtx)
+            checkTest(opts, a, srcDir, testDir, testFilter, testCtx)
     outputResultsAndExit(ctx)
