@@ -74,7 +74,7 @@ def checkHsFile(path):
         abort(f'Source file {path} contains illegal pragma: {m.group(0)}')
 
 BLACKLIST = ['package.yaml', 'stack.yaml']
-def doCheck(srcDir, testDir, sheet):
+def doCheck(srcDir, testDir, sheet, resultFile):
     sheetDir = getSheetDir(testDir, sheet)
     exFile = pjoin(sheetDir, 'exercise.yaml')
     ex = parseExercise(sheet, exFile)
@@ -102,10 +102,10 @@ def doCheck(srcDir, testDir, sheet):
         for t in a.tests:
             checkTest(a, testCtx, pjoin(sheetDir, t), [pjoin(testDir, 'lib'), sheetDir])
         checkScript(a, testCtx, sheetDir)
-    outputResultsAndExit(ctx)
+    outputResultsAndExit(ctx, resultFile)
 
 def check(opts: Options):
     with tempDir(dir='.') as d:
         with workingDir(d):
             debug(f"Running Haskell checks from directory {d}")
-            doCheck(opts.sourceDir, opts.testDir, opts.sheet)
+            doCheck(opts.sourceDir, opts.testDir, opts.sheet, opts.resultFile)

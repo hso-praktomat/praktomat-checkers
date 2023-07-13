@@ -22,6 +22,18 @@ class CheckCtx:
             self.compileOutput = self.compileOutput + '\n' + s
         else:
             self.compileOutput = s
+    def asDict(self):
+        testList = []
+        d = {'compileStatus': self.compileStatus, 'tests': testList}
+        for t in self.tests:
+            testList.append(t.asDict())
+        return d
+    def serialize(self, path):
+        import pickle
+        d = self.asDict()
+        with open(path, 'wb') as f:
+            pickle.dump(d, f)
+        print('Dumped test results to ' + abspath(path))
 
 @dataclass
 class TestContext:
@@ -38,6 +50,20 @@ class TestContext:
                 r.testErrors += x.testErrors
                 r.testFailures += x.testFailures
         return r
+    def asDict(self):
+        error = False
+        totalTests = 0
+        testErrors = 0
+        testFailures = 0
+        for r in self.results:
+            if r.error:
+                error = True
+            totalTests += r.totalTests
+            testErrors += r.testErrors
+            testFailures += r.testFailures
+        return {'sheet': self.sheet, 'assignment': self.assignment.id,
+                'error': error, 'totalTests': totalTests, 'testErrors': testErrors,
+                'testFailures': testFailures}
 
 @dataclass
 class TestResult:
@@ -56,8 +82,9 @@ class StyleResult:
     hasErrors: bool
     styleOutput: Optional[str]
 
-def outputResultsAndExit(ctx):
-    # FIXME: no compile abstract!
+def outputResultsAndExit(ctx: CheckCtx, outfile: Optional[str]):
+    if outfile:
+        ctx.serialize(outfile)
     print(ctx.compileTitle + ' status: ' + ctx.compileStatus)
     notOkTotal = 0
     hasErrors = False

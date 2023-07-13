@@ -12,6 +12,9 @@ def parseArgs():
                         help='Directories with student submission')
     parser.add_argument('--test-dir', metavar='DIR', type=str,
                         help='Directories with tests')
+    parser.add_argument('--result-file', metavar='FILE', type=str,
+                        help='File where test results are stored as a pickled python dict.\n' +
+                            'See TestCtx.asDict for the format of the dict.')
     subparsers = parser.add_subparsers(help='Commands', dest='cmd')
     parser.add_argument('--debug', help='Enable debug output',
                          action='store_true', default=False)
@@ -82,6 +85,7 @@ if __name__ == '__main__':
     submissionDir = args.submission_dir or '.'
     submissionDir = submissionDir.rstrip('/')
     submissionDir = abspath(submissionDir)
+    resultFile = args.result_file
     debug(f'Running checks with args={args}')
     if isDebug():
         print('Current user: ', end='')
@@ -100,14 +104,14 @@ if __name__ == '__main__':
         if not sheet:
             sheet = getSheetFromEnv(testDir)
         assignment = args.assignment
-        opts = python.PythonOptions(submissionDir, testDir, sheet, assignment, wypp)
+        opts = python.PythonOptions(submissionDir, testDir, resultFile, sheet, assignment, wypp)
         debug(f'Running python checks, options: {opts}')
         python.check(opts)
     elif cmd == 'haskell':
         sheet = args.sheet
         if not sheet:
             sheet = getSheetFromEnv(testDir)
-        opts = haskell.HaskellOptions(submissionDir, testDir, sheet)
+        opts = haskell.HaskellOptions(submissionDir, testDir, resultFile, sheet)
         debug(f'Running haskell checks, options: {opts}')
         haskell.check(opts)
     elif cmd == 'java':
@@ -115,7 +119,7 @@ if __name__ == '__main__':
         if not sheet:
             sheet = getSheetFromEnv(testDir)
         offline = not args.gradle_online
-        opts = java.JavaOptions(submissionDir, testDir, sheet, args.checkstyle, offline)
+        opts = java.JavaOptions(submissionDir, testDir, resultFile, sheet, args.checkstyle, offline)
         debug(f'Running Java checks, options: {opts}')
         java.check(opts)
     else:

@@ -181,4 +181,4 @@ def check(opts: JavaOptions):
         ctx.tests.append(testCtx)
         for testFilter in a.tests:
             checkTest(opts, a, srcDir, testDir, testFilter, testCtx)
-    outputResultsAndExit(ctx)
+    outputResultsAndExit(ctx, opts.resultFile)

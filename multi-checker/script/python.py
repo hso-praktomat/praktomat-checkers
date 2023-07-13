@@ -244,7 +244,7 @@ def checkAssignments(opts: Options, ex: Exercise, allAss: list[Assignment]):
         ctx.tests.append(testCtx)
         checkTutorTests(opts, testCtx, a, srcDirDict.get(a.src))
         checkScript(a, testCtx, sheetDir(opts))
-    outputResultsAndExit(ctx)
+    outputResultsAndExit(ctx, opts.resultFile)
 
 def sheetDir(opts: Options):
     return getSheetDir(opts.testDir, opts.sheet)

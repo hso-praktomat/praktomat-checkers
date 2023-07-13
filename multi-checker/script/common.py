@@ -8,6 +8,7 @@ OK_WITH_WARNINGS_EXIT_CODE = 121
 class Options:
     sourceDir: str
     testDir: Optional[str]
+    resultFile: Optional[str]
 
 def getSheetDir(testDir, sheet):
     return pjoin(testDir, sheet)
