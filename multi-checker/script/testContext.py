@@ -119,7 +119,7 @@ def outputResultsAndExit(ctx: CheckCtx, outfile: Optional[str]):
                     pointsStr = f'{space}{pointsFmt}/{assPointsFmt} {space1}points,'
                 else:
                     space = (maxPointsLen - 1) * ' '
-                    pointsStr = f'{space}?/{assPoints} {space1}points,'
+                    pointsStr = f'{space}?/{assPointsFmt} {space1}points,'
                 percentageStr = f'{percentage}% OK,'
                 rest = f'({res.totalTests} tests, {res.testErrors} errors, {res.testFailures} failures)'
                 shortResStr = f'{pointsStr:15} {percentageStr:10} {rest}'
