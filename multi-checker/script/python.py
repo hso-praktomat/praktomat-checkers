@@ -31,7 +31,8 @@ def prepareEnv(testEnv: Optional[dict], pyPath: Optional[str]):
         testEnv[key] = pyPath
     return testEnv
 
-def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, testFile: Optional[str]=None, testEnv: dict=None):
+def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, testFile: Optional[str]=None,
+            testEnv: dict=None, timeout: Optional[int]=None):
     thisDir = abspath('.')
     pyPath = wyppPath + '/python/site-lib:' + thisDir
     testEnv = prepareEnv(testEnv, pyPath)
@@ -39,21 +40,18 @@ def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, testFile: Optio
     if testFile:
         args = args + ['--test-file', testFile]
     args = args + ['--check-runnable' if onlyRunnable else '--check', studentFile]
+    args = addTimeoutCmd(args, timeout)
     debug(f'Command: {" ".join(args)}')
     res = run(args, onError='ignore', env=testEnv, stderrToStdout=True, captureStdout=True)
     return res
 
-def runUnittest(testFile: str, searchDirs: list[Optional[str]], testEnv: dict=None):
+def runUnittest(testFile: str, searchDirs: list[Optional[str]], testEnv: dict=None,
+                timeout: Optional[int]=None):
     if not isFile(testFile):
         abort(f'Test file {testFile} does not exist')
-    # important: testDir must come first so that the test module is taken from the testDir
-    pyPath = dirname(testFile)
-    for d in searchDirs:
-        if d:
-            pyPath = pyPath + ':' + d
-    testEnv = prepareEnv(testEnv, pyPath)
-    testMod = removeExt(basename(testFile))
-    args = ['python3', '-m', 'unittest', testMod]
+    testEnv = prepareEnv(testEnv, '.')
+    args = ['python3', testFile]
+    args = addTimeoutCmd(args, timeout)
     debug(f'Command: {" ".join(args)}')
     res = run(args, onError='ignore', env=testEnv, stderrToStdout=True, captureStdout=True)
     return res
@@ -68,7 +66,7 @@ class LoadStudentCodeResult:
 
 def loadStudentCode(opts: Options, p: str, checkLoad: bool) -> LoadStudentCodeResult:
     """
-    Checks that the student file loads ok and that the student are successful.
+    Checks that the student file loads ok and that the student tests are successful.
     Executed from within source dir.
     """
     _out = ''
@@ -104,10 +102,12 @@ You find more error messages above.''')
         return mkResult('fail')
     printOut()
     printOut(f'## Executing tests in {p} ...')
-    testRes = runWypp(studentFile, opts.wypp, onlyRunnable=False)
+    testRes = runWypp(studentFile, opts.wypp, onlyRunnable=False, timeout=testTimeoutSeconds())
     printOut(testRes.stdout, emptyNewline=False)
     if testRes.exitcode == 0:
         printOut(f'## OK: no test failures in {p}')
+    elif testRes.exitCode == TIMEOUT_EXIT_CODE:
+        printOut(f'Timeout for tests in {p}. Probably there is an infinite loop!')
     else:
         printOut(f'''File {p} contains test failures!
 If you cannot make a test succeed, you have to comment it out.''')
@@ -195,9 +195,11 @@ def checkTutorTests(opts: Options, testCtx: TestContext, a: Assignment, srcDir: 
             src = a.src
             if srcDir:
                 src = pjoin(srcDir, a.src)
-            testOut = runWypp(src, opts.wypp, onlyRunnable=False, testFile=testPath, testEnv=testEnv)
+            testOut = runWypp(src, opts.wypp, onlyRunnable=False, testFile=testPath,
+                              testEnv=testEnv, timeout=testTimeoutSeconds())
         else:
-            testOut = runUnittest(testPath, [opts.wypp + '/python/site-lib', srcDir], testEnv=testEnv)
+            testOut = runUnittest(testPath, [opts.wypp + '/python/site-lib', srcDir],
+                                  testEnv=testEnv, timeout=testTimeoutSeconds())
         testRes = getTestResult(t, testOut)
         testCtx.results.append(testRes)
         abortIfTestOkRequired(a, testRes)
