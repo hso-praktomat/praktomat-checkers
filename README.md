@@ -7,26 +7,33 @@ courses. Such tests can be found, for example, [here](https://git.hs-offenburg.d
 
 ## Checkers
 
-At the moment, there are the following checkers:
+At the moment, there is only one checkers, the `multi-checker`
 
-* multi-checker: to be used with python, haskell and Java submissions.
-  * Python submission use [WYPP](https://github.com/skogsbaer/write-your-python-program).
-    The checks make sure that the code loads successfully and that user-written tests
-    pass. Currently, there is no support for external unit tests.
-  * Haskell submissions are checked for compile errors (via `stack test`) and instructors
-    can also provide unit tests to be run against student's submission. The
-    [praktomat-tests](https://git.hs-offenburg.de/swehr/praktomat-tests) repository contains
-    examples for such unit tests.
-  * Java submissions are checked using Gradle. The submission will be compiled and the specified
-    tests will be run against the student's submission. Also, a coding style check will be
-    performed.
+### multi-checker
 
-  See `multi-checker/tests/runTests.py` for examples showcasing these checkers.
+To be used with python, haskell and Java submissions.
 
-  In principle, multi-checker could be separated into a python and a haskell checker.
-  But the checker script (files in `multi-checker/scripts/`) shares some logic between
-  both languages, so we created only one checker for simplicity.
+* Python submission use [WYPP](https://github.com/skogsbaer/write-your-python-program)
+  or the unit testmodule.
+* Haskell submissions are checked for compile errors (via `stack test`) and instructors
+  can also provide unit tests to be run against student's submission. The
+  [praktomat-tests](https://git.hs-offenburg.de/swehr/praktomat-tests) repository contains
+  examples for such unit tests.
+* Java submissions are checked using Gradle. The submission will be compiled and the specified
+  tests will be run against the student's submission. Also, a coding style check will be
+  performed.
 
+See `multi-checker/tests/runTests.py` for examples showcasing these checkers.
+
+In principle, multi-checker could be separated into a python, a Java, and a haskell checker.
+But the checker script (files in `multi-checker/scripts/`) shares some logic between
+both languages, so we created only one checker for simplicity.
+
+Commandline options: invoke with `--help`
+
+Environment variables:
+
+* `PRAKTOMAT_CHECKER_TEST_TIMEOUT`: timeout in seconds
 
 
 ## How it works
