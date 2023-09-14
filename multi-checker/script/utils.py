@@ -82,3 +82,31 @@ def isDebug():
 def debug(msg):
     if _DEBUG:
         print(f'[DEBUG] {msg}')
+
+def findDirMatchingAux(root: str, stopCondition: Callable) -> Optional[str]:
+    if isFile(root):
+        return None
+    if stopCondition(root):
+        return root
+    for x in ls(root):
+        result = findDirMatchingAux(x, stopCondition)
+        if result is not None:
+            return result
+    return None
+
+def isNotAWrapperDir(directory: str) -> bool:
+    pathnames = ls(directory, '[!.]*')
+    if len(pathnames) > 1:
+        return True
+    if len(pathnames) == 0:
+        return False
+    return not isDir(pathnames[0])
+
+def findDirMatching(root: str, stopCondition: Callable) -> str:
+    result = findDirMatchingAux(root, stopCondition)
+    if result is not None:
+        return result
+    else:
+        # Nothing was found
+        # Default to the given directory
+        return root
