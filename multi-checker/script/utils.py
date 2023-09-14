@@ -49,7 +49,7 @@ def fixEncoding(path):
         print(f'Fixed encoding of {path}')
 
 def fixEncodingRecursively(startDir: str, ext: str):
-    files = run(f"find {startDir} -type f -name '*.{ext}'", captureStdout=splitLines).stdout
+    files = run(f"find '{startDir}' -type f -name '*.{ext}'", captureStdout=splitLines).stdout
     for p in files:
         fixEncoding(p)
 
