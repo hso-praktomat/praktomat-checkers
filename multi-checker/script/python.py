@@ -257,7 +257,7 @@ def check(opts: Options):
     else:
         ex = None
     ass = opts.assignment
-    nestedSourceDir = findDirMatching(opts.sourceDir, isNotAWrapperDir)
+    nestedSourceDir = findSolutionDir(opts.sourceDir)
     with workingDir(nestedSourceDir):
         if ex is None:
             if ass is None:

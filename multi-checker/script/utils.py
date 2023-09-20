@@ -83,13 +83,15 @@ def debug(msg):
     if _DEBUG:
         print(f'[DEBUG] {msg}')
 
-def findDirMatchingAux(root: str, stopCondition: Callable) -> Optional[str]:
+def findSolutionDirAux(root: str, stopCondition: Optional[Callable]) -> Optional[str]:
     if isFile(root):
         return None
-    if stopCondition(root):
+    if isNotAWrapperDir(root):
+        return root
+    if stopCondition is not None and stopCondition(root):
         return root
     for x in ls(root):
-        result = findDirMatchingAux(x, stopCondition)
+        result = findSolutionDirAux(x, stopCondition)
         if result is not None:
             return result
     return None
@@ -102,8 +104,16 @@ def isNotAWrapperDir(directory: str) -> bool:
         return False
     return not isDir(pathnames[0])
 
-def findDirMatching(root: str, stopCondition: Callable) -> str:
-    result = findDirMatchingAux(root, stopCondition)
+def findSolutionDir(root: str, stopCondition: Optional[Callable]=None) -> str:
+    """
+    Finds the possibly nested solution directory in the given root directory.
+    A stop condition can be passed that returns True when a directory name is
+    supplied that meets the criteria of being the top-level solution directory.
+    Additionally, the search is not going to descend further if a directory
+    is not just wrapping another directory. If no matching directory is found,
+    the given root directory will be returned.
+    """
+    result = findSolutionDirAux(root, stopCondition)
     if result is not None:
         return result
     else:
