@@ -108,4 +108,5 @@ def check(opts: Options):
     with tempDir(dir='.') as d:
         with workingDir(d):
             debug(f"Running Haskell checks from directory {d}")
-            doCheck(opts.sourceDir, opts.testDir, opts.sheet)
+            nestedSourceDir = findSolutionDir(opts.sourceDir)
+            doCheck(nestedSourceDir, opts.testDir, opts.sheet)

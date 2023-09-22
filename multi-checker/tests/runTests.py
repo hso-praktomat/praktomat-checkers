@@ -59,7 +59,7 @@ if runPythonTests:
     expectFail(f'python3 {checkScript} --submission-dir python-wypp/ python --wypp {wyppDir} --sheet 01 --assignment 2')
     expectFail(f'python3 {checkScript} python --wypp {wyppDir} --sheet 01 --assignment 2')
 
-    pythonTests = [('solution-good', 0), ('solution-partial', 121), ('solution-partial-missing', 121),
+    pythonTests = [('solution-good', 0), ('solution-wrapped', 0), ('solution-partial', 121), ('solution-partial-missing', 121),
                 ('solution-fail', 121), ('solution-error', 1)]
 
     for d, ecode in pythonTests:
@@ -102,6 +102,9 @@ if runJavaTests:
 
     javaTestDir = '$HOME/devel/praktomat-tests/java-aud'
     expectOk(f'python3 {checkScript} --submission-dir {javaTestDir}/01-intro/solution --test-dir {javaTestDir} java --checkstyle ./checkstyle-10.3.4-all.jar --sheet 01-intro')
+
+    # Solution wrapped in another directory with failing tests
+    expectFail(f'python3 {checkScript} --submission-dir java-aud/passed-with-warnings/wrapper/ --test-dir {javaTestDir} java --checkstyle ./checkstyle-10.3.4-all.jar --sheet 01-intro', 121)
 
     # Submission with BOM and iso encoding and with failing tests
     expectFail(f'python3 {checkScript} --submission-dir java-aud/passed-with-warnings/AuD_Assignment_01/ --test-dir {javaTestDir} java --checkstyle ./checkstyle-10.3.4-all.jar --sheet 01-intro', 121)

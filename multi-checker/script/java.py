@@ -164,13 +164,7 @@ def check(opts: JavaOptions):
     debug(f'Exercise (file: {exFile}): {ex}')
     ctx = CheckCtx.empty('Compile')
     # do the checks
-    projectDir = opts.sourceDir
-    for pDir in ls(opts.sourceDir):
-        if not isDir(pDir):
-            continue
-        for entry in ls(pDir):
-            if entry.endswith('src'):
-                projectDir = pDir
+    projectDir = findSolutionDir(opts.sourceDir, lambda x: isDir(pjoin(x, "src")))
     debug(f'projectDir={projectDir}')
     fixEncodingRecursively(projectDir, 'java')
     cp(defaultBuildFile, projectDir)
