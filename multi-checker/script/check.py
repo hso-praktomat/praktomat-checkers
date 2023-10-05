@@ -21,7 +21,8 @@ def parseArgs():
     py = subparsers.add_parser('python', help='Check python assignment')
     py.add_argument('--wypp', metavar='DIR', type=str, help='Path to wypp')
     py.add_argument('--sheet', metavar='X', type=str, help='Identifier for sheet')
-    py.add_argument('--assignment', metavar='X', type=str, help='Identifier for assignment')
+    py.add_argument('--assignment', metavar='X', type=str,
+                    help='Identifier for assignment(s), multiple assignments separated by commas')
     hs = subparsers.add_parser('haskell', help='Check haskell assignment')
     hs.add_argument('--sheet', metavar='X', type=str, help='Identifier for sheet')
     java = subparsers.add_parser('java', help='Check Java assignment')
@@ -103,8 +104,16 @@ if __name__ == '__main__':
         sheet = args.sheet
         if not sheet:
             sheet = getSheetFromEnv(testDir)
-        assignment = args.assignment
-        opts = python.PythonOptions(submissionDir, testDir, resultFile, sheet, assignment, wypp)
+        assignments = None
+        if args.assignment:
+            l = []
+            for x in args.assignment.split(','):
+                x = x.strip()
+                if x:
+                    l.append(x)
+            if l:
+                assignments = l
+        opts = python.PythonOptions(submissionDir, testDir, resultFile, sheet, assignments, wypp)
         debug(f'Running python checks, options: {opts}')
         python.check(opts)
     elif cmd == 'haskell':

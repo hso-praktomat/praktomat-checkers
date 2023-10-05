@@ -15,7 +15,7 @@ def configError(s):
 @dataclass
 class PythonOptions(Options):
     sheet: str
-    assignment: Optional[str]
+    assignments: Optional[str | list[str]]
     wypp: str
 
 def prepareEnv(testEnv: Optional[dict], pyPath: Optional[str]):
@@ -117,11 +117,40 @@ If you cannot make a test succeed, you have to comment it out.''')
 def checkFileLoadsOk(opts: Options, p: str):
     res = loadStudentCode(opts, p, True)
     print(res.output)
-    match res.status:
-        case 'not_found':
-            sys.exit(OK_WITH_WARNINGS_EXIT_CODE)
-        case 'fail':
-            sys.exit(1)
+    return res.status
+
+def checkAssignmentsLoadOk(opts: Options, ass: str | list[str]):
+    if isinstance(ass, str):
+        ass = [ass]
+    delim = '=============================================================================='
+    stats = []
+    for x in ass:
+        p = f'aufgabe_{x.zfill(2)}.py'
+        print(f'\n{delim}')
+        print(f'Checking assignment {x} (file: {p})')
+        stat = checkFileLoadsOk(opts, p)
+        stats.append((p, stat))
+    print('\n')
+    print(delim)
+    print('Summary')
+    print()
+    warn = False
+    err = False
+    for (p, stat) in stats:
+        match stat:
+            case 'not_found':
+                print(f'{p}: not found')
+                warn = True
+            case 'fail':
+                print(f'{p}: failed')
+                err = True
+    print()
+    if err:
+        print('Error: at least one assignment failed!')
+        sys.exit(1)
+    if warn:
+        print('Warn: at least one assignment not found')
+        sys.exit(OK_WITH_WARNINGS_EXIT_CODE)
 
 class PythonTestResult:
     @staticmethod
@@ -251,21 +280,20 @@ def checkAssignments(opts: Options, ex: Exercise, allAss: list[Assignment]):
 def sheetDir(opts: Options):
     return getSheetDir(opts.testDir, opts.sheet)
 
-def check(opts: Options):
+def check(opts: PythonOptions):
     sheet = opts.sheet
     exFile = pjoin(sheetDir(opts), 'exercise.yaml')
     if isFile(exFile):
         ex = parseExercise(sheet, exFile)
     else:
         ex = None
-    ass = opts.assignment
+    ass = opts.assignments
     nestedSourceDir = findSolutionDir(opts.sourceDir)
     with workingDir(nestedSourceDir):
         if ex is None:
             if ass is None:
                 configError(f'Option --assignment not given, exercise file {exFile} not found')
-            p = f'aufgabe_{opts.assignment.zfill(2)}.py'
-            checkFileLoadsOk(opts, p)
+            checkAssignmentsLoadOk(opts, ass)
         else:
             if ass is None:
                 allAss = ex.assignments
