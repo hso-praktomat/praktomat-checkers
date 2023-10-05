@@ -259,7 +259,8 @@ def check(opts: Options):
     else:
         ex = None
     ass = opts.assignment
-    with workingDir(opts.sourceDir):
+    nestedSourceDir = findSolutionDir(opts.sourceDir)
+    with workingDir(nestedSourceDir):
         if ex is None:
             if ass is None:
                 configError(f'Option --assignment not given, exercise file {exFile} not found')

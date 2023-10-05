@@ -132,6 +132,9 @@ def checkFilesExist(ex: Exercise, prjDir: str):
     missing = []
     prjDir.rstrip('/') + '/'
     for a in ex.assignments:
+        if a.src is None:
+            # Nothing specified -> skip
+            continue
         srcFile = pjoin(prjDir, a.src)
         if not isFile(srcFile) and a.src not in missing:
             missing.append(a.src)
@@ -140,7 +143,7 @@ def checkFilesExist(ex: Exercise, prjDir: str):
         for f in missing:
             print(f'- {f}')
         print()
-        files = run(f'find {prjDir} -name "*.java"', captureStdout=splitLines).stdout
+        files = run(f"find '{prjDir}' -name '*.java'", captureStdout=splitLines).stdout
         if files:
             print(f'The following .java files are present:')
             for f in files:
@@ -161,13 +164,7 @@ def check(opts: JavaOptions):
     debug(f'Exercise (file: {exFile}): {ex}')
     ctx = CheckCtx.empty('Compile')
     # do the checks
-    projectDir = opts.sourceDir
-    for pDir in ls(opts.sourceDir):
-        if not isDir(pDir):
-            continue
-        for entry in ls(pDir):
-            if entry.endswith('src'):
-                projectDir = pDir
+    projectDir = findSolutionDir(opts.sourceDir, lambda x: isDir(pjoin(x, "src")))
     debug(f'projectDir={projectDir}')
     fixEncodingRecursively(projectDir, 'java')
     cp(defaultBuildFile, projectDir)

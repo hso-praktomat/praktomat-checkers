@@ -49,7 +49,7 @@ def fixEncoding(path):
         print(f'Fixed encoding of {path}')
 
 def fixEncodingRecursively(startDir: str, ext: str):
-    files = run(f"find {startDir} -type f -name '*.{ext}'", captureStdout=splitLines).stdout
+    files = run(f"find '{startDir}' -type f -name '*.{ext}'", captureStdout=splitLines).stdout
     for p in files:
         fixEncoding(p)
 
@@ -82,3 +82,41 @@ def isDebug():
 def debug(msg):
     if _DEBUG:
         print(f'[DEBUG] {msg}')
+
+def findSolutionDirAux(root: str, stopCondition: Optional[Callable]) -> Optional[str]:
+    if isFile(root):
+        return None
+    if isNotAWrapperDir(root):
+        return root
+    if stopCondition is not None and stopCondition(root):
+        return root
+    for x in ls(root):
+        result = findSolutionDirAux(x, stopCondition)
+        if result is not None:
+            return result
+    return None
+
+def isNotAWrapperDir(directory: str) -> bool:
+    pathnames = ls(directory, '[!.]*')
+    if len(pathnames) > 1:
+        return True
+    if len(pathnames) == 0:
+        return False
+    return not isDir(pathnames[0])
+
+def findSolutionDir(root: str, stopCondition: Optional[Callable]=None) -> str:
+    """
+    Finds the possibly nested solution directory in the given root directory.
+    A stop condition can be passed that returns True when a directory name is
+    supplied that meets the criteria of being the top-level solution directory.
+    Additionally, the search is not going to descend further if a directory
+    is not just wrapping another directory. If no matching directory is found,
+    the given root directory will be returned.
+    """
+    result = findSolutionDirAux(root, stopCondition)
+    if result is not None:
+        return result
+    else:
+        # Nothing was found
+        # Default to the given directory
+        return root
