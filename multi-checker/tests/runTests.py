@@ -61,7 +61,7 @@ if runPythonTests:
     expectFail(f'python3 {checkScript} python --wypp {wyppDir} --sheet 01 --assignment 1,2', 121)
     expectFail(f'python3 {checkScript} python --wypp {wyppDir} --sheet 01 --assignment 3', 1)
     expectFail(f'python3 {checkScript} python --wypp {wyppDir} --sheet 01 --assignment 1,2,3', 1)
-    sys.exit(1)
+
     pythonTests = [('solution-good', 0), ('solution-wrapped', 0), ('solution-partial', 121), ('solution-partial-missing', 121),
                 ('solution-fail', 121), ('solution-error', 1)]
 
