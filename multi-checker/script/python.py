@@ -29,12 +29,14 @@ def prepareEnv(testEnv: Optional[dict], pyPath: Optional[str]):
         if oldPyPath:
             pyPath = pyPath + ':' + oldPyPath
         testEnv[key] = pyPath
+    print(testEnv)
     return testEnv
 
 def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, testFile: Optional[str]=None,
             testEnv: dict=None, timeout: Optional[int]=None):
     thisDir = abspath('.')
     pyPath = wyppPath + '/python/site-lib:' + thisDir
+    print('pyPath='+pyPath)
     testEnv = prepareEnv(testEnv, pyPath)
     args = ['python3', wyppPath + '/python/src/runYourProgram.py']
     if testFile:
@@ -80,7 +82,7 @@ def loadStudentCode(opts: Options, p: str, checkLoad: bool) -> LoadStudentCodeRe
     studentFile = findFile(p, '.')
     if not studentFile:
         pyFilesList = run(f'find . -name "*.py"', captureStdout=splitLines, onError='ignore').stdout
-        pyFiles = '\n'.join(pyFilesList)
+        pyFiles = '\n'.join(pyFilesList[:20])
         printOut(f'''ERROR: File {p} not part of the submission. I found the following files:
 
 {pyFiles}''')

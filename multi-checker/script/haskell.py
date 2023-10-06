@@ -27,10 +27,17 @@ def checkCompile(ctx: CheckCtx):
 haskellTestRe = re.compile(r'^Cases:\s*(\d+)\s*Tried:\s*(\d+)\s*Errors:\s*(\d+)\s*Failures:\s*(\d+)')
 magicLine = "__START_TEST__"
 
-def getTestResult(testFile, out):
+def getTestResult(testFile, out: str):
     after = False
     lastTestLine = None
     out = out.replace('\r', '\n')
+    # running the tests in ghci always exists with ExitFailure 1. Don't show this to the students.
+    exitStr = '*** Exception: ExitFailure 1'
+    i = out.find(exitStr)
+    if i >= 0:
+        cleanOut = out[:i] + out[i+len(exitStr):]
+    else:
+        cleanOut = out
     for line in out.split('\n'):
         line = line.rstrip()
         if line == magicLine:
@@ -45,9 +52,9 @@ def getTestResult(testFile, out):
         tried = int(m.group(2))
         errors = int(m.group(3)) + (cases - tried)
         failures = int(m.group(4))
-        return TestResult(testFile, out, False, cases, errors, failures)
+        return TestResult(testFile, cleanOut, False, cases, errors, failures)
     else:
-        return TestResult(testFile, out, True)
+        return TestResult(testFile, cleanOut, True)
 
 def checkTest(assignment: Assignment, ctx: TestContext, testFile: str, incDirs: list[str]):
     prjName = 'ap' + str(assignment.sheet)
@@ -56,8 +63,9 @@ def checkTest(assignment: Assignment, ctx: TestContext, testFile: str, incDirs: 
     incOpts = []
     for d in incDirs:
         incOpts.append(f'--ghci-options -i{d}')
-    cmd = f'''stack ghci "{srcFile}" "{testFile}" --flag {prjName}:test-mode
+    cmd = f'''stack --silent ghci "{srcFile}" "{testFile}" --flag {prjName}:test-mode
         {" ".join(incOpts)}
+        --ghci-options -e --ghci-options ":m {testModName}"
         --ghci-options -e --ghci-options {testModName}.tutorMain'''
     debug(f'Executing tests {testFile} for {srcFile} ...')
     debug(f'Command: {cmd}')
@@ -93,7 +101,7 @@ def doCheck(srcDir, testDir, sheet, resultFile):
     for a in ex.assignments:
         if not isFile(a.src):
             print(f'ERROR: File {a.src} not included in submission. I found the following .hs files:')
-            run(f'find . -name "*.hs"')
+            run(f'find . -name "*.hs" | head -20')
     ctx = CheckCtx.empty('Compile')
     checkCompile(ctx)
     for a in ex.assignments:

@@ -1,3 +1,5 @@
 python-wypp-checker/docker/*.py
 __pycache__
 .vscode/
+.gradle/
+_build/

@@ -6,13 +6,13 @@ RUN curl -sSL https://get.haskellstack.org/ | sh
 
 # Install haskell packages needed by the test routines.
 # The resolver must match the one given in the stack.yaml file.
-RUN stack --resolver lts-18.28 install base
-RUN stack --resolver lts-18.28 install containers directory filepath template-haskell mtl text
-RUN stack --resolver lts-18.28 install happy primitive safe syb vector
-RUN stack --resolver lts-18.28 install haskell-src-exts
-RUN stack --resolver lts-18.28 install haskell-src-meta
-RUN stack --resolver lts-18.28 install main-tester
-RUN stack --resolver lts-18.28 install call-stack HUnit
+RUN stack --resolver lts-21.14 install base
+RUN stack --resolver lts-21.14 install containers directory filepath template-haskell mtl text
+RUN stack --resolver lts-21.14 install happy primitive safe syb vector
+RUN stack --resolver lts-21.14 install haskell-src-exts
+RUN stack --resolver lts-21.14 install haskell-src-meta
+RUN stack --resolver lts-21.14 install main-tester
+RUN stack --resolver lts-21.14 install call-stack HUnit
 
 # Install Gradle
 RUN apt-get update && apt-get install -yq \
