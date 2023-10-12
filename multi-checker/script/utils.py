@@ -83,21 +83,24 @@ def debug(msg):
     if _DEBUG:
         print(f'[DEBUG] {msg}')
 
-def findSolutionDirAux(root: str, stopCondition: Optional[Callable]) -> Optional[str]:
+def findSolutionDirAux(root: str, stopCondition: Optional[Callable], isSolutionRoot: bool) -> Optional[str]:
     if isFile(root):
         return None
-    if isNotAWrapperDir(root):
+    if isNotAWrapperDir(root, isSolutionRoot):
         return root
     if stopCondition is not None and stopCondition(root):
         return root
     for x in ls(root):
-        result = findSolutionDirAux(x, stopCondition)
+        result = findSolutionDirAux(x, stopCondition, False)
         if result is not None:
             return result
     return None
 
-def isNotAWrapperDir(directory: str) -> bool:
+def isNotAWrapperDir(directory: str, isSolutionRoot: bool) -> bool:
     pathnames = ls(directory, '[!.]*')
+    if len(pathnames) == 2 and isSolutionRoot:
+        # Filter out the script that starts the multi checker
+        pathnames = list(filter(lambda x: not (basename(x).startswith('check') and x.endswith('.sh')), pathnames))
     if len(pathnames) > 1:
         return True
     if len(pathnames) == 0:
@@ -113,7 +116,7 @@ def findSolutionDir(root: str, stopCondition: Optional[Callable]=None) -> str:
     is not just wrapping another directory. If no matching directory is found,
     the given root directory will be returned.
     """
-    result = findSolutionDirAux(root, stopCondition)
+    result = findSolutionDirAux(root, stopCondition, True)
     if result is not None:
         return result
     else:
