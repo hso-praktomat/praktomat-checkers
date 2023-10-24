@@ -108,7 +108,7 @@ You find more error messages above.''')
     printOut(testRes.stdout, emptyNewline=False)
     if testRes.exitcode == 0:
         printOut(f'## OK: no test failures in {p}')
-    elif testRes.exitCode == TIMEOUT_EXIT_CODE:
+    elif testRes.exitcode == TIMEOUT_EXIT_CODE:
         printOut(f'Timeout for tests in {p}. Probably there is an infinite loop!')
     else:
         printOut(f'''File {p} contains test failures!
