@@ -5,6 +5,7 @@ import haskell
 import java
 import argparse
 import re
+import traceback
 
 def parseArgs():
     parser = argparse.ArgumentParser(description='Checker for haskell assignments')
@@ -74,13 +75,13 @@ def getDefaultTestDir(cmd):
     else:
         return pjoin(_DEFAULT_TEST_DIR, 'haskell-advanced-prog')
 
-if __name__ == '__main__':
+def main():
     args = parseArgs()
     if args.debug:
         enableDebug()
     cmd = args.cmd
     if not cmd:
-        bug('command not given on commandline')
+        abort('command not given on commandline')
     testDir = args.test_dir or getDefaultTestDir(cmd)
     testDir = abspath(testDir)
     submissionDir = args.submission_dir or '.'
@@ -133,4 +134,12 @@ if __name__ == '__main__':
         java.check(opts)
     else:
         bug(f'invalid kind: {cmd}')
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as e:
+        print(traceback.format_exc())
+        bug('checker raised an unexpected exception, this is a bug!')
+    main()
 

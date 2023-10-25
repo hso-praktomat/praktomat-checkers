@@ -41,14 +41,15 @@ def info(msg: str):
 
 testCount = 0
 
-def runCmd(cmd: str, onError='raise'):
+def runCmd(cmd: str, onError='raise', capture=False):
     if useDocker:
         cmd = f'docker run --volume {praktomatCheckersLocal}:{praktomatCheckersDocker} '\
             f'--volume {praktomatTestsLocal}:{praktomatTestsDocker} '\
             f'--volume $HOME/devel/tick-trick-track:/external/tick-trick-track '\
             f'{dockerImage} {cmd}'
         info(cmd)
-    return run(cmd, onError=onError)
+    return run(cmd, onError=onError, captureStderr=capture, captureStdout=capture,
+               stderrToStdout=capture)
 
 def expectOk(cmd: str):
     global testCount
@@ -69,6 +70,11 @@ def expectFail(cmd: str, ecode=None):
     if ecode is not None:
         if res.exitcode != ecode:
             fail(f'Command should fail with exit code {ecode} but failed with {res.exitcode}: {cmd}')
+        if res.exitcode == 1:
+            # make sure there is no exception
+            res2 = runCmd(cmd, onError='ignore', capture=True)
+            if 'INTERNAL ERROR: checker raised an unexpected exception, this is a bug!' in res2.stdout:
+                fail(f'Command raised an exception')
     info('OK')
 
 def printHeader(title):
@@ -96,7 +102,7 @@ if runPythonTests:
     expectFail(f'python3 {checkScript} --submission-dir {localTestDir} python --wypp {wyppDir} --sheet 01 --assignment 1,2,3', 1)
 
     pythonTests = [('solution-good', 0), ('solution-wrapped', 0), ('solution-partial', 121), ('solution-partial-missing', 121),
-                ('solution-fail', 121), ('solution-error', 1)]
+                ('solution-fail', 121), ('solution-error', 1), ('solution-with-own-test-errors', 1)]
 
     for d, ecode in pythonTests:
         cmd = f'python3 {checkScript} --test-dir {localTestDir} --submission-dir {localTestDir}/03/{d}/ python --wypp {wyppDir} --sheet 03'
