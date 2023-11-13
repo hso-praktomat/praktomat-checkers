@@ -98,10 +98,14 @@ def doCheck(srcDir, testDir, sheet, resultFile):
     cp(pjoin(sheetDir, 'package.yaml'), '.')
     cp(pjoin(testDir, 'stack.yaml'), '.')
     # do the checks
+    missing = 0
     for a in ex.assignments:
         if not isFile(a.src):
             print(f'ERROR: File {a.src} not included in submission. I found the following .hs files:')
             run(f'find . -name "*.hs" | head -20')
+            missing += 1
+    if missing == len(ex.assignments):
+        abort('All source files missing!')
     ctx = CheckCtx.empty('Compile')
     checkCompile(ctx)
     for a in ex.assignments:

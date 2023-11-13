@@ -133,6 +133,7 @@ if runHaskellTests:
     haskellTestDir = f'{praktomatTests}/haskell-advanced-prog'
     haskellTestDirLocal = f'{praktomatTestsLocal}/haskell-advanced-prog'
     expectOk(f'python3 {checkScript} --submission-dir {haskellTestDir}/02/solution/ --test-dir {haskellTestDir} haskell --sheet 02', dir=f'{haskellTestDir}/02/solution/')
+    expectFail(f'python3 {checkScript} --submission-dir {thisDir}/haskell/02-no-file --test-dir {haskellTestDir} haskell --sheet 02', 1, dir=f'{thisDir}/haskell/02-no-file')
 
     expectFail(f'python3 {checkScript} --submission-dir {thisDir}/haskell/05-divide-by-zero/ --test-dir {haskellTestDir} haskell --sheet 05', 121, dir=f'{thisDir}/haskell/05-divide-by-zero/')
     expectFail(f'python3 {checkScript} --submission-dir {haskellTestDir}/01/solution/ --test-dir {haskellTestDir} haskell --sheet 01', 121, dir=f'{haskellTestDir}/01/solution/')
