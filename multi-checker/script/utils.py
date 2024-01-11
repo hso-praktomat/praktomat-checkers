@@ -53,15 +53,20 @@ def fixEncodingRecursively(startDir: str, ext: str):
     for p in files:
         fixEncoding(p)
 
-def findFile(p: str, sourceDir: str) -> Optional[str]:
+def findFile(p: str, sourceDir: str, ignoreCase: bool=False) -> Optional[str]:
     cand = pjoin(sourceDir, p)
     if isFile(cand):
         return cand
     for x in ls(sourceDir):
+        if ignoreCase and basename(x).lower() == p.lower() and isFile(x):
+            return x
         if isDir(x):
             cand = pjoin(x, p)
             if isFile(cand):
                 return cand
+            for y in ls(x):
+                if ignoreCase and basename(y).lower() == p.lower() and isFile(y):
+                    return y
     return None
 
 def removeLeading(full: str, leading: str):

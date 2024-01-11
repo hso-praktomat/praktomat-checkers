@@ -79,7 +79,7 @@ def loadStudentCode(opts: Options, p: str, checkLoad: bool) -> LoadStudentCodeRe
     _srcDir = None
     def mkResult(status: LoadStudentCodeStatus) -> LoadStudentCodeResult:
         return LoadStudentCodeResult(status, _out, _srcDir)
-    studentFile = findFile(p, '.')
+    studentFile = findFile(p, '.', ignoreCase=True)
     if not studentFile:
         pyFilesList = run(f'find . -name "*.py"', captureStdout=splitLines, onError='ignore').stdout
         pyFiles = '\n'.join(pyFilesList[:20])
@@ -127,7 +127,21 @@ def checkAssignmentsLoadOk(opts: Options, ass: str | list[str]):
     delim = '=============================================================================='
     stats = []
     for x in ass:
-        p = f'aufgabe_{x.zfill(2)}.py'
+        possible_filenames = [
+            f'aufgabe_{x.zfill(2)}.py',
+            f'aufgabe_{x}.py',
+            f'aufgabe{x.zfill(2)}.py',
+            f'aufgabe{x}.py',
+            f'aufgabe-{x.zfill(2)}.py',
+            f'aufgabe-{x}.py',
+        ]
+        # Use a default file name in case none is found.
+        # The script will then fail at a later point.
+        p = possible_filenames[0]
+        for name in possible_filenames:
+            if findFile(name, '.', ignoreCase=True) is not None:
+                p = name
+                break
         print(f'\n{delim}')
         print(f'Checking assignment {x} (file: {p})')
         stat = checkFileLoadsOk(opts, p)
