@@ -97,7 +97,7 @@ if runPythonTests:
     python2TestDir = f'{praktomatTests}/python-prog2/'
     localTestDir = f'{thisDir}/python-wypp'
 
-    expectOk(f'python3 {checkScript} --submission-dir {localTestDir} python --wypp {wyppDir} --sheet 01 --assignment 1', dir=localTestDir)
+    expectOk(f'python3 {checkScript} --submission-dir {localTestDir} python --wypp {wyppDir} --sheet 01 --assignment 1,4', dir=localTestDir)
     expectFail(f'python3 {checkScript} --submission-dir {localTestDir} python --wypp {wyppDir} --sheet 01 --assignment 2', 121, dir=localTestDir)
     expectFail(f'python3 {checkScript} --submission-dir {localTestDir} python --wypp {wyppDir} --sheet 01 --assignment 2', 121, dir=localTestDir)
     expectFail(f'python3 {checkScript} --submission-dir {localTestDir} python --wypp {wyppDir} --sheet 01 --assignment 1,2', 121, dir=localTestDir)

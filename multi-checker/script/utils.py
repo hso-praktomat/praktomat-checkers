@@ -57,16 +57,10 @@ def findFile(p: str, sourceDir: str, ignoreCase: bool=False) -> Optional[str]:
     cand = pjoin(sourceDir, p)
     if isFile(cand):
         return cand
-    for x in ls(sourceDir):
-        if ignoreCase and basename(x).lower() == p.lower() and isFile(x):
-            return x
-        if isDir(x):
-            cand = pjoin(x, p)
-            if isFile(cand):
-                return cand
-            for y in ls(x):
-                if ignoreCase and basename(y).lower() == p.lower() and isFile(y):
-                    return y
+    if ignoreCase:
+        for x in ls(sourceDir):
+            if basename(x).lower() == p.lower() and isFile(x):
+                return x
     return None
 
 def removeLeading(full: str, leading: str):
