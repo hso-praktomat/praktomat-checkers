@@ -123,8 +123,8 @@ if runPythonTests:
     expectFail(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}abschlussprojekt/solution-fail python --wypp {wyppDir} --sheet abschlussprojekt', dir=f'{pythonTestDir}abschlussprojekt/solution-fail')
     expectFail(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}abschlussprojekt/solution-simple python --wypp {wyppDir} --sheet abschlussprojekt', 121, dir=f'{pythonTestDir}abschlussprojekt/solution-simple')
     expectOk(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}abschlussprojekt/solution python --wypp {wyppDir} --sheet abschlussprojekt', dir=f'{pythonTestDir}abschlussprojekt/solution')
-    expectOk(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}10/solution python --wypp {wyppDir} --sheet 10', dir=f'{pythonTestDir}10/solution')
-    expectOk(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}10/solution/subdir python --wypp {wyppDir} --sheet 10', dir=f'{python2TestDir}P04-Listen/solution')
+    expectOk(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}10-dicts-exceptions/solution python --wypp {wyppDir} --sheet 10-dicts-exceptions', dir=f'{pythonTestDir}10/solution')
+    expectOk(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}10-dicts-exceptions/solution/subdir python --wypp {wyppDir} --sheet 10-dicts-exceptions', dir=f'{python2TestDir}P04-Listen/solution')
     expectOk(f'python3 {checkScript} --test-dir {python2TestDir} --submission-dir {python2TestDir}P04-Listen/solution python --wypp {wyppDir} --sheet P04-Listen', dir=f'{python2TestDir}P04-Listen/solution')
 
 if runHaskellTests:
