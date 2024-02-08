@@ -22,10 +22,11 @@ class JavaOptions(Options):
 
 checkstyleConfig = pjoin(os.path.realpath(os.path.dirname(__file__)), 'checkstyle.xml')
 
+# studentDir is the toplevel directory of the student's project
 def execGradle(task: str, offline: bool, studentDir: str, testDir: str='test-src', testFilter: str='*'):
     cands = []
     for x in ['build.gradle.kts', 'build.gradle']:
-        buildFile = abspath(pjoin(studentDir, '..', x))
+        buildFile = abspath(pjoin(studentDir, x))
         if isFile(buildFile):
             break
         cands.append(buildFile)
@@ -35,6 +36,7 @@ def execGradle(task: str, offline: bool, studentDir: str, testDir: str='test-src
         'gradle',
         '-b',
         buildFile,
+        #'--console=verbose',
         '-PtestFilter=' + testFilter,
         '-PtestDir=' + testDir,
         '-PstudentDir=' + studentDir,
@@ -50,23 +52,20 @@ def execGradle(task: str, offline: bool, studentDir: str, testDir: str='test-src
     result = run(cmd, onError='ignore', stderrToStdout=True, captureStdout=True)
     return result
 
-def checkCompile(ctx: CheckCtx, opts: JavaOptions, srcDir: str, exResult: CompileStatus):
-    result = execGradle('compileJava', opts.gradleOffline, studentDir=srcDir)
+def checkCompile(ctx: CheckCtx, opts: JavaOptions, studentDir: str, exResult: CompileStatus):
+    result = execGradle('compileJava', opts.gradleOffline, studentDir=studentDir)
     out = result.stdout
+    ctx.compileOutput = out
     if result.exitcode == 0:
-        ctx.compileOutput = out
         ctx.compileStatus = exResult
     else:
-        print(f'Compiling failed\n\n{out}')
-        findOut = run('find . -type f | xargs ls -l', onError='ignore', stderrToStdout=True, captureStdout=True).stdout
-        debug(f'Directory listing:\n{findOut}')
-        abort('Aborting')
+        ctx.compileStatus = 'FAIL'
 
 gradleTestRe = re.compile(r'^(\d+) tests completed, (\d+) failed$')
 
-def getTestResult(testFilter: str, out: str, srcDir: str):
+def getTestResult(testFilter: str, out: str, studentDir: str):
     out = out.replace('\r', '\n')
-    testResultDir = abspath(pjoin(srcDir, '..', '_build', 'test-results', 'test'))
+    testResultDir = abspath(pjoin(studentDir, '_build', 'test-results', 'test'))
     if isDir(testResultDir):
         tests = 0
         failures = 0
@@ -88,16 +87,16 @@ def getTestResult(testFilter: str, out: str, srcDir: str):
     else:
         return TestResult(testFilter, out, error=True)
 
-def checkTest(opts: JavaOptions, assignment: Assignment, srcDir: str, testDir: str, testFilter: str, ctx: TestContext):
+def checkTest(opts: JavaOptions, assignment: Assignment, studentDir: str, testDir: str, testFilter: str, ctx: TestContext, checkCtx: CheckCtx):
     debug(f'Running tests maching {testFilter} ...')
-    result = execGradle('test', opts.gradleOffline, studentDir=srcDir, testDir=testDir, testFilter=testFilter)
-    testResult = getTestResult(testFilter, result.stdout, srcDir)
+    result = execGradle('test', opts.gradleOffline, studentDir=studentDir, testDir=testDir, testFilter=testFilter)
+    testResult = getTestResult(testFilter, result.stdout, studentDir)
     ctx.results.append(testResult)
-    abortIfTestOkRequired(assignment, testResult)
+    abortIfTestOkRequired(assignment, testResult, checkCtx)
 
-def checkStyle(ctx: CheckCtx, srcDir: str, checkstylePath: str, config: str=checkstyleConfig):
+def checkStyle(ctx: CheckCtx, studentDir: str, checkstylePath: str, config: str=checkstyleConfig):
     sourceFiles = []
-    for root, dirs, files in os.walk(srcDir):
+    for root, dirs, files in os.walk(studentDir):
         for name in files:
             if name.lower().endswith('.java'):
                sourceFiles.append(os.path.join(root, name))
@@ -115,8 +114,8 @@ def checkStyle(ctx: CheckCtx, srcDir: str, checkstylePath: str, config: str=chec
     result = run(cmd, onError='ignore', stderrToStdout=True, captureStdout=True)
     out = result.stdout
     # remove absolute paths from output
-    if srcDir and srcDir[0] == '/':
-        x = srcDir.rstrip('/') + '/'
+    if studentDir and studentDir[0] == '/':
+        x = studentDir.rstrip('/') + '/'
         out = out.replace(x, '')
     hasErrors = 'ERROR' in out or result.exitcode != 0
     if hasErrors:
@@ -137,6 +136,12 @@ def checkStyle(ctx: CheckCtx, srcDir: str, checkstylePath: str, config: str=chec
         abort('Aborting')
     ctx.styleResult = StyleResult(hasErrors=hasErrors, styleOutput=result.stdout.replace('\r', '\n'))
 
+def srcExists(s: str) -> bool:
+    if s.endswith('.java'):
+        return isFile(s)
+    else:
+        return isDir(s)
+
 def checkFilesExist(ass: list[Assignment], prjDir: str):
     missing = []
     prjDir.rstrip('/') + '/'
@@ -145,7 +150,7 @@ def checkFilesExist(ass: list[Assignment], prjDir: str):
             # Nothing specified -> skip
             continue
         srcFile = pjoin(prjDir, a.src)
-        if not isFile(srcFile) and a.src not in missing:
+        if not srcExists(srcFile) and a.src not in missing:
             missing.append(a.src)
     if missing:
         print('ERROR: The following files are missing in your submission:')
@@ -167,34 +172,44 @@ def checkFilesExist(ass: list[Assignment], prjDir: str):
         return 'OK'
 
 def checkWithSourceDir(opts: JavaOptions, sourceDir: str, sheetDir: str, ass: list[Assignment]):
-    ctx = CheckCtx.empty('Compile')
+    ctx = CheckCtx.empty('Compile', opts.resultFile)
     # do the checks
     projectDir = findSolutionDir(sourceDir, lambda x: isDir(pjoin(x, "src")))
     debug(f'projectDir={projectDir}')
-    fixEncodingRecursively(projectDir, 'java')
     cp(opts.gradleBuildFile, projectDir)
-    srcDir = pjoin(projectDir, 'src')
     exResult = checkFilesExist(ass, projectDir)
     if opts.runCheckstyle:
-        checkStyle(ctx, srcDir, opts.checkstylePath)
-    checkCompile(ctx, opts, srcDir, exResult)
+        checkStyle(ctx, projectDir, opts.checkstylePath)
+    checkCompile(ctx, opts, projectDir, exResult)
     testDir = pjoin(sheetDir, 'test-src')
     for a in ass:
         testCtx = TestContext(assignment=a, sheet=opts.sheet, results=[])
         ctx.tests.append(testCtx)
         for testFilter in a.tests:
-            checkTest(opts, a, srcDir, testDir, testFilter, testCtx)
-    outputResultsAndExit(ctx, opts.resultFile)
+            checkTest(opts, a, projectDir, testDir, testFilter, testCtx, ctx)
+    outputResultsAndExit(ctx)
+
+def dirnameForSource(s: str):
+    if s.endswith('.java'):
+        return dirname(s)
+    else:
+        return s
 
 def check(opts: JavaOptions):
     sheetDir = getSheetDir(opts.testDir, opts.sheet)
     exFile = pjoin(sheetDir, 'exercise.yaml')
     ex = parseExercise(opts.sheet, exFile)
     debug(f'Exercise (file: {exFile}): {ex}')
+    projectDir = findSolutionDir(opts.sourceDir, lambda x: isDir(pjoin(x, "src")))
+    debug(f'projectDir={projectDir}')
+    fixEncodingRecursively(projectDir, 'java')
     if opts.assignments:
         l = asList(opts.assignments)
         ass = [a for a in ex.assignments if a.id in l]
-        subs = set([dirname(a.src) for a in ass])
-        withLimitedDir(opts.sourceDir, list(subs), lambda d: checkWithSourceDir(opts, d, sheetDir, ass))
+        subs = set([dirnameForSource(a.src) for a in ass])
+        for sub in subs:
+            if not isDir(pjoin(projectDir, sub)):
+                abort(f'Directory {sub} required for one of the selected assignments does not exist')
+        withLimitedDir(projectDir, list(subs), lambda d: checkWithSourceDir(opts, d, sheetDir, ass))
     else:
-        checkWithSourceDir(opts, opts.sourceDir)
+        checkWithSourceDir(opts, opts.sourceDir, ex.assignments)

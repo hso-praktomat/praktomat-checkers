@@ -56,7 +56,7 @@ def getTestResult(testFile, out: str):
     else:
         return TestResult(testFile, cleanOut, True)
 
-def checkTest(assignment: Assignment, ctx: TestContext, testFile: str, incDirs: list[str]):
+def checkTest(assignment: Assignment, ctx: TestContext, testFile: str, incDirs: list[str], checkCtx: CheckCtx):
     prjName = 'ap' + str(assignment.sheet)
     testModName = removeExt(basename(testFile))
     srcFile = assignment.src
@@ -72,7 +72,7 @@ def checkTest(assignment: Assignment, ctx: TestContext, testFile: str, incDirs: 
     result = run(cmd, onError='ignore', stderrToStdout=True, captureStdout=True)
     testResult = getTestResult(testFile, 'Command: ' + cmd + '\n\n' + result.stdout)
     ctx.results.append(testResult)
-    abortIfTestOkRequired(assignment, testResult)
+    abortIfTestOkRequired(assignment, testResult, checkCtx)
 
 pragmaRe = re.compile(r'^\s*{-# OPTIONS_GHC -Wno.*$', re.MULTILINE)
 def checkHsFile(path):
@@ -106,15 +106,15 @@ def doCheck(srcDir, testDir, sheet, resultFile):
             missing += 1
     if missing == len(ex.assignments):
         abort('All source files missing!')
-    ctx = CheckCtx.empty('Compile')
+    ctx = CheckCtx.empty('Compile', resultFile)
     checkCompile(ctx)
     for a in ex.assignments:
         testCtx = TestContext(assignment=a, sheet=sheet, results=[])
         ctx.tests.append(testCtx)
         for t in a.tests:
-            checkTest(a, testCtx, pjoin(sheetDir, t), [pjoin(testDir, 'lib'), sheetDir])
-        checkScript(a, testCtx, sheetDir)
-    outputResultsAndExit(ctx, resultFile)
+            checkTest(a, testCtx, pjoin(sheetDir, t), [pjoin(testDir, 'lib'), sheetDir], ctx)
+        checkScript(a, testCtx, sheetDir, ctx)
+    outputResultsAndExit(ctx)
 
 def check(opts: Options):
     nestedSourceDir = findSolutionDir(opts.sourceDir)

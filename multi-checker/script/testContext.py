@@ -14,9 +14,10 @@ class CheckCtx:
     compileOutput: Optional[str]
     tests: list[TestContext]
     styleResult: Optional[StyleResult]=None
+    outFile: Optional[str] = None
     @staticmethod
-    def empty(t: str) -> CheckCtx:
-        return CheckCtx(t, False, None, [])
+    def empty(t: str, outFile: str) -> CheckCtx:
+        return CheckCtx(t, False, None, [], outFile=outFile)
     def appendCompileOutput(self, s: str):
         if self.compileOutput:
             self.compileOutput = self.compileOutput + '\n' + s
@@ -82,9 +83,9 @@ class StyleResult:
     hasErrors: bool
     styleOutput: Optional[str]
 
-def outputResultsAndExit(ctx: CheckCtx, outfile: Optional[str]):
-    if outfile:
-        ctx.serialize(outfile)
+def outputResultsAndExit(ctx: CheckCtx, ecode=None):
+    if ctx.outFile:
+        ctx.serialize(ctx.outFile)
     print(ctx.compileTitle + ' status: ' + ctx.compileStatus)
     notOkTotal = 0
     hasErrors = False
@@ -151,6 +152,8 @@ def outputResultsAndExit(ctx: CheckCtx, outfile: Optional[str]):
             title = f'Output for test of assignment {testCtx.assignment.id} ({testRes.testFile})'
             printWithTitle(title, testRes.testOutput)
             debug(testRes)
+    if ecode is not None:
+        sys.exit(ecode)
     match ctx.compileStatus:
         case 'FAIL':
             sys.exit(1)
@@ -162,15 +165,16 @@ def outputResultsAndExit(ctx: CheckCtx, outfile: Optional[str]):
             else:
                 sys.exit(0)
 
-def abortIfTestOkRequired(assignment: Assignment, result: TestResult):
+def abortIfTestOkRequired(assignment: Assignment, result: TestResult, ctx: CheckCtx):
     if assignment.testOkRequired and not result.isSuccess:
         print(f'Test for assignment {assignment.id} is required to succeed but failed!')
         print()
         print(result.testOutput)
         print()
-        abort(f'Aborting')
+        print('Aborting')
+        outputResultsAndExit(ctx, ecode=1)
 
-def checkScript(assignment: Assignment, ctx: TestContext, sheetDir: str):
+def checkScript(assignment: Assignment, ctx: TestContext, sheetDir: str, checkCtx: CheckCtx):
     script = assignment.testScript
     if not script:
         return
@@ -182,4 +186,4 @@ def checkScript(assignment: Assignment, ctx: TestContext, sheetDir: str):
     numErrors = 0 if (scriptResult.exitcode == 0) else 1
     testResult = TestResult(script, scriptResult.stdout, False, totalTests=1, testFailures=numErrors)
     ctx.results.append(testResult)
-    abortIfTestOkRequired(assignment, testResult)
+    abortIfTestOkRequired(assignment, testResult, ctx, checkCtx)

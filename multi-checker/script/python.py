@@ -229,7 +229,7 @@ def getTestResult(testFile, runRes: RunResult):
     return TestResult(testFile=testFile, testOutput=runRes.stdout, error=(runRes.exitcode != 0),
             totalTests=0, testFailures=0, testErrors=0)
 
-def checkTutorTests(opts: Options, testCtx: TestContext, a: Assignment, srcDir: Optional[str]):
+def checkTutorTests(opts: Options, testCtx: TestContext, a: Assignment, srcDir: Optional[str], checkCtx: CheckCtx):
     """
     Checks the tutor tests. Executed from within the source dir.
     """
@@ -247,7 +247,7 @@ def checkTutorTests(opts: Options, testCtx: TestContext, a: Assignment, srcDir: 
                                   testEnv=testEnv, timeout=testTimeoutSeconds())
         testRes = getTestResult(t, testOut)
         testCtx.results.append(testRes)
-        abortIfTestOkRequired(a, testRes)
+        abortIfTestOkRequired(a, testRes, checkCtx)
     pass
 
 def checkAssignments(opts: Options, ex: Exercise, allAss: list[Assignment]):
@@ -262,7 +262,7 @@ def checkAssignments(opts: Options, ex: Exercise, allAss: list[Assignment]):
     for a in allAss:
         if a.src is not None and a.src not in [x[0] for x in allFiles]:
             allFiles.append((a.src, a.pythonConfig.wypp))
-    ctx = CheckCtx.empty('Load and student tests')
+    ctx = CheckCtx.empty('Load and student tests', opts.resultFile)
     compileStatus = 'OK'
     missing = 0
     srcDirDict = {} # a.src -> directory where file is found
@@ -289,9 +289,9 @@ def checkAssignments(opts: Options, ex: Exercise, allAss: list[Assignment]):
     for a in allAss:
         testCtx = TestContext(assignment=a, sheet=ex.sheet, results=[])
         ctx.tests.append(testCtx)
-        checkTutorTests(opts, testCtx, a, srcDirDict.get(a.src))
-        checkScript(a, testCtx, sheetDir(opts))
-    outputResultsAndExit(ctx, opts.resultFile)
+        checkTutorTests(opts, testCtx, a, srcDirDict.get(a.src), ctx)
+        checkScript(a, testCtx, sheetDir(opts), ctx)
+    outputResultsAndExit(ctx)
 
 def sheetDir(opts: Options):
     return getSheetDir(opts.testDir, opts.sheet)
