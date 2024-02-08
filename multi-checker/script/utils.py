@@ -122,3 +122,11 @@ def findSolutionDir(root: str, stopCondition: Optional[Callable]=None) -> str:
         # Nothing was found
         # Default to the given directory
         return root
+
+def withLimitedDir(sourceDir, subdirs, action):
+    with tempDir(suffix=basename(sourceDir), delete=False) as tmp:
+        for sub in subdirs:
+            target = pjoin(tmp, sub)
+            mkdir(target, createParents=True)
+            shutil.copytree(pjoin(sourceDir, sub), target, dirs_exist_ok=True)
+        action(tmp)

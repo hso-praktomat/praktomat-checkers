@@ -14,14 +14,23 @@ import xml.etree.ElementTree as ET
 @dataclass
 class JavaOptions(Options):
     sheet: str
+    gradleBuildFile: str
+    runCheckstyle: bool
     checkstylePath: str
     gradleOffline: bool
+    assignments: Optional[str | list[str]]
 
-defaultBuildFile = pjoin(os.path.realpath(os.path.dirname(__file__)), 'build.gradle.kts')
 checkstyleConfig = pjoin(os.path.realpath(os.path.dirname(__file__)), 'checkstyle.xml')
 
 def execGradle(task: str, offline: bool, studentDir: str, testDir: str='test-src', testFilter: str='*'):
-    buildFile = abspath(pjoin(studentDir, '..', 'build.gradle.kts'))
+    cands = []
+    for x in ['build.gradle.kts', 'build.gradle']:
+        buildFile = abspath(pjoin(studentDir, '..', x))
+        if isFile(buildFile):
+            break
+        cands.append(buildFile)
+    else:
+        abort(f'No build file found: {cands}')
     cmd = [
         'gradle',
         '-b',
@@ -128,10 +137,10 @@ def checkStyle(ctx: CheckCtx, srcDir: str, checkstylePath: str, config: str=chec
         abort('Aborting')
     ctx.styleResult = StyleResult(hasErrors=hasErrors, styleOutput=result.stdout.replace('\r', '\n'))
 
-def checkFilesExist(ex: Exercise, prjDir: str):
+def checkFilesExist(ass: list[Assignment], prjDir: str):
     missing = []
     prjDir.rstrip('/') + '/'
-    for a in ex.assignments:
+    for a in ass:
         if a.src is None:
             # Nothing specified -> skip
             continue
@@ -150,32 +159,42 @@ def checkFilesExist(ex: Exercise, prjDir: str):
                 print('- ' + removeLeading(f, prjDir))
         else:
             print(f'No java files found in your submission')
-        if len(missing) == len(ex.assignments):
+        if len(missing) == len(ass):
             print()
             abort('All files missing, aborting')
         return 'OK_BUT_SOME_MISSING'
     else:
         return 'OK'
 
-def check(opts: JavaOptions):
-    sheetDir = getSheetDir(opts.testDir, opts.sheet)
-    exFile = pjoin(sheetDir, 'exercise.yaml')
-    ex = parseExercise(opts.sheet, exFile)
-    debug(f'Exercise (file: {exFile}): {ex}')
+def checkWithSourceDir(opts: JavaOptions, sourceDir: str, sheetDir: str, ass: list[Assignment]):
     ctx = CheckCtx.empty('Compile')
     # do the checks
-    projectDir = findSolutionDir(opts.sourceDir, lambda x: isDir(pjoin(x, "src")))
+    projectDir = findSolutionDir(sourceDir, lambda x: isDir(pjoin(x, "src")))
     debug(f'projectDir={projectDir}')
     fixEncodingRecursively(projectDir, 'java')
-    cp(defaultBuildFile, projectDir)
+    cp(opts.gradleBuildFile, projectDir)
     srcDir = pjoin(projectDir, 'src')
-    exResult = checkFilesExist(ex, projectDir)
-    checkStyle(ctx, srcDir, opts.checkstylePath)
+    exResult = checkFilesExist(ass, projectDir)
+    if opts.runCheckstyle:
+        checkStyle(ctx, srcDir, opts.checkstylePath)
     checkCompile(ctx, opts, srcDir, exResult)
     testDir = pjoin(sheetDir, 'test-src')
-    for a in ex.assignments:
+    for a in ass:
         testCtx = TestContext(assignment=a, sheet=opts.sheet, results=[])
         ctx.tests.append(testCtx)
         for testFilter in a.tests:
             checkTest(opts, a, srcDir, testDir, testFilter, testCtx)
     outputResultsAndExit(ctx, opts.resultFile)
+
+def check(opts: JavaOptions):
+    sheetDir = getSheetDir(opts.testDir, opts.sheet)
+    exFile = pjoin(sheetDir, 'exercise.yaml')
+    ex = parseExercise(opts.sheet, exFile)
+    debug(f'Exercise (file: {exFile}): {ex}')
+    if opts.assignments:
+        l = asList(opts.assignments)
+        ass = [a for a in ex.assignments if a.id in l]
+        subs = set([dirname(a.src) for a in ass])
+        withLimitedDir(opts.sourceDir, list(subs), lambda d: checkWithSourceDir(opts, d, sheetDir, ass))
+    else:
+        checkWithSourceDir(opts, opts.sourceDir)

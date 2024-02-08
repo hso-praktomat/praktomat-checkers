@@ -314,5 +314,6 @@ def check(opts: PythonOptions):
             if ass is None:
                 allAss = ex.assignments
             else:
-                allAss = [a for a in ex.assignments if a.id == ass]
+                l = asList(ass)
+                allAss = [a for a in ex.assignments if a.id in l]
             checkAssignments(opts, ex, allAss)

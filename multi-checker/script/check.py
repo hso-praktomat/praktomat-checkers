@@ -7,6 +7,8 @@ import argparse
 import re
 import traceback
 
+defaultGradleBuildFile = pjoin(os.path.realpath(os.path.dirname(__file__)), 'build.gradle.kts')
+
 def parseArgs():
     parser = argparse.ArgumentParser(description='Checker for haskell assignments')
     parser.add_argument('--submission-dir', metavar='DIR', type=str,
@@ -31,9 +33,18 @@ def parseArgs():
     java.add_argument('--checkstyle', metavar='JAR', type=str,
                         help='Path to the CheckStyle JAR file',
                         default='/opt/praktomat-addons/checkstyle.jar')
+    java.add_argument('--build-gradle', metavar='FILE', type=str,
+                        help=f'Path to the build.gradle.kts file',
+                        default=defaultGradleBuildFile)
+    java.add_argument('--no-checkstyle', action='store_true', default=False,
+                      help='Do not run checkstyle over the submissions')
     java.add_argument('--gradle-online', action='store_true', default=False,
                       help='Use gradle in online mode, default is offline')
-    (known, _other) = parser.parse_known_args()
+    java.add_argument('--assignment', metavar='X', type=str,
+                      help='Identifier for assignment(s), multiple assignments separated by commas')
+    (known, other) = parser.parse_known_args()
+    if other:
+        print(f'WARNING: ignoring unknown commandline arguments: {other}')
     return known
 
 # "Labortest 2, Gruppe A" -> ["labortest_2", labortest_2_gruppe_a"]
@@ -75,6 +86,18 @@ def getDefaultTestDir(cmd):
     else:
         return pjoin(_DEFAULT_TEST_DIR, 'haskell-advanced-prog')
 
+def getAssignments(s: str|None) -> list[str] | None:
+    assignments = None
+    if s:
+        l = []
+        for x in s.split(','):
+            x = x.strip()
+            if x:
+                l.append(x)
+        if l:
+            assignments = l
+    return assignments
+
 def main():
     args = parseArgs()
     if args.debug:
@@ -105,15 +128,7 @@ def main():
         sheet = args.sheet
         if not sheet:
             sheet = getSheetFromEnv(testDir)
-        assignments = None
-        if args.assignment:
-            l = []
-            for x in args.assignment.split(','):
-                x = x.strip()
-                if x:
-                    l.append(x)
-            if l:
-                assignments = l
+        assignments = getAssignments(args.assignment)
         opts = python.PythonOptions(submissionDir, testDir, resultFile, sheet, assignments, wypp)
         debug(f'Running python checks, options: {opts}')
         python.check(opts)
@@ -129,7 +144,17 @@ def main():
         if not sheet:
             sheet = getSheetFromEnv(testDir)
         offline = not args.gradle_online
-        opts = java.JavaOptions(submissionDir, testDir, resultFile, sheet, args.checkstyle, offline)
+        assignments = getAssignments(args.assignment)
+        opts = java.JavaOptions(
+            sourceDir=submissionDir,
+            testDir=testDir,
+            resultFile=resultFile,
+            sheet=sheet,
+            runCheckstyle=not args.no_checkstyle,
+            checkstylePath=args.checkstyle,
+            gradleBuildFile=args.build_gradle,
+            gradleOffline=offline,
+            assignments=assignments)
         debug(f'Running Java checks, options: {opts}')
         java.check(opts)
     else:
