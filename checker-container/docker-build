@@ -2,6 +2,11 @@
 
 TAG=skogsbaer/praktomat-checker-base:latest
 
+if [ -z "$1" ]; then
+    echo "USAGE: $0 PLATFORM"
+    exit 1
+fi
+
 cd $(dirname $0)
-docker build --tag $TAG . || exit 1
+docker build --platform $1 --tag $TAG . || exit 1
 docker push $TAG
