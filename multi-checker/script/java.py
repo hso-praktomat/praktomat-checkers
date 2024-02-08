@@ -212,4 +212,4 @@ def check(opts: JavaOptions):
                 abort(f'Directory {sub} required for one of the selected assignments does not exist')
         withLimitedDir(projectDir, list(subs), lambda d: checkWithSourceDir(opts, d, sheetDir, ass))
     else:
-        checkWithSourceDir(opts, opts.sourceDir, ex.assignments)
+        checkWithSourceDir(opts, opts.sourceDir, sheetDir, ex.assignments)

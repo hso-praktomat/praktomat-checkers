@@ -39,6 +39,11 @@ def fail(msg: str):
 def info(msg: str):
     print(f'[INFO] {msg}')
 
+_DEBUG = False
+def debug(msg: str):
+    if _DEBUG:
+        print(f'[DEBUG] {msg}')
+
 testCount = 0
 
 def runCmd(cmd: str, onError='raise', capture=False, dir=None):
@@ -50,33 +55,39 @@ def runCmd(cmd: str, onError='raise', capture=False, dir=None):
             f'--volume {praktomatTestsLocal}:{praktomatTestsDocker} '\
             f'--volume $HOME/devel/tick-trick-track:/external/tick-trick-track '\
             f'{workDirArg} {dockerImage} {cmd}'
-        info(cmd)
+        debug(cmd)
     return run(cmd, onError=onError, captureStderr=capture, captureStdout=capture,
                stderrToStdout=capture)
 
 def expectOk(cmd: str, dir=None):
     global testCount
     testCount = testCount + 1
+    print()
     info(f'Running test, cmd: {cmd}')
-    res = runCmd(cmd, onError='ignore', dir=dir)
+    res = runCmd(cmd, onError='ignore', dir=dir, capture=True)
     if res.exitcode != 0:
+        print(res.stdout)
         fail(f'Command should succeed but failed with exit code {res.exitcode}: {cmd}')
     info('OK')
 
 def expectFail(cmd: str, ecode=None, dir=None):
     global testCount
     testCount = testCount + 1
-    info(f'Running {cmd} ...')
-    res = runCmd(cmd, onError='ignore', dir=dir)
+    print()
+    info(f'Running test, cmd: {cmd} ...')
+    res = runCmd(cmd, onError='ignore', dir=dir, capture=True)
     if res.exitcode == 0:
+        print(res.stdout)
         fail(f'Command should fail but succeded with exit code {res.exitcode}: {cmd}')
     if ecode is not None:
         if res.exitcode != ecode:
+            print(res.stdout)
             fail(f'Command should fail with exit code {ecode} but failed with {res.exitcode}: {cmd}')
         if res.exitcode == 1:
             # make sure there is no exception
             res2 = runCmd(cmd, onError='ignore', capture=True, dir=dir)
             if 'INTERNAL ERROR: checker raised an unexpected exception, this is a bug!' in res2.stdout:
+                print(res.stdout)
                 fail(f'Command raised an exception')
     info('OK')
 

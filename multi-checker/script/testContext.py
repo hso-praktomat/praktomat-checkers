@@ -186,4 +186,4 @@ def checkScript(assignment: Assignment, ctx: TestContext, sheetDir: str, checkCt
     numErrors = 0 if (scriptResult.exitcode == 0) else 1
     testResult = TestResult(script, scriptResult.stdout, False, totalTests=1, testFailures=numErrors)
     ctx.results.append(testResult)
-    abortIfTestOkRequired(assignment, testResult, ctx, checkCtx)
+    abortIfTestOkRequired(assignment, testResult, checkCtx)
