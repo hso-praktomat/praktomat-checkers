@@ -197,4 +197,4 @@ def check(opts: JavaOptions):
         subs = set([dirname(a.src) for a in ass])
         withLimitedDir(opts.sourceDir, list(subs), lambda d: checkWithSourceDir(opts, d, sheetDir, ass))
     else:
-        checkWithSourceDir(opts, opts.sourceDir)
+        checkWithSourceDir(opts, opts.sourceDir, sheetDir, ex.assignments)
