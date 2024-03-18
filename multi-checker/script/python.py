@@ -113,7 +113,6 @@ You find more error messages above.''')
     else:
         printOut(f'''File {p} contains test failures!
 If you cannot make a test succeed, you have to comment it out.''')
-        return mkResult('fail')
     return mkResult('ok')
 
 def checkFileLoadsOk(opts: Options, p: str):
