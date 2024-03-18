@@ -91,46 +91,49 @@ def outputResultsAndExit(ctx: CheckCtx, ecode=None):
     hasErrors = False
     totalPoints = 0
     possibleTotalPoints = 0
-    print('Test results:')
-    maxAssignmentIdLen = max([len(testCtx.assignment.id) for testCtx in ctx.tests])
-    maxPoints = max([testCtx.assignment.points for testCtx in ctx.tests])
-    maxPointsLen = len(f'{maxPoints:.1f}')
-    for testCtx in ctx.tests:
-        res = testCtx.summarizeResults()
-        assPoints = testCtx.assignment.points
-        assPointsFmt = f'{assPoints:.1f}'
-        space1 = (maxPointsLen - len(assPointsFmt)) * ' '
-        possibleTotalPoints += assPoints
-        if res.error:
-            zero = f'0.0/{assPoints:.1f} points,'
-            shortResStr = f'{zero:15} ERROR'
-            hasErrors = True
-        else:
-            if res.totalTests > 0:
-                notOk = res.testErrors + res.testFailures
-                notOkTotal += notOk
-                ok = res.totalTests - notOk
-                ratio = ok / res.totalTests
-                percentage = round(100 * ratio)
-                if assPoints > 0:
-                    points = round(ratio * assPoints, 1)
-                    totalPoints = totalPoints + points
-                    pointsFmt = f'{points:.1f}'
-                    space = (maxPointsLen - len(pointsFmt)) * ' '
-                    pointsStr = f'{space}{pointsFmt}/{assPointsFmt} {space1}points,'
+    if not ctx.tests:
+        print('No tests found')
+    else:
+        print('Test results:')
+        maxAssignmentIdLen = max([len(testCtx.assignment.id) for testCtx in ctx.tests])
+        maxPoints = max([testCtx.assignment.points for testCtx in ctx.tests])
+        maxPointsLen = len(f'{maxPoints:.1f}')
+        for testCtx in ctx.tests:
+            res = testCtx.summarizeResults()
+            assPoints = testCtx.assignment.points
+            assPointsFmt = f'{assPoints:.1f}'
+            space1 = (maxPointsLen - len(assPointsFmt)) * ' '
+            possibleTotalPoints += assPoints
+            if res.error:
+                zero = f'0.0/{assPoints:.1f} points,'
+                shortResStr = f'{zero:15} ERROR'
+                hasErrors = True
+            else:
+                if res.totalTests > 0:
+                    notOk = res.testErrors + res.testFailures
+                    notOkTotal += notOk
+                    ok = res.totalTests - notOk
+                    ratio = ok / res.totalTests
+                    percentage = round(100 * ratio)
+                    if assPoints > 0:
+                        points = round(ratio * assPoints, 1)
+                        totalPoints = totalPoints + points
+                        pointsFmt = f'{points:.1f}'
+                        space = (maxPointsLen - len(pointsFmt)) * ' '
+                        pointsStr = f'{space}{pointsFmt}/{assPointsFmt} {space1}points,'
+                    else:
+                        space = (maxPointsLen - 1) * ' '
+                        pointsStr = f'{space}?/{assPointsFmt} {space1}points,'
+                    percentageStr = f'{percentage}% OK,'
+                    rest = f'({res.totalTests} tests, {res.testErrors} errors, {res.testFailures} failures)'
+                    shortResStr = f'{pointsStr:15} {percentageStr:10} {rest}'
                 else:
                     space = (maxPointsLen - 1) * ' '
-                    pointsStr = f'{space}?/{assPointsFmt} {space1}points,'
-                percentageStr = f'{percentage}% OK,'
-                rest = f'({res.totalTests} tests, {res.testErrors} errors, {res.testFailures} failures)'
-                shortResStr = f'{pointsStr:15} {percentageStr:10} {rest}'
-            else:
-                space = (maxPointsLen - 1) * ' '
-                q = f'{space}?/{assPointsFmt} {space1}points,'
-                shortResStr = f'{q:15} no tests'
-        id = testCtx.assignment.id
-        space = (maxAssignmentIdLen - len(id)) * ' '
-        print(f'Assignment {id}:{space} {shortResStr}')
+                    q = f'{space}?/{assPointsFmt} {space1}points,'
+                    shortResStr = f'{q:15} no tests'
+            id = testCtx.assignment.id
+            space = (maxAssignmentIdLen - len(id)) * ' '
+            print(f'Assignment {id}:{space} {shortResStr}')
     if ctx.styleResult != None:
         styleStatusShort = "ERROR" if ctx.styleResult.hasErrors else "OK"
         print('\nCoding style: ' + styleStatusShort)
