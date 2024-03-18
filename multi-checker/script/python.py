@@ -29,7 +29,6 @@ def prepareEnv(testEnv: Optional[dict], pyPath: Optional[str]):
         if oldPyPath:
             pyPath = pyPath + ':' + oldPyPath
         testEnv[key] = pyPath
-    print(testEnv)
     return testEnv
 
 def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, testFile: Optional[str]=None,
@@ -277,7 +276,7 @@ def checkAssignments(opts: Options, ex: Exercise, allAss: list[Assignment]):
                 pass
             case 'not_found':
                 missing = missing + 1
-                print(f'File {p} missing')
+                # print(f'File {p} missing')
     if compileStatus == 'OK' and missing > 0:
         if missing == len(allFiles):
             compileStatus = 'FAIL'

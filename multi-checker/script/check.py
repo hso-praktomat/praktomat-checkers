@@ -43,8 +43,8 @@ def parseArgs():
     java.add_argument('--assignment', metavar='X', type=str,
                       help='Identifier for assignment(s), multiple assignments separated by commas')
     (known, other) = parser.parse_known_args()
-    if other:
-        print(f'WARNING: ignoring unknown commandline arguments: {other}')
+    #if other:
+    #    print(f'WARNING: ignoring unknown commandline arguments: {other}')
     return known
 
 # "Labortest 2, Gruppe A" -> ["labortest_2", labortest_2_gruppe_a"]
