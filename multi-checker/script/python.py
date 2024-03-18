@@ -41,9 +41,8 @@ def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, testFile: Optio
     if testFile:
         args = args + ['--test-file', testFile]
     args = args + ['--check-runnable' if onlyRunnable else '--check', studentFile]
-    args = addTimeoutCmd(args, timeout)
-    debug(f'Command: {" ".join(args)}')
-    res = run(args, onError='ignore', env=testEnv, stderrToStdout=True, captureStdout=True)
+    res = runWithTimeout(args, timeout, f'running {studentFile} via WYPP, testFile={testFile}',
+                         env=testEnv)
     return res
 
 def runUnittest(testFile: str, searchDirs: list[Optional[str]], testEnv: dict=None,
@@ -52,9 +51,8 @@ def runUnittest(testFile: str, searchDirs: list[Optional[str]], testEnv: dict=No
         abort(f'Test file {testFile} does not exist')
     testEnv = prepareEnv(testEnv, '.')
     args = ['python3', testFile]
-    args = addTimeoutCmd(args, timeout)
     debug(f'Command: {" ".join(args)}')
-    res = run(args, onError='ignore', env=testEnv, stderrToStdout=True, captureStdout=True)
+    res = runWithTimeout(args, timeout, f'running unittests in {testFile}', env=testEnv)
     return res
 
 LoadStudentCodeStatus = Literal['ok', 'fail', 'not_found']
@@ -93,7 +91,7 @@ def loadStudentCode(opts: Options, p: str, checkLoad: bool) -> LoadStudentCodeRe
         return mkResult('ok')
     printOut()
     printOut(f'## Checking that {p} loads successfully ...')
-    runRes = runWypp(studentFile, opts.wypp, onlyRunnable=True)
+    runRes = runWypp(studentFile, opts.wypp, onlyRunnable=True, timeout=testTimeoutSeconds())
     printOut(runRes.stdout, emptyNewline=False)
     if runRes.exitcode == 0:
         printOut(f'## OK: {p} loads successfully')

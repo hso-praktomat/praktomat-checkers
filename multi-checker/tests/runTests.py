@@ -46,36 +46,41 @@ def debug(msg: str):
 
 testCount = 0
 
-def runCmd(cmd: str, onError='raise', capture=False, dir=None):
+def runCmd(cmd: str, onError='raise', capture=False, dir=None, env=None):
     if useDocker:
         workDirArg = ""
         if dir is not None:
             workDirArg = f'--workdir={dir}'
-        cmd = f'docker run --rm --volume {praktomatCheckersLocal}:{praktomatCheckersDocker} '\
+        if env:
+            envStr = ' '.join([f'-e {k}="{v}"' for k,v in env.items()])
+        else:
+            envStr = ''
+        cmd = f'docker run {envStr} --rm --volume {praktomatCheckersLocal}:{praktomatCheckersDocker} '\
             f'--volume {praktomatTestsLocal}:{praktomatTestsDocker} '\
             f'--volume $HOME/devel/tick-trick-track:/external/tick-trick-track '\
             f'{workDirArg} {dockerImage} {cmd}'
-        debug(cmd)
+    debug(cmd)
     return run(cmd, onError=onError, captureStderr=capture, captureStdout=capture,
-               stderrToStdout=capture)
+               stderrToStdout=capture, env=env)
 
-def expectOk(cmd: str, dir=None):
+def expectOk(cmd: str, dir=None, env=None):
     global testCount
     testCount = testCount + 1
     print()
     info(f'Running test, cmd: {cmd}')
-    res = runCmd(cmd, onError='ignore', dir=dir, capture=True)
+    res = runCmd(cmd, onError='ignore', dir=dir, capture=True, env=env)
     if res.exitcode != 0:
         print(res.stdout)
         fail(f'Command should succeed but failed with exit code {res.exitcode}: {cmd}')
     info('OK')
+    return res
 
-def expectFail(cmd: str, ecode=None, dir=None):
+def expectFail(cmd: str, ecode=None, dir=None, env=None):
     global testCount
     testCount = testCount + 1
     print()
     info(f'Running test, cmd: {cmd} ...')
-    res = runCmd(cmd, onError='ignore', dir=dir, capture=True)
+    res = runCmd(cmd, onError='ignore', dir=dir, capture=True, env=env)
     if res.exitcode == 0:
         print(res.stdout)
         fail(f'Command should fail but succeded with exit code {res.exitcode}: {cmd}')
@@ -85,11 +90,12 @@ def expectFail(cmd: str, ecode=None, dir=None):
             fail(f'Command should fail with exit code {ecode} but failed with {res.exitcode}: {cmd}')
         if res.exitcode == 1:
             # make sure there is no exception
-            res2 = runCmd(cmd, onError='ignore', capture=True, dir=dir)
+            res2 = runCmd(cmd, onError='ignore', capture=True, dir=dir, env=env)
             if 'INTERNAL ERROR: checker raised an unexpected exception, this is a bug!' in res2.stdout:
                 print(res.stdout)
                 fail(f'Command raised an exception')
     info('OK')
+    return res
 
 def printHeader(title):
     print()
@@ -116,14 +122,19 @@ if runPythonTests:
     expectFail(f'python3 {checkScript} --submission-dir {localTestDir} python --wypp {wyppDir} --sheet 01 --assignment 1,2,3', 1, dir=localTestDir)
 
     pythonTests = [('solution-good', 0), ('solution-wrapped', 0), ('solution-partial', 121), ('solution-partial-missing', 121),
-                ('solution-fail', 121), ('solution-error', 1), ('solution-with-own-test-errors', 1)]
+                ('solution-fail', 121), ('solution-error', 1), ('solution-with-own-test-errors', 0),
+                ('solution-timeout', 1)]
 
     for d, ecode in pythonTests:
         cmd = f'python3 {checkScript} --test-dir {localTestDir} --submission-dir {localTestDir}/03/{d}/ python --wypp {wyppDir} --sheet 03'
+        env = {'PRAKTOMAT_CHECKER_TEST_TIMEOUT': '2'}
         if ecode == 0:
-            expectOk(cmd, dir=f'{localTestDir}/03/{d}')
+            res = expectOk(cmd, dir=f'{localTestDir}/03/{d}', env=env)
         else:
-            expectFail(cmd, ecode)
+            res = expectFail(cmd, ecode, env=env)
+        if d == 'solution-timeout':
+            if 'timeout' not in res.stdout.lower():
+                fail(f'expected timeout in output\n\n---\n{res.stdout}\n---')
 
     expectOk(f'python3 {checkScript} --test-dir {pythonTestDir} --submission-dir {pythonTestDir}/09/solution/ python --wypp {wyppDir} --sheet 09', dir=f'{pythonTestDir}/09/solution/')
 

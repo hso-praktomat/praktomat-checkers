@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import *
 from shell import *
+from utils import *
 
 OK_WITH_WARNINGS_EXIT_CODE = 121
 
@@ -23,6 +24,7 @@ def replaceAll(l: list[str], repl: str, s: str) -> str:
 
 def testTimeoutSeconds():
     fromEnv = os.getenv('PRAKTOMAT_CHECKER_TEST_TIMEOUT')
+    debug('Timeout from environment: ' + str(fromEnv))
     if fromEnv:
         try:
             return int(fromEnv)
@@ -30,8 +32,18 @@ def testTimeoutSeconds():
             pass
     return 60
 
-def addTimeoutCmd(cmd: list[str], timeout: Optional[int]):
+def runWithTimeout(cmd: list[str], timeout: Optional[int], what: str, env: dict=None):
     if timeout:
-        return ['timeout', str(timeout)] + cmd
+        cmd = ['timeout', str(timeout)] + cmd
+    debug(f'Command: {" ".join(cmd)}')
+    res = run(cmd, onError='ignore', env=env, stderrToStdout=True, captureStdout=True)
+    if timeout and res.exitcode == TIMEOUT_EXIT_CODE:
+        msg = f'Timeout after {timeout}s while {what}'
+        newStdout = res.stdout
+        if newStdout:
+            newStdout = newStdout + '\n\n' + msg
+        else:
+            newStdout = msg
+        return RunResult(newStdout, res.stderr, res.exitcode)
     else:
-        return cmd
+        return res
