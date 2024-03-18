@@ -35,7 +35,8 @@ RUN rm -rf /get-gradle-deps
 # Python
 # Packages
 RUN pip3 install pyyaml
-RUN pip3 install libPyshell==0.1.6
+RUN pip3 install libPyshell==0.3.0
+RUN pip3 install wypp==1.0.6
 
 # WYPP
 RUN mkdir /wypp
