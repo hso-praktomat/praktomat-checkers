@@ -16,7 +16,7 @@ sourceSets {
     }
 }
 
-layout.buildDirectory.set(File(studentDir, "../_build"))
+layout.buildDirectory.set(File(studentDir, "_build"))
 
 repositories {
     mavenCentral()
