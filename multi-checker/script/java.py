@@ -171,10 +171,9 @@ def checkFilesExist(ass: list[Assignment], prjDir: str):
     else:
         return 'OK'
 
-def checkWithSourceDir(opts: JavaOptions, sourceDir: str, sheetDir: str, ass: list[Assignment]):
+def checkWithSourceDir(opts: JavaOptions, projectDir: str, sheetDir: str, ass: list[Assignment]):
     ctx = CheckCtx.empty('Compile', opts.resultFile)
     # do the checks
-    projectDir = findSolutionDir(sourceDir, lambda x: isDir(pjoin(x, "src")))
     debug(f'projectDir={projectDir}')
     cp(opts.gradleBuildFile, projectDir)
     exResult = checkFilesExist(ass, projectDir)
@@ -212,4 +211,4 @@ def check(opts: JavaOptions):
                 abort(f'Directory {sub} required for one of the selected assignments does not exist')
         withLimitedDir(projectDir, list(subs), lambda d: checkWithSourceDir(opts, d, sheetDir, ass))
     else:
-        checkWithSourceDir(opts, opts.sourceDir, sheetDir, ex.assignments)
+        checkWithSourceDir(opts, projectDir, sheetDir, ex.assignments)
