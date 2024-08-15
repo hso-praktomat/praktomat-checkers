@@ -10,7 +10,7 @@ RUN chmod 1777 /home
 ADD https://github.com/checkstyle/checkstyle/releases/download/checkstyle-10.3.4/checkstyle-10.3.4-all.jar /opt/praktomat-addons/checkstyle.jar
 
 # Setup timezone
-ENV TZ Europe/Berlin
+ENV TZ=Europe/Berlin
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Install required packages here
@@ -37,5 +37,5 @@ RUN apt-get clean && apt-get update && apt-get install -yq \
 # Setup locale
 RUN locale-gen en_US.UTF-8
 RUN update-locale LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US.UTF-8
