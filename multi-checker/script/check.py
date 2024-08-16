@@ -64,6 +64,9 @@ def candsFromTitle(origTitle: str) -> list[str]:
 
 _numRe = re.compile(r'\b\d+\b')
 def getSheetFromEnv(testDir):
+    task_id = os.environ.get('TASK_ID_CUSTOM')
+    if task_id is not None and task_id != '':
+        return task_id
     origTitle = os.environ.get('TASK_TITLE').strip()
     cands = candsFromTitle(origTitle)
     m = _numRe.search(origTitle)
@@ -74,17 +77,6 @@ def getSheetFromEnv(testDir):
         if isDir(d):
             return c
     return cands[-1]  # prefer the more generic
-
-
-_DEFAULT_TEST_DIR = '/external/praktomat-tests'
-
-def getDefaultTestDir(cmd):
-    if cmd == 'python':
-        return pjoin(_DEFAULT_TEST_DIR, 'python-prog1')
-    elif cmd == 'java':
-        return pjoin(_DEFAULT_TEST_DIR, 'java-aud')
-    else:
-        return pjoin(_DEFAULT_TEST_DIR, 'haskell-advanced-prog')
 
 def getAssignments(s: str|None) -> list[str] | None:
     assignments = None
@@ -105,8 +97,9 @@ def main():
     cmd = args.cmd
     if not cmd:
         abort('command not given on commandline')
-    testDir = args.test_dir or getDefaultTestDir(cmd)
-    testDir = abspath(testDir)
+    testDir = args.test_dir
+    if testDir is not None:
+        testDir = abspath(testDir)
     submissionDir = args.submission_dir or '.'
     submissionDir = submissionDir.rstrip('/')
     submissionDir = abspath(submissionDir)

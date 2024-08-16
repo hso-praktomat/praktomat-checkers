@@ -14,7 +14,9 @@ class Options:
     testDir: Optional[str]
     resultFile: Optional[str]
 
-def getSheetDir(testDir, sheet):
+def getSheetDir(testDir: Optional[str], sheet: str):
+    if testDir is None:
+        return '/external'
     return pjoin(testDir, sheet)
 
 def replaceAll(l: list[str], repl: str, s: str) -> str:
