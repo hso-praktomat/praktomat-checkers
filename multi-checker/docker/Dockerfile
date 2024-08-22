@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -yq \
   openjdk-17-jdk \
   zip \
   && rm -rf /var/lib/apt/lists/*
-ARG GRADLE_VERSION=8.6
+ARG GRADLE_VERSION=8.10
 ADD https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip /gradle.zip
 RUN mkdir /opt/gradle
 RUN unzip -d /opt/gradle /gradle.zip
