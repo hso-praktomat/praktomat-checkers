@@ -7,7 +7,7 @@ RUN useradd -m praktomat
 RUN chmod 1777 /home
 
 # Setup CheckStyle
-ADD https://github.com/checkstyle/checkstyle/releases/download/checkstyle-10.3.4/checkstyle-10.3.4-all.jar /opt/praktomat-addons/checkstyle.jar
+ADD https://github.com/checkstyle/checkstyle/releases/download/checkstyle-10.18.1/checkstyle-10.18.1-all.jar /opt/praktomat-addons/checkstyle.jar
 
 # Setup timezone
 ENV TZ=Europe/Berlin
