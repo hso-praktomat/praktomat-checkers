@@ -1,7 +1,6 @@
 # Praktomat Checkers with Docker
 
-This repository contains checkers for praktomat when used with
-[safe-docker](https://github.com/nomeata/safe-docker).
+This repository contains checkers for praktomat when used with Docker.
 The checkers are independent from concrete tests for specific
 courses. Such tests can be found, for example, [here](https://git.hs-offenburg.de/swehr/praktomat-tests).
 
@@ -44,8 +43,7 @@ communicates the result of the checker back to praktomat.
 
 The shell script runs either in the same environment as praktomat (same
 machine or same docker container) or it runs inside an extra docker container.
-[safe-docker](https://github.com/nomeata/safe-docker) takes care of the
-latter case.
+Praktomat with its Docker integration takes care of the latter case.
 
 When runing praktomat via docker (see
 https://github.com/hso-praktomat/praktomat-docker), you enable
@@ -66,7 +64,7 @@ are available for tweaking:
 * `PRAKTOMAT_CHECKER_ENABLE_NETWORK=True` enables network in the checker
   container.
 
-Safe-docker enforces several restrictions:
+Running checkers with Docker enforces several restrictions:
 
 * The checker script finish within 60 seconds. (Setting
   `TEST_TIMEOUT` in local.py der Praktomat-Instanz)
