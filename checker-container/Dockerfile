@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM ubuntu:jammy
+FROM ubuntu:noble
 
 RUN useradd -m praktomat
 
