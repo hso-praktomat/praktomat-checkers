@@ -16,7 +16,7 @@ RUN stack --resolver lts-21.14 install call-stack HUnit
 
 # Install Gradle
 RUN apt-get update && apt-get install -yq \
-  openjdk-17-jdk \
+  openjdk-21-jdk \
   zip \
   && rm -rf /var/lib/apt/lists/*
 ARG GRADLE_VERSION=8.10.1
