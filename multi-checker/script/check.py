@@ -166,5 +166,4 @@ if __name__ == '__main__':
     except Exception as e:
         print(traceback.format_exc())
         bug('checker raised an unexpected exception, this is a bug!')
-    main()
 
