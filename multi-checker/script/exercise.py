@@ -27,11 +27,16 @@ class YamlDict:
 
 @dataclass
 class PythonAssignmentConfig:
-    wypp: bool
+    wypp: bool         # check that the file loads and that type annotations are correct
+    checkLoad: bool    # only check that the file loads (without type checking)
     @staticmethod
     def parse(v: YamlDict):
-        b = v.get('python-wypp', True)
-        return PythonAssignmentConfig(b)
+        wypp = v.get('python-wypp', True)
+        load = v.get('python-load', True)
+        return PythonAssignmentConfig(wypp, load)
+    @property
+    def typecheck(self):
+        return self.wypp and self.checkLoad
 
 @dataclass
 class Assignment:
@@ -73,6 +78,11 @@ class Exercise:
             a = Assignment.parse(sheet, ymlDict.extend(v), k)
             assignments.append(a)
         return Exercise(sheet, assignments)
+    def ensureAssignmentsDefined(self, assignmentIds: list[str]):
+        allIds = [a.id for a in self.assignments]
+        for x in assignmentIds:
+            if x not in allIds:
+                abort(f'Assigned {x} not defined in exercise file')
 
 def parseExercise(sheet, yamlPath) -> Exercise:
     s = readFile(yamlPath)

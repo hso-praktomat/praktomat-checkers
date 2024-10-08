@@ -31,8 +31,8 @@ def prepareEnv(testEnv: Optional[dict], pyPath: Optional[str]):
         testEnv[key] = pyPath
     return testEnv
 
-def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, testFile: Optional[str]=None,
-            testEnv: dict=None, timeout: Optional[int]=None):
+def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, typecheck: bool,
+            testFile: Optional[str]=None, testEnv: dict=None, timeout: Optional[int]=None):
     thisDir = abspath('.')
     pyPath = wyppPath + '/python/site-lib:' + thisDir
     print('pyPath='+pyPath)
@@ -40,7 +40,10 @@ def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, testFile: Optio
     args = ['python3', wyppPath + '/python/src/runYourProgram.py']
     if testFile:
         args = args + ['--test-file', testFile]
-    args = args + ['--check-runnable' if onlyRunnable else '--check', studentFile]
+    args = args + ['--check-runnable' if onlyRunnable else '--check']
+    if not typecheck:
+        args = args + ['--no-typechecking']
+    args = args + [studentFile]
     res = runWithTimeout(args, timeout, f'running {studentFile} via WYPP, testFile={testFile}',
                          env=testEnv)
     return res
@@ -63,11 +66,15 @@ class LoadStudentCodeResult:
     output: str
     srcDir: Optional[str]
 
-def loadStudentCode(opts: Options, p: str, checkLoad: bool) -> LoadStudentCodeResult:
+LoadCheck = Literal['dont-load', 'load-no-typecheck', 'load-typecheck']
+
+def loadStudentCode(opts: Options, p: str, checkLoad: LoadCheck) -> LoadStudentCodeResult:
     """
     Checks that the student file loads ok and that the student tests are successful.
     Executed from within source dir.
     """
+    if checkLoad not in ['dont-load', 'load-no-typecheck', 'load-typecheck']:
+        raise ValueError('Invalid value for checkLoad argument: ' + str(checkLoad))
     _out = ''
     def printOut(s='', emptyNewline=True):
         nonlocal _out
@@ -86,12 +93,14 @@ def loadStudentCode(opts: Options, p: str, checkLoad: bool) -> LoadStudentCodeRe
         return mkResult('not_found')
     _srcDir = dirname(studentFile)
     fixEncoding(studentFile)
-    if not checkLoad:
+    if checkLoad == 'dont-load':
         printOut(f'Only checking that file {studentFile} exists, not loading.')
         return mkResult('ok')
     printOut()
     printOut(f'## Checking that {p} loads successfully ...')
-    runRes = runWypp(studentFile, opts.wypp, onlyRunnable=True, timeout=testTimeoutSeconds())
+    typecheck = checkLoad == 'load-typecheck'
+    runRes = runWypp(studentFile, opts.wypp, onlyRunnable=True, typecheck=typecheck,
+                     timeout=testTimeoutSeconds())
     printOut(runRes.stdout, emptyNewline=False)
     if runRes.exitcode == 0:
         printOut(f'## OK: {p} loads successfully')
@@ -101,7 +110,8 @@ You find more error messages above.''')
         return mkResult('fail')
     printOut()
     printOut(f'## Executing tests in {p} ...')
-    testRes = runWypp(studentFile, opts.wypp, onlyRunnable=False, timeout=testTimeoutSeconds())
+    testRes = runWypp(studentFile, opts.wypp, onlyRunnable=False, typecheck=typecheck,
+                      timeout=testTimeoutSeconds())
     printOut(testRes.stdout, emptyNewline=False)
     if testRes.exitcode == 0:
         printOut(f'## OK: no test failures in {p}')
@@ -113,7 +123,7 @@ If you cannot make a test succeed, you have to comment it out.''')
     return mkResult('ok')
 
 def checkFileLoadsOk(opts: Options, p: str):
-    res = loadStudentCode(opts, p, True)
+    res = loadStudentCode(opts, p, 'load-typecheck')
     print(res.output)
     return res.status
 
@@ -236,8 +246,9 @@ def checkTutorTests(opts: Options, testCtx: TestContext, a: Assignment, srcDir: 
             src = a.src
             if srcDir:
                 src = pjoin(srcDir, a.src)
-            testOut = runWypp(src, opts.wypp, onlyRunnable=False, testFile=testPath,
-                              testEnv=testEnv, timeout=testTimeoutSeconds())
+            testOut = runWypp(src, opts.wypp, onlyRunnable=False,
+                              typecheck=a.pythonConfig.typecheck,
+                              testFile=testPath, testEnv=testEnv, timeout=testTimeoutSeconds())
         else:
             testOut = runUnittest(testPath, [opts.wypp + '/python/site-lib', srcDir],
                                   testEnv=testEnv, timeout=testTimeoutSeconds())
@@ -257,7 +268,13 @@ def checkAssignments(opts: Options, ex: Exercise, allAss: list[Assignment]):
     allFiles = []
     for a in allAss:
         if a.src is not None and a.src not in [x[0] for x in allFiles]:
-            allFiles.append((a.src, a.pythonConfig.wypp))
+            checkLoad: LoadCheck = 'dont-load'
+            pc = a.pythonConfig
+            if pc.typecheck:
+                checkLoad = 'load-typecheck'
+            elif pc.checkLoad:
+                checkLoad = 'load-no-typecheck'
+            allFiles.append((a.src, checkLoad))
     ctx = CheckCtx.empty('Load and student tests', opts.resultFile)
     compileStatus = 'OK'
     missing = 0
@@ -311,5 +328,6 @@ def check(opts: PythonOptions):
                 allAss = ex.assignments
             else:
                 l = asList(ass)
+                ex.ensureAssignmentsDefined(l)
                 allAss = [a for a in ex.assignments if a.id in l]
             checkAssignments(opts, ex, allAss)

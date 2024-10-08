@@ -203,6 +203,7 @@ def check(opts: JavaOptions):
     debug(f'projectDir={projectDir}')
     fixEncodingRecursively(projectDir, 'java')
     if opts.assignments:
+        ex.ensureAssignmentsDefined(opts.assignments)
         l = asList(opts.assignments)
         ass = [a for a in ex.assignments if a.id in l]
         subs = set([dirnameForSource(a.src) for a in ass])
