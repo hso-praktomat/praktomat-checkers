@@ -16,4 +16,13 @@ fi
 
 cd $(dirname $0)
 docker build --platform "$platform" --tag $TAG . || exit 1
-docker push $TAG
+
+echo
+echo "Successfully build image with tag $TAG."
+
+if [ $(hostname) == "progcheck" ]; then
+    echo "Not pushing because we are running on progcheck"
+else
+    docker push $TAG
+    echo "Successfully pushed image with tag $TAG"
+fi
