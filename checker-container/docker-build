@@ -2,11 +2,18 @@
 
 TAG=skogsbaer/praktomat-checker-base:latest
 
-if [ -z "$1" ]; then
+if [ "$1" == "--help" ]; then
     echo "USAGE: $0 PLATFORM"
+    echo "PLATFORM is either linux/arm64 or linux/amd64 (default)"
     exit 1
 fi
 
+if [ -z "$1"  ]; then
+    platform="linux/amd64"
+else
+    platform="$1"
+fi
+
 cd $(dirname $0)
-docker build --platform $1 --tag $TAG . || exit 1
+docker build --platform "$platform" --tag $TAG . || exit 1
 docker push $TAG

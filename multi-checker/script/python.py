@@ -266,6 +266,7 @@ def checkAssignments(opts: Options, ex: Exercise, allAss: list[Assignment]):
     This function is called if an exercise.yaml file exists.
     """
     allFiles = []
+    extras = set()
     for a in allAss:
         if a.src is not None and a.src not in [x[0] for x in allFiles]:
             checkLoad: LoadCheck = 'dont-load'
@@ -275,6 +276,10 @@ def checkAssignments(opts: Options, ex: Exercise, allAss: list[Assignment]):
             elif pc.checkLoad:
                 checkLoad = 'load-no-typecheck'
             allFiles.append((a.src, checkLoad))
+            for e in a.extraFiles:
+                extras.add(e)
+    for e in extras:
+        cp(pjoin(sheetDir(opts), e), '.')
     ctx = CheckCtx.empty('Load and student tests', opts.resultFile)
     compileStatus = 'OK'
     missing = 0

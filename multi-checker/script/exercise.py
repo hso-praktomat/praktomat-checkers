@@ -48,10 +48,12 @@ class Assignment:
     testOkRequired: bool
     testScript: Optional[str]
     pythonConfig: PythonAssignmentConfig
+    extraFiles: list[str] # auxiliary files that can be used by the student code
     @staticmethod
     def parse(sheet: str, v: YamlDict, id: int):
         src = v.get('src')
         tests = asList(v.get('test', [])) + asList(v.get('tests', []))
+        extras = asList(v.get('extras', []))
         points = v.get('points', -1)
         try:
             points = int(points)
@@ -60,7 +62,7 @@ class Assignment:
         testOkRequired = v.get('test-ok-required', False)
         testScript = v.get('test-script')
         py = PythonAssignmentConfig.parse(v)
-        return Assignment(sheet, id, points, src, tests, testOkRequired, testScript, py)
+        return Assignment(sheet, id, points, src, tests, testOkRequired, testScript, py, extras)
 
 assignmentIdRe = re.compile(r'\d+[a-z]?')
 

@@ -1,22 +1,28 @@
 #!/bin/bash
 
 if [ "$1" == "--help" ]; then
-    echo "USAGE: $0 --build-base PLATFORM"
-    echo "Platform is either linux/arm64 or linux/amd64"
+    echo "USAGE: $0 --build-base [PLATFORM]"
+    echo "Platform is either linux/arm64 or linux/amd64 (default)"
     exit 1
 fi
 
 if [ "$1" == "--build-base" ]; then
     shift
-    echo $1
-    echo "Building docker base image ..."
-    $(dirname $0)/../../checker-container/docker-build "$1" || exit 1
-    echo "Done building docker base image"
+    build_base=1
+else
+    build_base=0
 fi
 
-if [ -z "$1" ]; then
-    echo "No platform given, aborting"
-    exit 1
+if [ -z "$1"  ]; then
+    platform="linux/amd64"
+else
+    platform="$1"
+fi
+
+if [ $build_base == 1 ]; then
+    echo "Building docker base image ..."
+    $(dirname $0)/../../checker-container/docker-build "$platform" || exit 1
+    echo "Done building docker base image"
 fi
 
 TAG=skogsbaer/praktomat-multi-checker:latest
@@ -24,7 +30,7 @@ TAG=skogsbaer/praktomat-multi-checker:latest
 cd $(dirname $0)
 trap "rm -rf checker" EXIT
 cp -r ../script/ checker
-docker build --platform "$1" --tag $TAG . || exit 1
+docker build --platform "$platform" --tag $TAG . || exit 1
 docker push $TAG
 echo
 echo "Successfully build and pushed image with tag $TAG"

@@ -13,8 +13,16 @@ class HaskellOptions(Options):
 def checkCompile(ctx: CheckCtx):
     cmd = 'stack test --only-locals'
     debug(f'Running "{cmd}"')
-    result = run(cmd, onError='ignore', stderrToStdout=True, captureStdout=True)
-    out = result.stdout
+    tmpName = mkTempFile(suffix='.log')
+    try:
+        if isDebug():
+            capture = createTee([TEE_STDOUT, tmpName])
+        else:
+            capture = open(tmpName, 'w')
+        result = run(cmd, onError='ignore', stderrToStdout=True, captureStdout=capture)
+    finally:
+        capture.close()
+    out = readFile(tmpName)
     if result.exitcode == 0:
         ctx.compileOutput = out
         ctx.compileStatus = 'OK'
@@ -82,8 +90,7 @@ def checkHsFile(path):
         abort(f'Source file {path} contains illegal pragma: {m.group(0)}')
 
 BLACKLIST = ['package.yaml', 'stack.yaml']
-def doCheck(srcDir, testDir, sheet, resultFile):
-    sheetDir = getSheetDir(testDir, sheet)
+def doCheck(srcDir, sheetDir, sheet, resultFile):
     exFile = pjoin(sheetDir, 'exercise.yaml')
     ex = parseExercise(sheet, exFile)
     debug(f'Exercise (file: {exFile}): {ex}')
@@ -96,7 +103,7 @@ def doCheck(srcDir, testDir, sheet, resultFile):
             checkHsFile(x)
         cp(x, '.')
     cp(pjoin(sheetDir, 'package.yaml'), '.')
-    cp(pjoin(testDir, 'stack.yaml'), '.')
+    cp(pjoin(sheetDir, 'stack.yaml'), '.')
     # do the checks
     missing = 0
     for a in ex.assignments:
@@ -112,7 +119,7 @@ def doCheck(srcDir, testDir, sheet, resultFile):
         testCtx = TestContext(assignment=a, sheet=sheet, results=[])
         ctx.tests.append(testCtx)
         for t in a.tests:
-            checkTest(a, testCtx, pjoin(sheetDir, t), [pjoin(testDir, 'lib'), sheetDir], ctx)
+            checkTest(a, testCtx, pjoin(sheetDir, t), [pjoin(sheetDir, 'lib'), sheetDir], ctx)
         checkScript(a, testCtx, sheetDir, ctx)
     outputResultsAndExit(ctx)
 
@@ -121,4 +128,5 @@ def check(opts: Options):
     with tempDir(dir='.') as d:
         with workingDir(d):
             debug(f"Running Haskell checks from directory {d}")
-            doCheck(nestedSourceDir, opts.testDir, opts.sheet, opts.resultFile)
+            sheetDir = getSheetDir(opts.testDir, opts.sheet)
+            doCheck(nestedSourceDir, sheetDir, opts.sheet, opts.resultFile)

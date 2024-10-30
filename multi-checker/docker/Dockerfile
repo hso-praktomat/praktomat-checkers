@@ -5,14 +5,16 @@ FROM skogsbaer/praktomat-checker-base:latest
 RUN curl -sSL https://get.haskellstack.org/ | sh
 
 # Install haskell packages needed by the test routines.
-# The resolver must match the one given in the stack.yaml file.
-RUN stack --resolver lts-21.14 install base
-RUN stack --resolver lts-21.14 install containers directory filepath template-haskell mtl text
-RUN stack --resolver lts-21.14 install happy primitive safe syb vector
-RUN stack --resolver lts-21.14 install haskell-src-exts
-RUN stack --resolver lts-21.14 install haskell-src-meta
-RUN stack --resolver lts-21.14 install main-tester
-RUN stack --resolver lts-21.14 install call-stack HUnit
+# The resolver must match the one given in the stack.yaml file
+# from praktomat-tests/haskell-advanced-prog/common and from 
+# ~/Teaching/AdvancedProg-Praktikum/config-common
+RUN stack --resolver lts-22.34 install base
+RUN stack --resolver lts-22.34 install containers directory filepath template-haskell mtl text
+RUN stack --resolver lts-22.34 install happy primitive safe syb vector
+RUN stack --resolver lts-22.34 install haskell-src-exts
+RUN stack --resolver lts-22.34 install haskell-src-meta
+RUN stack --resolver lts-22.34 install main-tester
+RUN stack --resolver lts-22.34 install call-stack HUnit
 
 # Install Gradle
 RUN apt-get update && apt-get install -yq \
@@ -43,7 +45,7 @@ RUN pip3 install --break-system-packages wypp==1.0.6
 # WYPP
 RUN mkdir /wypp
 ADD ./git-clone /git-clone
-RUN bash /git-clone https://github.com/skogsbaer/write-your-python-program.git 1a76459988009c3e0878390cfa13e783663900a7 /wypp
+RUN bash /git-clone https://github.com/skogsbaer/write-your-python-program.git bb9cae8d13d0a39f375b59f01b1ce8ad61c1c27e /wypp
 RUN rm -rf /wypp/.git
 
 # Our checker scripts

@@ -6,11 +6,13 @@ import java
 import argparse
 import re
 import traceback
+import io
 
 defaultGradleBuildFile = pjoin(os.path.realpath(os.path.dirname(__file__)), 'build.gradle.kts')
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, line_buffering=True)
 
 def parseArgs():
-    parser = argparse.ArgumentParser(description='Checker for haskell assignments')
+    parser = argparse.ArgumentParser(description='Checker for assignments')
     parser.add_argument('--submission-dir', metavar='DIR', type=str,
                         help='Directories with student submission')
     parser.add_argument('--test-dir', metavar='DIR', type=str,
