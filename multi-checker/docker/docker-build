@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "$1" == "--help" ]; then
-    echo "USAGE: $0 --build-base [PLATFORM]"
+    echo "USAGE: $0 [--build-base] [PLATFORM]"
     echo "Platform is either linux/arm64 or linux/amd64 (default)"
     exit 1
 fi
@@ -31,6 +31,12 @@ cd $(dirname $0)
 trap "rm -rf checker" EXIT
 cp -r ../script/ checker
 docker build --platform "$platform" --tag $TAG . || exit 1
-docker push $TAG
 echo
-echo "Successfully build and pushed image with tag $TAG"
+echo "Successfully build image with tag $TAG."
+
+if [ $(hostname) == "progcheck" ]; then
+    echo "Not pushing because we are running on progcheck"
+else
+    docker push $TAG
+    echo "Successfully pushed image with tag $TAG"
+fi
