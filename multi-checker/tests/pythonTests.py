@@ -9,23 +9,23 @@ python2TestDirLocal = f'{praktomatTestsLocal}/python-prog2'
 localTestDir = f'{thisDir}/python-wypp'
 
 def test_python01():
-    expectOk(f'python3 {checkScript} {checkScriptArgs} --submission-dir {localTestDir} python --wypp {wyppDir} --sheet 01 --assignment 1,4',
+    expectOk(f'python3 {checkScript} {checkScriptArgs} python --wypp {wyppDir} --sheet 01 --assignment 1,4',
              dir=localTestDir)
 
 def test_python02():
-    expectFail(f'python3 {checkScript} {checkScriptArgs} --submission-dir {localTestDir} python --wypp {wyppDir} --sheet 01 --assignment 2',
+    expectFail(f'python3 {checkScript} {checkScriptArgs} python --wypp {wyppDir} --sheet 01 --assignment 2',
                121, dir=localTestDir)
 def test_python03():
-    expectFail(f'python3 {checkScript} {checkScriptArgs} --submission-dir {localTestDir} python --wypp {wyppDir} --sheet 01 --assignment 2',
+    expectFail(f'python3 {checkScript} {checkScriptArgs} python --wypp {wyppDir} --sheet 01 --assignment 2',
                121, dir=localTestDir)
 def test_python04():
-    expectFail(f'python3 {checkScript} {checkScriptArgs} --submission-dir {localTestDir} python --wypp {wyppDir} --sheet 01 --assignment 1,2',
+    expectFail(f'python3 {checkScript} {checkScriptArgs} python --wypp {wyppDir} --sheet 01 --assignment 1,2',
                121, dir=localTestDir)
 def test_python05():
-    expectFail(f'python3 {checkScript} {checkScriptArgs} --submission-dir {localTestDir} python --wypp {wyppDir} --sheet 01 --assignment 3',
+    expectFail(f'python3 {checkScript} {checkScriptArgs} python --wypp {wyppDir} --sheet 01 --assignment 3',
                1, dir=localTestDir)
 def test_python06():
-    expectFail(f'python3 {checkScript} {checkScriptArgs} --submission-dir {localTestDir} python --wypp {wyppDir} --sheet 01 --assignment 1,2,3',
+    expectFail(f'python3 {checkScript} {checkScriptArgs} python --wypp {wyppDir} --sheet 01 --assignment 1,2,3',
                1, dir=localTestDir)
 
 def test_python07():
@@ -36,7 +36,7 @@ def test_python07():
     for d, ecode in pythonTests:
         sheetDirLocal = f'{praktomatCheckersLocal}/multi-checker/tests/python-wypp/03'
         submissionDir = f'{localTestDir}/03/{d}/'
-        cmd = f'python3 {checkScript} {checkScriptArgs} --submission-dir {submissionDir} python --wypp {wyppDir} --sheet 03'
+        cmd = f'python3 {checkScript} {checkScriptArgs} python --wypp {wyppDir} --sheet 03'
         env = {'PRAKTOMAT_CHECKER_TEST_TIMEOUT': '2'}
         if ecode == 0:
             res = expectOk(cmd, external=sheetDirLocal, dir=submissionDir, env=env)
@@ -47,39 +47,39 @@ def test_python07():
                 fail(f'expected timeout in output\n\n---\n{res.stdout}\n---')
 
 def test_python08():
-    expectOk(f'python3 {checkScript} {checkScriptArgs} --submission-dir {pythonTestDir}/09/solution/ python --wypp {wyppDir} --sheet 09',
+    expectOk(f'python3 {checkScript} {checkScriptArgs} python --wypp {wyppDir} --sheet 09',
         external=f'{pythonTestDirLocal}/09', dir=f'{pythonTestDir}/09/solution/')
 
 def test_python09():
-    expectOk(f'python3 {checkScript} {checkScriptArgs} --submission-dir {pythonTestDir}/labortest_2/solution/ python --wypp {wyppDir} --sheet labortest_2',
+    expectOk(f'python3 {checkScript} {checkScriptArgs} python --wypp {wyppDir} --sheet labortest_2',
         external=f'{pythonTestDirLocal}/labortest_2', dir=f'{pythonTestDir}/labortest_2/solution/')
 
 def test_python10():
-    expectFail(f'python3 {checkScript} {checkScriptArgs} --submission-dir {pythonTestDir}/labortest_2/solution-partial/ python --wypp {wyppDir} --sheet labortest_2',
+    expectFail(f'python3 {checkScript} {checkScriptArgs} python --wypp {wyppDir} --sheet labortest_2',
         121, external=f'{pythonTestDirLocal}/labortest_2', dir=f'{pythonTestDir}/labortest_2/solution-partial/')
 
 def test_python11():
-    expectFail(f'python3 {checkScript} {checkScriptArgs} --submission-dir {pythonTestDir}/labortest_2/solution-nofiles/ python --wypp {wyppDir} --sheet labortest_2',
+    expectFail(f'python3 {checkScript} {checkScriptArgs} python --wypp {wyppDir} --sheet labortest_2',
         1, external=f'{pythonTestDirLocal}/labortest_2', dir=f'{pythonTestDir}/labortest_2/solution-nofiles/')
 
 def test_python12():
-    expectFail(f'python3 {checkScript} {checkScriptArgs} --submission-dir {pythonTestDir}abschlussprojekt/solution-fail python --wypp {wyppDir} --sheet abschlussprojekt',
+    expectFail(f'python3 {checkScript} {checkScriptArgs} python --wypp {wyppDir} --sheet abschlussprojekt',
         external=f'{pythonTestDirLocal}/abschlussprojekt', dir=f'{pythonTestDir}abschlussprojekt/solution-fail')
 
 def test_python13():
-    expectFail(f'python3 {checkScript} {checkScriptArgs} --submission-dir {pythonTestDir}abschlussprojekt/solution-simple python --wypp {wyppDir} --sheet abschlussprojekt',
+    expectFail(f'python3 {checkScript} {checkScriptArgs} python --wypp {wyppDir} --sheet abschlussprojekt',
         121, external=f'{pythonTestDirLocal}/abschlussprojekt', dir=f'{pythonTestDir}abschlussprojekt/solution-simple')
 
 def test_python14():
-    expectOk(f'python3 {checkScript} {checkScriptArgs} --submission-dir {pythonTestDir}abschlussprojekt/solution python --wypp {wyppDir} --sheet abschlussprojekt',
+    expectOk(f'python3 {checkScript} {checkScriptArgs} python --wypp {wyppDir} --sheet abschlussprojekt',
         external=f'{pythonTestDirLocal}/abschlussprojekt', dir=f'{pythonTestDir}abschlussprojekt/solution')
 
 def test_python15():
-    expectOk(f'python3 {checkScript} {checkScriptArgs} --submission-dir {pythonTestDir}/solutions/10-dicts-exceptions python --wypp {wyppDir} --sheet 10-dicts-exceptions',
+    expectOk(f'python3 {checkScript} {checkScriptArgs} python --wypp {wyppDir} --sheet 10-dicts-exceptions',
         external=f'{pythonTestDirLocal}/10-dicts-exceptions', dir=f'{pythonTestDir}/solutions/10-dicts-exceptions')
 
 def test_python16():
-    expectOk(f'python3 {checkScript} {checkScriptArgs} --submission-dir {pythonTestDir}solutions/10-dicts-exceptions/subdir python --wypp {wyppDir} --sheet 10-dicts-exceptions',
+    expectOk(f'python3 {checkScript} {checkScriptArgs} python --wypp {wyppDir} --sheet 10-dicts-exceptions',
         external=f'{pythonTestDirLocal}/10-dicts-exceptions', dir=f'{pythonTestDir}solutions/10-dicts-exceptions/subdir')
 
 def test_python17():
@@ -89,7 +89,7 @@ def test_python17():
     prog2SheetsIncomplete = ['P01-intro', 'P06-Sorting2']
     prog2Sheets = ['P06-Sorting2']
     for s in prog2Sheets:
-        cmd = f'python3 {checkScript} {checkScriptArgs} --submission-dir {python2TestDir}{s}/solution python --wypp {wyppDir} --sheet {s}'
+        cmd = f'python3 {checkScript} {checkScriptArgs} python --wypp {wyppDir} --sheet {s}'
         external=f'{python2TestDirLocal}/{s}'
         dir=f'{python2TestDir}{s}/solution'
         if s in prog2SheetsIncomplete:
