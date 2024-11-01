@@ -1,0 +1,3 @@
+#!/bin/bash
+
+pytest --verbose haskellTests.py javaTests.py pythonTests.py "$@"
