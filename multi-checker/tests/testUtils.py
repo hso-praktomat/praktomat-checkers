@@ -15,15 +15,11 @@ praktomatCheckersLocal = expandEnvVars('$HOME/devel/praktomat-checkers')
 
 _DEBUG = False
 
-praktomatTestsDocker = '/praktomat-tests'
-praktomatCheckersDocker = '/praktomat-checkers'
-sheetDirDocker = '/external'
+thisDir = f'{praktomatCheckersLocal}/multi-checker/tests'
 
-praktomatTests = praktomatTestsDocker
-praktomatCheckers = praktomatCheckersDocker
-thisDir = f'{praktomatCheckers}/multi-checker/tests'
+_praktomatCheckersDocker = '/praktomat-checkers'
+checkScript = f'{_praktomatCheckersDocker}/multi-checker/script/check.py'
 
-checkScript = f'{praktomatCheckers}/multi-checker/script/check.py'
 checkScriptArgs = ''
 if _DEBUG:
     checkScriptArgs = "--debug"
@@ -39,23 +35,31 @@ def debug(msg: str):
     if _DEBUG:
         print(f'[DEBUG] {msg}')
 
-def runCmd(cmd: str, onError='raise', capture=False, external=None, dir=None, env=None):
+def runCmd(cmd: str, onError='raise', capture=False, external=None, submissionDir=None, env=None):
+    submissionDirDocker = '/submission'
+    externalDirDocker = '/external'
     try:
-        externalTmp = mkTempDir(deleteAtExit=False)
-        workDirArg = ""
-        if dir is not None:
-            workDirArg = f'--workdir={dir}'
+        temp = mkTempDir(deleteAtExit=False)
+        externalTmp = pjoin(temp, 'external')
+        dirTmp = pjoin(temp, 'dir')
+        workDirArg = ''
+        submissionVolumeArg = ''
+        if submissionDir is not None:
+            debug(f'Copying {submissionDir} to {dirTmp}')
+            cp(submissionDir, dirTmp)
+            workDirArg = f'--workdir={submissionDirDocker}'
+            submissionVolumeArg = f'--volume {dirTmp}:{submissionDirDocker}'
         if env:
             envStr = ' '.join([f'-e {k}="{v}"' for k,v in env.items()])
         else:
             envStr = ''
-        cmdDocker = f'docker run {envStr} --rm --volume {praktomatCheckersLocal}:{praktomatCheckersDocker} '\
-            f'--volume {praktomatTestsLocal}:{praktomatTestsDocker} '\
+        cmdDocker = f'docker run {envStr} --rm ' \
+            f'--volume {praktomatCheckersLocal}:{_praktomatCheckersDocker} '\
             f'--volume $HOME/devel/tick-trick-track:/external/tick-trick-track '\
-            f'{workDirArg} '
+            f'{submissionVolumeArg} {workDirArg} '
         if external is not None:
-            cp(external, externalTmp) # copies external to externalTmp (as a subdir)
-            cmdDocker += f'--volume {pjoin(externalTmp, basename(external))}:{sheetDirDocker} '
+            cp(external, externalTmp)
+            cmdDocker += f'--volume {externalTmp}:{externalDirDocker} '
         cmdDocker += f'{dockerImage} {cmd}'
         cmd = cmdDocker
         debug(cmd)
@@ -63,26 +67,26 @@ def runCmd(cmd: str, onError='raise', capture=False, external=None, dir=None, en
                 stderrToStdout=capture, env=env)
     finally:
         try:
-            rmdir(externalTmp, recursive=True)
+            pass # rmdir(temp, recursive=True)
         except Exception:
             pass
 
-def expectOk(cmd: str, external=None, dir=None, env=None):
+def expectOk(cmd: str, external=None, submissionDir=None, env=None):
     print()
     info(f'Running test, cmd: {cmd}')
     capture = False if _DEBUG else True
-    res = runCmd(cmd, onError='ignore', external=external, dir=dir, capture=capture, env=env)
+    res = runCmd(cmd, onError='ignore', external=external, submissionDir=submissionDir, capture=capture, env=env)
     if res.exitcode != 0:
         print(res.stdout)
         fail(f'Command should succeed but failed with exit code {res.exitcode}: {cmd}')
     info('OK')
     return res
 
-def expectFail(cmd: str, ecode=None, external=None, dir=None, env=None):
+def expectFail(cmd: str, ecode=None, external=None, submissionDir=None, env=None):
     print()
     info(f'Running test, cmd: {cmd} ...')
     capture = False if _DEBUG else True
-    res = runCmd(cmd, onError='ignore', external=external, dir=dir, capture=capture, env=env)
+    res = runCmd(cmd, onError='ignore', external=external, submissionDir=submissionDir, capture=capture, env=env)
     if res.exitcode == 0:
         print(res.stdout)
         fail(f'Command should fail but succeded with exit code {res.exitcode}: {cmd}')
@@ -92,7 +96,7 @@ def expectFail(cmd: str, ecode=None, external=None, dir=None, env=None):
             fail(f'Command should fail with exit code {ecode} but failed with {res.exitcode}: {cmd}')
         if res.exitcode == 1:
             # make sure there is no exception
-            res2 = runCmd(cmd, onError='ignore', external=external, capture=True, dir=dir, env=env)
+            res2 = runCmd(cmd, onError='ignore', external=external, capture=True, submissionDir=submissionDir, env=env)
             if 'INTERNAL ERROR: checker raised an unexpected exception, this is a bug!' in res2.stdout:
                 print(res2.stdout)
                 fail(f'Command raised an exception')
