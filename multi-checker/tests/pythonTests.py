@@ -75,14 +75,12 @@ def test_python14():
         external=f'{pythonTestDirLocal}/abschlussprojekt', dir=f'{pythonTestDir}abschlussprojekt/solution')
 
 def test_python15():
-    # HERE
-    expectOk(f'python3 {checkScript} {checkScriptArgs} --submission-dir {pythonTestDir}10-dicts-exceptions/solution python --wypp {wyppDir} --sheet 10-dicts-exceptions',
-        external=f'{pythonTestDirLocal}/10-dicts-exceptions', dir=f'{pythonTestDir}10/solution')
+    expectOk(f'python3 {checkScript} {checkScriptArgs} --submission-dir {pythonTestDir}/solutions/10-dicts-exceptions python --wypp {wyppDir} --sheet 10-dicts-exceptions',
+        external=f'{pythonTestDirLocal}/10-dicts-exceptions', dir=f'{pythonTestDir}/solutions/10-dicts-exceptions')
 
 def test_python16():
-# HERE
-    expectOk(f'python3 {checkScript} {checkScriptArgs} --submission-dir {pythonTestDir}10-dicts-exceptions/solution/subdir python --wypp {wyppDir} --sheet 10-dicts-exceptions',
-        external=f'{pythonTestDirLocal}/10-dicts-exceptions', dir=f'{python2TestDir}P04-Listen/solution')
+    expectOk(f'python3 {checkScript} {checkScriptArgs} --submission-dir {pythonTestDir}solutions/10-dicts-exceptions/subdir python --wypp {wyppDir} --sheet 10-dicts-exceptions',
+        external=f'{pythonTestDirLocal}/10-dicts-exceptions', dir=f'{pythonTestDir}solutions/10-dicts-exceptions/subdir')
 
 def test_python17():
     prog2Sheets = ['P01-intro', 'P02-higher-order-funs', 'P03-OO', 'P04-Listen', 'P05-Sorting',
@@ -91,7 +89,6 @@ def test_python17():
     prog2SheetsIncomplete = ['P01-intro', 'P06-Sorting2']
     prog2Sheets = ['P06-Sorting2']
     for s in prog2Sheets:
-        # HERE
         cmd = f'python3 {checkScript} {checkScriptArgs} --submission-dir {python2TestDir}{s}/solution python --wypp {wyppDir} --sheet {s}'
         external=f'{python2TestDirLocal}/{s}'
         dir=f'{python2TestDir}{s}/solution'

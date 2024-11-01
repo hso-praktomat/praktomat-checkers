@@ -16,29 +16,24 @@ def test_haskell03():
             121, external=f'{haskellTestDirLocal}/05', dir=f'{thisDir}/haskell/05-divide-by-zero/')
 
 def test_haskell04():
-    # HERE
     expectFail(f'python3 {checkScript} {checkScriptArgs} --submission-dir {haskellTestDir}/solutions/01 haskell --sheet 01',
-            121, external=f'{haskellTestDirLocal}/01', dir=f'{haskellTestDir}/01/solution/')
+            121, external=f'{haskellTestDirLocal}/01', dir=f'{haskellTestDir}/solutions/01')
 
 def test_haskell05():
-    # HERE
     expectOk(f'python3 {checkScript} {checkScriptArgs} --submission-dir {haskellTestDir}/solutions/03 haskell --sheet 03',
-            external=f'{haskellTestDirLocal}/03', dir=f'{haskellTestDir}/03/solution/')
+            external=f'{haskellTestDirLocal}/03', dir=f'{haskellTestDir}/solutions/03')
 
 def test_haskell06():
-    # HERE
     expectOk(f'python3 {checkScript} {checkScriptArgs} --submission-dir {haskellTestDir}/solutions/04 haskell --sheet 04',
-            external=f'{haskellTestDirLocal}/04', dir=f'{haskellTestDir}/04/solution/')
+            external=f'{haskellTestDirLocal}/04', dir=f'{haskellTestDir}/solutions/04')
 
 def test_haskell07():
-    # HERE
     expectOk(f'python3 {checkScript} {checkScriptArgs} --submission-dir {haskellTestDir}/solutions/05 haskell --sheet 05',
-            external=f'{haskellTestDirLocal}/05', dir=f'{haskellTestDir}/05/solution/')
+            external=f'{haskellTestDirLocal}/05', dir=f'{haskellTestDir}/solutions/05')
 
 def test_haskell08():
-    # HERE
     expectOk(f'python3 {checkScript} {checkScriptArgs} --submission-dir {haskellTestDir}/solutions/06 haskell --sheet 06',
-            external=f'{haskellTestDirLocal}/06', dir=f'{haskellTestDir}/06/solution/')
+            external=f'{haskellTestDirLocal}/06', dir=f'{haskellTestDir}solutions/06')
 
 def test_haskell09():
     # Sheet 06 again, but with a nested solution directory
