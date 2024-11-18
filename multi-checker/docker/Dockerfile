@@ -40,12 +40,11 @@ RUN apt-get update && apt-get install -yq \
   python3-yaml \
   && rm -rf /var/lib/apt/lists/*
 RUN pip3 install --break-system-packages libPyshell==0.3.0
-RUN pip3 install --break-system-packages wypp==1.0.6
 
 # WYPP
 RUN mkdir /wypp
 ADD ./git-clone /git-clone
-RUN bash /git-clone https://github.com/skogsbaer/write-your-python-program.git bb9cae8d13d0a39f375b59f01b1ce8ad61c1c27e /wypp
+RUN bash /git-clone https://github.com/skogsbaer/write-your-python-program.git 45e4ebcaa5faefe843b2e06c388f51737fb71aae /wypp
 RUN rm -rf /wypp/.git
 
 # Our checker scripts
