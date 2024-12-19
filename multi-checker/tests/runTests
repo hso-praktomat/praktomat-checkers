@@ -1,3 +1,4 @@
 #!/bin/bash
 
+# Pass option --capture=no for full output
 pytest --verbose haskellTests.py javaTests.py pythonTests.py "$@"

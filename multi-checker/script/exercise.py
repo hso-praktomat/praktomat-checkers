@@ -84,7 +84,7 @@ class Exercise:
         allIds = [a.id for a in self.assignments]
         for x in assignmentIds:
             if x not in allIds:
-                abort(f'Assigned {x} not defined in exercise file')
+                abort(f'Assignment {x} not defined in exercise file')
 
 def parseExercise(sheet, yamlPath) -> Exercise:
     s = readFile(yamlPath)
