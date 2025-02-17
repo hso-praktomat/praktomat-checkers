@@ -88,7 +88,7 @@ def getTestResult(testFilter: str, out: str, studentDir: str):
         return TestResult(testFilter, out, error=True)
 
 def checkTest(opts: JavaOptions, assignment: Assignment, studentDir: str, testDir: str, testFilter: str, ctx: TestContext, checkCtx: CheckCtx):
-    debug(f'Running tests maching {testFilter} ...')
+    debug(f'Running tests matching {testFilter} ...')
     result = execGradle('test', opts.gradleOffline, studentDir=studentDir, testDir=testDir, testFilter=testFilter)
     testResult = getTestResult(testFilter, result.stdout, studentDir)
     ctx.results.append(testResult)
@@ -171,6 +171,12 @@ def checkFilesExist(ass: list[Assignment], prjDir: str):
     else:
         return 'OK'
 
+def dirnameForSource(s: str):
+    if s.endswith('.java'):
+        return dirname(s)
+    else:
+        return s
+
 def checkWithSourceDir(opts: JavaOptions, projectDir: str, sheetDir: str, ass: list[Assignment]):
     ctx = CheckCtx.empty('Compile', opts.resultFile)
     # do the checks
@@ -180,19 +186,15 @@ def checkWithSourceDir(opts: JavaOptions, projectDir: str, sheetDir: str, ass: l
     if opts.runCheckstyle:
         checkStyle(ctx, projectDir, opts.checkstylePath)
     checkCompile(ctx, opts, projectDir, exResult)
-    testDir = pjoin(sheetDir, 'test-src')
     for a in ass:
         testCtx = TestContext(assignment=a, sheet=opts.sheet, results=[])
         ctx.tests.append(testCtx)
-        for testFilter in a.tests:
-            checkTest(opts, a, projectDir, testDir, testFilter, testCtx, ctx)
+        for t in a.tests:
+            td = dirnameForSource(t)
+            if not isDir(pjoin(sheetDir, td)):
+                abort(f'Configuration error: test directory {td} does not exist in {sheetDir}.')
+            withLimitedDir(sheetDir, [td], lambda d: checkTest(opts, a, projectDir, d, '*', testCtx, ctx))
     outputResultsAndExit(ctx)
-
-def dirnameForSource(s: str):
-    if s.endswith('.java'):
-        return dirname(s)
-    else:
-        return s
 
 def check(opts: JavaOptions):
     sheetDir = getSheetDir(opts.testDir, opts.sheet)
