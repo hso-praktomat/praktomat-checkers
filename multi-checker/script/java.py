@@ -23,7 +23,8 @@ class JavaOptions(Options):
 checkstyleConfig = pjoin(os.path.realpath(os.path.dirname(__file__)), 'checkstyle.xml')
 
 # studentDir is the toplevel directory of the student's project
-def execGradle(task: str, offline: bool, studentDir: str, testDir: str='test-src', testFilter: str='*'):
+def execGradle(task: str, offline: bool, studentDir: str, testDir: str='test-src',
+               testFilter: str='*', timeout: Optional[int] = None):
     cands = []
     for x in ['build.gradle.kts', 'build.gradle']:
         buildFile = abspath(pjoin(studentDir, x))
@@ -36,20 +37,23 @@ def execGradle(task: str, offline: bool, studentDir: str, testDir: str='test-src
         'gradle',
         '-b',
         buildFile,
-        #'--console=verbose',
         '-PtestFilter=' + testFilter,
         '-PtestDir=' + testDir,
         '-PstudentDir=' + studentDir,
         task,
         '--no-parallel',
         '--max-workers=1',
-        '--warning-mode=none',
-        '-Dorg.gradle.welcome=never'
+        '--no-continue'
     ]
+    if isDebug():
+        cmd.append('--console=verbose')
+    else:
+        cmd.append('--warning-mode=none')
+        cmd.append('-Dorg.gradle.welcome=never')
     if offline:
         cmd.append('--offline')
     debug(f'Running "{cmd}"')
-    result = run(cmd, onError='ignore', stderrToStdout=True, captureStdout=True)
+    result = runWithTimeout(cmd, timeout, f'running gradle task {task}')
     return result
 
 def checkCompile(ctx: CheckCtx, opts: JavaOptions, studentDir: str, exResult: CompileStatus):
@@ -89,7 +93,8 @@ def getTestResult(testFilter: str, out: str, studentDir: str):
 
 def checkTest(opts: JavaOptions, assignment: Assignment, studentDir: str, testDir: str, testFilter: str, ctx: TestContext, checkCtx: CheckCtx):
     debug(f'Running tests matching {testFilter} ...')
-    result = execGradle('test', opts.gradleOffline, studentDir=studentDir, testDir=testDir, testFilter=testFilter)
+    result = execGradle('test', opts.gradleOffline, studentDir=studentDir, testDir=testDir,
+                        testFilter=testFilter, timeout=testTimeoutSeconds())
     testResult = getTestResult(testFilter, result.stdout, studentDir)
     ctx.results.append(testResult)
     abortIfTestOkRequired(assignment, testResult, checkCtx)

@@ -6,7 +6,7 @@ from utils import *
 OK_WITH_WARNINGS_EXIT_CODE = 121
 
 # Exit code of the timeout command on timeout
-TIMEOUT_EXIT_CODE = 124
+TIMEOUT_EXIT_CODES = [124, -9, 137]
 
 @dataclass
 class Options:
@@ -24,7 +24,7 @@ def replaceAll(l: list[str], repl: str, s: str) -> str:
         s = s.replace(x, repl)
     return s
 
-def testTimeoutSeconds():
+def testTimeoutSeconds(default: int=60):
     fromEnv = os.getenv('PRAKTOMAT_CHECKER_TEST_TIMEOUT')
     debug('Timeout from environment: ' + str(fromEnv))
     if fromEnv:
@@ -32,20 +32,20 @@ def testTimeoutSeconds():
             return int(fromEnv)
         except TypeError:
             pass
-    return 60
+    return default
 
 def runWithTimeout(cmd: list[str], timeout: Optional[int], what: str, env: dict=None):
     if timeout:
-        cmd = ['timeout', str(timeout)] + cmd
+        cmd = ['timeout', '--kill-after', '2', str(timeout)] + cmd
     debug(f'Command: {" ".join(cmd)}')
     res = run(cmd, onError='ignore', env=env, stderrToStdout=True, captureStdout=True)
-    if timeout and res.exitcode == TIMEOUT_EXIT_CODE:
+    if timeout and res.exitcode in TIMEOUT_EXIT_CODES:
         msg = f'Timeout after {timeout}s while {what}'
         newStdout = res.stdout
         if newStdout:
             newStdout = newStdout + '\n\n' + msg
         else:
             newStdout = msg
-        return RunResult(newStdout, res.stderr, res.exitcode)
+        return RunResult(newStdout, res.stderr, TIMEOUT_EXIT_CODES[0])
     else:
         return res
