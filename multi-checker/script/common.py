@@ -6,7 +6,7 @@ from utils import *
 OK_WITH_WARNINGS_EXIT_CODE = 121
 
 # Exit code of the timeout command on timeout
-TIMEOUT_EXIT_CODES = [124, -9, 137]
+TIMEOUT_EXIT_CODE = 124
 
 @dataclass
 class Options:
@@ -35,17 +35,21 @@ def testTimeoutSeconds(default: int=60):
     return default
 
 def runWithTimeout(cmd: list[str], timeout: Optional[int], what: str, env: dict=None):
-    if timeout:
-        cmd = ['timeout', '--kill-after', '2', str(timeout)] + cmd
+    # Note: I first tried using the unix timeout command. But the combination with gradle
+    # and the subprocess did not work, the process just hung.
     debug(f'Command: {" ".join(cmd)}')
-    res = run(cmd, onError='ignore', env=env, stderrToStdout=True, captureStdout=True)
-    if timeout and res.exitcode in TIMEOUT_EXIT_CODES:
+    #res = subprocess.run(cmd, env=env)
+    res = run(cmd, onError='ignore', env=env, stderrToStdout=True, captureStdout=True, timeout=timeout)
+    ecode = res.exitcode
+    debug(f'Exit code: {ecode}')
+    if timeout and ecode == TIMEOUT_EXIT_CODE:
         msg = f'Timeout after {timeout}s while {what}'
+        debug(msg)
         newStdout = res.stdout
         if newStdout:
             newStdout = newStdout + '\n\n' + msg
         else:
             newStdout = msg
-        return RunResult(newStdout, res.stderr, TIMEOUT_EXIT_CODES[0])
+        return RunResult(newStdout, res.stderr, TIMEOUT_EXIT_CODE)
     else:
-        return res
+        return RunResult(res.stdout, res.stderr, ecode)
