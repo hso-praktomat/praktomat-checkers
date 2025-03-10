@@ -24,9 +24,9 @@ repositories {
 
 dependencies {
     implementation("com.github.andrewoma.dexx:collection:0.7")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.11.0")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.12.0")
     testImplementation("junit:junit:4.13.2")
-    implementation("org.junit.jupiter:junit-jupiter:5.11.0")
+    implementation("org.junit.jupiter:junit-jupiter:5.12.0")
     implementation("junit:junit:4.13.2")
 }
 
