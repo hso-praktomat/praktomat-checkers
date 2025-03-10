@@ -39,7 +39,7 @@ RUN rm -rf /get-gradle-deps
 RUN apt-get update && apt-get install -yq \
   python3-yaml \
   && rm -rf /var/lib/apt/lists/*
-RUN pip3 install --break-system-packages libPyshell==0.3.0
+RUN pip3 install --break-system-packages libPyshell==0.5.0
 
 # WYPP
 RUN mkdir /wypp
