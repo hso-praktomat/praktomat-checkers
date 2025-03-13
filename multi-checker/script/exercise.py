@@ -45,6 +45,7 @@ class Assignment:
     points: int
     src: str         # the name of the source file
     tests: list[str] # test files, can be empty
+    testFilter: Optional[str]
     testOkRequired: bool
     testScript: Optional[str]
     pythonConfig: PythonAssignmentConfig
@@ -53,6 +54,7 @@ class Assignment:
     def parse(sheet: str, v: YamlDict, id: int):
         src = v.get('src')
         tests = asList(v.get('test', [])) + asList(v.get('tests', []))
+        testFilter = v.get('test-filter')
         extras = asList(v.get('extras', []))
         points = v.get('points', -1)
         try:
@@ -62,7 +64,7 @@ class Assignment:
         testOkRequired = v.get('test-ok-required', False)
         testScript = v.get('test-script')
         py = PythonAssignmentConfig.parse(v)
-        return Assignment(sheet, id, points, src, tests, testOkRequired, testScript, py, extras)
+        return Assignment(sheet, id, points, src, tests, testFilter, testOkRequired, testScript, py, extras)
 
 assignmentIdRe = re.compile(r'\d+[a-z]?')
 
