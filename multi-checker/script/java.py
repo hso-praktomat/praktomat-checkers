@@ -182,6 +182,17 @@ def dirnameForSource(s: str):
     else:
         return s
 
+def dirnameForFilter(s: str):
+    s = s.replace('.', '/')
+    # Try to find the first class name (assumption: it's the only capitalized element)
+    # or wildcard, then continue with its parent directory
+    pathElements = s.split('/')
+    for i, p in enumerate(pathElements):
+        if (len(p) > 0 and p[0].isupper()) or '*' in p:
+            pathElements = pathElements[:i]
+            break
+    return os.path.join('test-src', *pathElements)
+
 def checkWithSourceDir(opts: JavaOptions, projectDir: str, sheetDir: str, ass: list[Assignment]):
     ctx = CheckCtx.empty('Compile', opts.resultFile)
     # do the checks
@@ -194,11 +205,19 @@ def checkWithSourceDir(opts: JavaOptions, projectDir: str, sheetDir: str, ass: l
     for a in ass:
         testCtx = TestContext(assignment=a, sheet=opts.sheet, results=[])
         ctx.tests.append(testCtx)
-        for t in a.tests:
-            td = dirnameForSource(t)
+
+        testDirectories = list(map(dirnameForSource, a.tests))
+        if a.testFilter:
+            testDirectories.append(dirnameForFilter(a.testFilter))
+        for td in testDirectories:
             if not isDir(pjoin(sheetDir, td)):
                 abort(f'Configuration error: test directory {td} does not exist in {sheetDir}.')
-            withLimitedDir(sheetDir, [td], lambda d: checkTest(opts, a, projectDir, d, '*', testCtx, ctx))
+
+        if len(testDirectories) > 0:
+            testFilter = a.testFilter
+            if not testFilter:
+                testFilter = '*'
+            withLimitedDir(sheetDir, testDirectories, lambda d: checkTest(opts, a, projectDir, d, testFilter, testCtx, ctx))
     outputResultsAndExit(ctx)
 
 def check(opts: JavaOptions):
