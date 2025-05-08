@@ -321,6 +321,7 @@ def check(opts: PythonOptions):
         ex = parseExercise(sheet, exFile)
     else:
         ex = None
+    debug(f'Exercise (file: {exFile}): {ex}')
     ass = opts.assignments
     nestedSourceDir = findSolutionDir(opts.sourceDir)
     with workingDir(nestedSourceDir):
