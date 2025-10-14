@@ -46,6 +46,7 @@ def execGradle(task: str, offline: bool, studentDir: str, testDir: str='test-src
         '--no-continue'
     ]
     if isDebug():
+        cmd.append('--info')
         cmd.append('--console=verbose')
     else:
         cmd.append('--warning-mode=none')
