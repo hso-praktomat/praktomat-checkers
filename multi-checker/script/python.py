@@ -34,10 +34,10 @@ def prepareEnv(testEnv: Optional[dict], pyPath: Optional[str]):
 def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, typecheck: bool,
             testFile: Optional[str]=None, testEnv: dict=None, timeout: Optional[int]=None):
     thisDir = abspath('.')
-    pyPath = wyppPath + '/python/site-lib:' + thisDir
+    pyPath = wyppPath + '/python/code:' + thisDir
     print('pyPath='+pyPath)
     testEnv = prepareEnv(testEnv, pyPath)
-    args = ['python3', wyppPath + '/python/src/runYourProgram.py']
+    args = ['python3', wyppPath + '/python/code/wypp/runYourProgram.py']
     if testFile:
         args = args + ['--test-file', testFile]
     args = args + ['--check-runnable' if onlyRunnable else '--check']
@@ -250,7 +250,7 @@ def checkTutorTests(opts: Options, testCtx: TestContext, a: Assignment, srcDir: 
                               typecheck=a.pythonConfig.typecheck,
                               testFile=testPath, testEnv=testEnv, timeout=testTimeoutSeconds())
         else:
-            testOut = runUnittest(testPath, [opts.wypp + '/python/site-lib', srcDir],
+            testOut = runUnittest(testPath, [opts.wypp + '/python/code', srcDir],
                                   testEnv=testEnv, timeout=testTimeoutSeconds())
         testRes = getTestResult(t, testOut)
         testCtx.results.append(testRes)
