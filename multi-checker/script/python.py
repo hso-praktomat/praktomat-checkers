@@ -37,7 +37,7 @@ def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, typecheck: bool
     pyPath = wyppPath + '/python/code:' + thisDir
     print('pyPath='+pyPath)
     testEnv = prepareEnv(testEnv, pyPath)
-    args = ['python3', wyppPath + '/python/code/wypp/runYourProgram.py']
+    args = ['python3', wyppPath + '/python/code/wypp/runYourProgram.py', '--lang', 'de']
     if testFile:
         args = args + ['--test-file', testFile]
     args = args + ['--check-runnable' if onlyRunnable else '--check']
