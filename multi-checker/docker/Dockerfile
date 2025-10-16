@@ -8,13 +8,13 @@ RUN curl -sSL https://get.haskellstack.org/ | sh
 # The resolver must match the one given in the stack.yaml file
 # from praktomat-tests/haskell-advanced-prog/common and from
 # ~/Teaching/AdvancedProg-Praktikum/config-common
-RUN stack --resolver lts-22.34 install base
-RUN stack --resolver lts-22.34 install containers directory filepath template-haskell mtl text
-RUN stack --resolver lts-22.34 install happy primitive safe syb vector
-RUN stack --resolver lts-22.34 install haskell-src-exts
-RUN stack --resolver lts-22.34 install haskell-src-meta
-RUN stack --resolver lts-22.34 install main-tester
-RUN stack --resolver lts-22.34 install call-stack HUnit
+RUN stack --resolver lts-24.3 install base
+RUN stack --resolver lts-24.3 install containers directory filepath template-haskell mtl text
+RUN stack --resolver lts-24.3 install happy primitive safe syb vector
+RUN stack --resolver lts-24.3 install haskell-src-exts
+RUN stack --resolver lts-24.3 install haskell-src-meta
+RUN stack --resolver lts-24.3 install main-tester
+RUN stack --resolver lts-24.3 install call-stack HUnit
 
 # Install Gradle
 RUN apt-get update && apt-get install -yq \
