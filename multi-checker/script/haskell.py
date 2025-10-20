@@ -56,6 +56,9 @@ def getTestResult(testFile, out: str):
                 lastTestLine = line
     if lastTestLine:
         m = haskellTestRe.match(lastTestLine)
+        if not m:
+            print('Cannot parse test output!')
+            return TestResult(testFile, cleanOut, True)
         cases = int(m.group(1))
         tried = int(m.group(2))
         errors = int(m.group(3)) + (cases - tried)
@@ -71,10 +74,10 @@ def checkTest(assignment: Assignment, ctx: TestContext, testFile: str, incDirs: 
     incOpts = []
     for d in incDirs:
         incOpts.append(f'--ghci-options -i{d}')
-    cmd = f'''stack --silent ghci "{srcFile}" "{testFile}" --flag {prjName}:test-mode
-        {" ".join(incOpts)}
-        --ghci-options -e --ghci-options ":m {testModName}"
-        --ghci-options -e --ghci-options {testModName}.tutorMain'''
+    cmd = f'stack --silent ghci "{srcFile}" "{testFile}" --flag {prjName}:test-mode ' + \
+          " ".join(incOpts) + \
+          f' --ghci-options -e --ghci-options ":m {testModName}"' + \
+          f' --ghci-options -e --ghci-options {testModName}.tutorMain'
     debug(f'Executing tests {testFile} for {srcFile} ...')
     debug(f'Command: {cmd}')
     result = run(cmd, onError='ignore', stderrToStdout=True, captureStdout=True)
