@@ -35,7 +35,7 @@ def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, typecheck: bool
             testFile: Optional[str]=None, testEnv: dict=None, timeout: Optional[int]=None):
     thisDir = abspath('.')
     pyPath = wyppPath + '/python/code:' + thisDir
-    print('pyPath='+pyPath)
+    # print('pyPath='+pyPath)
     testEnv = prepareEnv(testEnv, pyPath)
     args = ['python3', wyppPath + '/python/code/wypp/runYourProgram.py', '--lang', 'de']
     if testFile:
