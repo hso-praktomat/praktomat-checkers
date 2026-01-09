@@ -41,3 +41,7 @@ def test_haskellSheet6_nested():
         cp(f'{haskellTestDir}/solutions/06', pjoin(d, 'solution'))
         expectOk(f'python3 {checkScript} {checkScriptArgs} haskell --sheet 06',
                 external=f'{haskellTestDir}/06', submissionDir=pjoin(haskellTestDir, basename(d)))
+
+def test_haskellSheetLabTests():
+    expectOk(f'python3 {checkScript} {checkScriptArgs} haskell --sheet T01',
+            external=f'{haskellTestDir}/T01', submissionDir=f'{haskellTestDir}/solutions/T01')
