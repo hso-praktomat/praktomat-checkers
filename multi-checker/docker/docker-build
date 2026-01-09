@@ -36,6 +36,8 @@ echo "Successfully build image with tag $TAG."
 
 if [ $(hostname) == "progcheck" ]; then
     echo "Not pushing because we are running on progcheck"
+elif [ "$platform" == "linux/arm64" ]; then
+    echo "Not pushing image for ARM64"
 else
     docker push $TAG
     echo "Successfully pushed image with tag $TAG"
