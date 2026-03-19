@@ -3,6 +3,7 @@ from common import *
 import python
 import haskell
 import java
+import llm_tutor
 import argparse
 import re
 import traceback
@@ -44,9 +45,15 @@ def parseArgs():
                       help='Use gradle in online mode, default is offline')
     java.add_argument('--assignment', metavar='X', type=str,
                       help='Identifier for assignment(s), multiple assignments separated by commas')
-    (known, other) = parser.parse_known_args()
+    
+    llm = subparsers.add_parser('llm-tutor', help='Run LLM tutor feedback check')
+    llm.add_argument('--sheet', metavar='X', type=str, help='Identifier for sheet')
+    llm.add_argument('--fake-llm', action= 'store_true',default=False, 
+                     help='used just to test the system')
+
     #if other:
     #    print(f'WARNING: ignoring unknown commandline arguments: {other}')
+    (known, other) = parser.parse_known_args()
     return known
 
 # "Labortest 2, Gruppe A" -> ["labortest_2", labortest_2_gruppe_a"]
@@ -152,6 +159,17 @@ def main():
             assignments=assignments)
         debug(f'Running Java checks, options: {opts}')
         java.check(opts)
+    elif cmd == 'llm-tutor':
+        # sheet optional; für deinen Durchstoß nicht nötig
+        opts = llm_tutor.LlmTutorOptions(
+            sourceDir=submissionDir,
+            testDir=testDir,
+            resultFile=resultFile,
+            sheet=None,
+            fakeLlm= args.fake_llm
+        )
+        debug(f'Running LLM tutor checks, options: {opts}')
+        llm_tutor.check(opts)
     else:
         bug(f'invalid kind: {cmd}')
 
