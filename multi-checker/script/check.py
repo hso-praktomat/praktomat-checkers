@@ -16,7 +16,7 @@ def parseArgs():
     parser.add_argument('--submission-dir', metavar='DIR', type=str,
                         help='Directories with student submission')
     parser.add_argument('--test-dir', metavar='DIR', type=str,
-                        help='Directories with tests')
+                        help='Directories with tests and the exercise.yaml')
     parser.add_argument('--result-file', metavar='FILE', type=str,
                         help='File where test results are stored as a pickled python dict.\n' +
                             'See TestCtx.asDict for the format of the dict.')
