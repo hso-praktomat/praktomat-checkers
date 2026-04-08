@@ -45,6 +45,8 @@ def parseArgs():
     java.add_argument('--assignment', metavar='X', type=str,
                       help='Identifier for assignment(s), multiple assignments separated by commas')
     (known, other) = parser.parse_known_args()
+    if '--debug' in other:
+        known.debug = True
     #if other:
     #    print(f'WARNING: ignoring unknown commandline arguments: {other}')
     return known
