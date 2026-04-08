@@ -45,6 +45,8 @@ def parseArgs():
     java.add_argument('--assignment', metavar='X', type=str,
                       help='Identifier for assignment(s), multiple assignments separated by commas')
     (known, other) = parser.parse_known_args()
+    if '--debug' in other:
+        known.debug = True
     #if other:
     #    print(f'WARNING: ignoring unknown commandline arguments: {other}')
     return known
@@ -65,12 +67,17 @@ def candsFromTitle(origTitle: str) -> list[str]:
     return cands
 
 _numRe = re.compile(r'\b\d+\b')
-def getSheetFromEnv(testDir):
+def getSheetFromEnv(testDir: str) -> Optional[str]:
     task_id = os.environ.get('TASK_ID_CUSTOM')
     if task_id is not None and task_id != '':
         return task_id
-    origTitle = os.environ.get('TASK_TITLE').strip()
+    taskTitle = os.environ.get('TASK_TITLE')
+    if taskTitle is None:
+        return None
+    origTitle = taskTitle.strip()
     cands = candsFromTitle(origTitle)
+    if cands:
+        return None
     m = _numRe.search(origTitle)
     if m:
         cands.append(m.group(0).zfill(2))

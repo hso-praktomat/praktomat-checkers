@@ -14,10 +14,16 @@ class Options:
     testDir: Optional[str]
     resultFile: Optional[str]
 
-def getSheetDir(testDir: Optional[str], sheet: str):
+def getSheetDir(testDir: Optional[str], sheet: Optional[str]):
     if testDir is None:
-        return '/external'
-    return pjoin(testDir, sheet)
+        testDir = '/external'
+    if sheet is None:
+        return testDir
+    cand = pjoin(testDir, sheet)
+    if isdir(cand):
+        return cand
+    else:
+        return testDir
 
 def replaceAll(l: list[str], repl: str, s: str) -> str:
     for x in l:
@@ -34,7 +40,7 @@ def testTimeoutSeconds(default: int=60):
             pass
     return default
 
-def runWithTimeout(cmd: list[str], timeout: Optional[int], what: str, env: dict=None):
+def runWithTimeout(cmd: list[str], timeout: Optional[int], what: str, env: Optional[dict]=None):
     # Note: I first tried using the unix timeout command. But the combination with gradle
     # and the subprocess did not work, the process just hung.
     debug(f'Command: {" ".join(cmd)}')
