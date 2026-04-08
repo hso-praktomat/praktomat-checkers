@@ -24,6 +24,15 @@ def prepareEnv(testEnv: Optional[dict], searchDirs: list[str]) -> dict:
     else:
         testEnv = testEnv.copy()
     if searchDirs:
+        l: list[str] = []
+        for x in searchDirs:
+            x = x.strip()
+            if not x:
+                x = '.'
+            x = os.path.normpath(x)
+            if x not in l:
+                l.append(x)
+        searchDirs = l
         key = 'PYTHONPATH'
         pyPath = ':'.join(searchDirs)
         oldPyPath = os.getenv(key)
@@ -54,7 +63,6 @@ def runUnittest(testFile: str, searchDirs: list[str], testEnv: Optional[dict]=No
         abort(f'Test file {testFile} does not exist')
     testEnv = prepareEnv(testEnv, ['.'] + searchDirs)
     args = ['python3', testFile]
-    debug(f'Command: {" ".join(args)}')
     res = runWithTimeout(args, timeout, f'running unittests in {testFile}', env=testEnv)
     return res
 
