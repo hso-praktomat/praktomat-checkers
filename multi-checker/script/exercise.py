@@ -34,8 +34,10 @@ class YamlDict:
         return x
     def getStr(self, key: str) -> Optional[str]:
         x = self.get(key)
+        if x is None:
+            return None
         if not isinstance(x, str):
-            abort(f'Config option "{key} must be a string')
+            abort(f'Config option "{key} must be a string: {x}')
         return x
     def items(self):
         return self.__dicts[0].items()

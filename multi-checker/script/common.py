@@ -32,8 +32,8 @@ def replaceAll(l: list[str], repl: str, s: str) -> str:
 
 def testTimeoutSeconds(default: int=60):
     fromEnv = os.getenv('PRAKTOMAT_CHECKER_TEST_TIMEOUT')
-    debug('Timeout from environment: ' + str(fromEnv))
     if fromEnv:
+        debug('Timeout from environment: ' + str(fromEnv))
         try:
             return int(fromEnv)
         except TypeError:
