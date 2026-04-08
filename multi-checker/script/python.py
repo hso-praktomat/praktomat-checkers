@@ -18,13 +18,14 @@ class PythonOptions(Options):
     assignments: Optional[str | list[str]]
     wypp: str
 
-def prepareEnv(testEnv: Optional[dict], pyPath: Optional[str]):
+def prepareEnv(testEnv: Optional[dict], searchDirs: list[str]) -> dict:
     if testEnv is None:
         testEnv = {}
     else:
         testEnv = testEnv.copy()
-    if pyPath:
+    if searchDirs:
         key = 'PYTHONPATH'
+        pyPath = ':'.join(searchDirs)
         oldPyPath = os.getenv(key)
         if oldPyPath:
             pyPath = pyPath + ':' + oldPyPath
@@ -34,9 +35,8 @@ def prepareEnv(testEnv: Optional[dict], pyPath: Optional[str]):
 def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, typecheck: bool,
             testFile: Optional[str]=None, testEnv: Optional[dict]=None, timeout: Optional[int]=None):
     thisDir = abspath('.')
-    pyPath = wyppPath + '/python/code:' + thisDir
     # print('pyPath='+pyPath)
-    testEnv = prepareEnv(testEnv, pyPath)
+    testEnv = prepareEnv(testEnv, [wyppPath + '/python/code:', thisDir])
     args = ['python3', wyppPath + '/python/code/wypp/runYourProgram.py', '--lang', 'de']
     if testFile:
         args = args + ['--test-file', testFile]
@@ -48,11 +48,11 @@ def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, typecheck: bool
                          env=testEnv)
     return res
 
-def runUnittest(testFile: str, searchDirs: list[Optional[str]], testEnv: Optional[dict]=None,
+def runUnittest(testFile: str, searchDirs: list[str], testEnv: Optional[dict]=None,
                 timeout: Optional[int]=None):
     if not isFile(testFile):
         abort(f'Test file {testFile} does not exist')
-    testEnv = prepareEnv(testEnv, '.')
+    testEnv = prepareEnv(testEnv, ['.'] + searchDirs)
     args = ['python3', testFile]
     debug(f'Command: {" ".join(args)}')
     res = runWithTimeout(args, timeout, f'running unittests in {testFile}', env=testEnv)
@@ -261,7 +261,10 @@ def checkTutorTests(opts: PythonOptions,
                               typecheck=a.pythonConfig.typecheck,
                               testFile=testPath, testEnv=testEnv, timeout=testTimeoutSeconds())
         else:
-            testOut = runUnittest(testPath, [opts.wypp + '/python/code', srcDir],
+            searchDirs = [opts.wypp + '/python/code']
+            if srcDir:
+                searchDirs.append(srcDir)
+            testOut = runUnittest(testPath, searchDirs,
                                   testEnv=testEnv, timeout=testTimeoutSeconds())
         testRes = getTestResult(t, testOut)
         testCtx.results.append(testRes)

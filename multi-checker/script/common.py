@@ -43,19 +43,27 @@ def testTimeoutSeconds(default: int=60):
 def runWithTimeout(cmd: list[str], timeout: Optional[int], what: str, env: Optional[dict]=None):
     # Note: I first tried using the unix timeout command. But the combination with gradle
     # and the subprocess did not work, the process just hung.
-    debug(f'Command: {" ".join(cmd)}')
+    debug(f'START Command: {" ".join(cmd)}')
+    if env:
+        debug(f'Environment for command: {env}')
     #res = subprocess.run(cmd, env=env)
     res = run(cmd, onError='ignore', env=env, stderrToStdout=True, captureStdout=True, timeout=timeout)
     ecode = res.exitcode
     debug(f'Exit code: {ecode}')
-    if timeout and ecode == TIMEOUT_EXIT_CODE:
-        msg = f'Timeout after {timeout}s while {what}'
-        debug(msg)
-        newStdout = res.stdout
-        if newStdout:
-            newStdout = newStdout + '\n\n' + msg
+    debug(f'Stdout:\n{res.stdout}')
+    debug(f'Stderr:\n{res.stderr}')
+    try:
+        if timeout and ecode == TIMEOUT_EXIT_CODE:
+            msg = f'Timeout after {timeout}s while {what}'
+            debug(msg)
+            newStdout = res.stdout
+            if newStdout:
+                newStdout = newStdout + '\n\n' + msg
+            else:
+                newStdout = msg
+            return RunResult(newStdout, res.stderr, TIMEOUT_EXIT_CODE)
         else:
-            newStdout = msg
-        return RunResult(newStdout, res.stderr, TIMEOUT_EXIT_CODE)
-    else:
-        return RunResult(res.stdout, res.stderr, ecode)
+            return RunResult(res.stdout, res.stderr, ecode)
+    finally:
+        debug(f'END Command: {" ".join(cmd)}')
+
