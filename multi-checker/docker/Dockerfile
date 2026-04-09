@@ -41,10 +41,10 @@ RUN apt-get update && apt-get install -yq \
   && rm -rf /var/lib/apt/lists/*
 RUN pip3 install --break-system-packages libPyshell==0.5.0 aiofiles aiohttp
 
-# WYPP, version 2.2.1 plus some fixes (2026-03-26)
+# WYPP, version 2.3.0 (2026-04-09)
 RUN mkdir /wypp
 ADD ./git-clone /git-clone
-RUN bash /git-clone https://github.com/skogsbaer/write-your-python-program.git 324674a3f12b0f4d5dc75d5123b9842f9aee54ea /wypp
+RUN bash /git-clone https://github.com/skogsbaer/write-your-python-program.git 910e5c867bfd31c7c959d550dde5838547c6ef84 /wypp
 RUN rm -rf /wypp/.git
 
 # Our checker scripts
