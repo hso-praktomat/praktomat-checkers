@@ -24,7 +24,7 @@ def getSolutionDir(solutionDir: Optional[str]):
         return '/solution'
     
 def getPdfDir(pdfDir: Optional[str]):
-    if solutionDir is None:
+    if pdfDir is None:
         return '/pdf'
 
 def replaceAll(l: list[str], repl: str, s: str) -> str:

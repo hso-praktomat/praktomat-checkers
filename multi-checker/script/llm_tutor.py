@@ -9,13 +9,16 @@ from common import *
 from exercise import parseExercise
 
 
+def configError(s):
+    abort('Config error: ' + s)
+
 @dataclass
 class LlmTutorOptions(Options):
     llm_tutor_dir: str
     solution_dir: str
     pdf_dir: str
-    sheet: Optional[str] = None
     fakeLlm: bool
+    sheet: Optional[str] = None
    
    
 # alle strings sind als pfad hier weitergegeben
@@ -34,13 +37,13 @@ def runLlmTutor (llmTutorPfad: str, fake_llm: bool, id: str, sampleSolution: str
             print(args , "\n")
             return 
     else:
-         None
+        runWithTimeout(args)
     
     
 
 def check(opts: LlmTutorOptions):
     # test dir, pfad zum exercise.yaml (mount a dir tests/llm-tutor > externel)
-    exTest_dir = getSheetDir(opts)
+    exTest_dir = getSheetDir(opts.testDir, opts.sheet)
     exYaml = pjoin(exTest_dir, 'exercise.yaml')
     if isFile(exYaml):
         ex = parseExercise(opts.sheet, exYaml)
@@ -51,14 +54,18 @@ def check(opts: LlmTutorOptions):
         for assignemnt in ex.assignments:
              
             # pfad zu Musterlösung (mount a dir > tests/llm-tutor/sampleSolution > solution)
-            exSampleSolution_pfad = pjoin(getSolutionDir(opts.solution_dir), assignemnt.tests)
+            if not assignemnt.tests:
+                configError(f'No test file defined for assignment {assignemnt.id}')
+                exSampleSolution_pfad = pjoin(getSolutionDir(opts.solution_dir), assignemnt.tests[0])
+
+            # aufgabe pfad extrahieren
+            if not assignemnt.extraFiles:
+                configError(f'No extra file defined for assignment {assignemnt.id}')
+                pdf = pjoin(getPdfDir(opts.pdf_dir), assignemnt.extraFiles[0])
 
             # student Solution
             nestedSourceDir = findSolutionDir(opts.sourceDir)
             student_pfad = pjoin (nestedSourceDir, assignemnt.src)
-
-            # aufgabe pfad extrahieren
-            pdf = pjoin(getPdfDir(opts.pdf_dir), assignemnt.extraFiles)
 
             # Result von Sprachmodell
             runLlmTutor(llmTutorPfad=opts.llm_tutor_dir,
