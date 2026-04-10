@@ -1,6 +1,4 @@
-meta:
-  task_pdf: P04-mixed_blatt-04.pdf
-  model_solution: muster_pizza.py
-
 3:
   src: pizza.py
+  test: muster_pizza.py
+  extras: P04-mixed_blatt-04.pdf

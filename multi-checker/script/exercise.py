@@ -94,3 +94,4 @@ def parseExercise(sheet, yamlPath) -> Exercise:
     ex = Exercise.parse(sheet, YamlDict(ymlDict))
     debug(f"Parsed exercise from {yamlPath} for sheet {sheet}: {ex}")
     return ex
+

@@ -47,6 +47,11 @@ def parseArgs():
                       help='Identifier for assignment(s), multiple assignments separated by commas')
     
     llm = subparsers.add_parser('llm-tutor', help='Run LLM tutor feedback check')
+    llm.add_argument('--llm-tutor-dir', metavar='DIR', type=str, help='Path to llm-tutor-dir')
+    llm.add_argument('--solution-dir', metavar='DIR', type=str,
+                        help='Directories with sample solution')
+    llm.add_argument('--pdf-dir', metavar='DIR', type=str,
+                        help='Directories with assignment pdfs')
     llm.add_argument('--sheet', metavar='X', type=str, help='Identifier for sheet')
     llm.add_argument('--fake-llm', action= 'store_true',default=False, 
                      help='used just to test the system')

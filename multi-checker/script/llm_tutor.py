@@ -5,112 +5,68 @@ import os, sys, shlex
 import yaml  # pip install pyyaml
 
 from utils import *
-from common import Options, runWithTimeout, testTimeoutSeconds
+from common import *
 from exercise import parseExercise
 
 
-THIS_DIR = os.path.dirname(os.path.abspath(__file__))  # ...\multi-checker\script
-
-# 4 Ebenen hoch: Bachelor_Wehr
-PROJECT_ROOT = os.path.abspath(os.path.join(THIS_DIR, "..", "..", "..", ".."))
-
-TUTOR_ROOT = os.path.join(PROJECT_ROOT, "Tutor_chatbot")
-
-DEFAULT_TUTOR_PY = os.path.join(TUTOR_ROOT, ".venv", "Scripts", "python.exe")
-DEFAULT_TUTOR_MAIN = os.path.join(TUTOR_ROOT, "src", "praktomat_entry.py")
-
-default_cmd = f'"{DEFAULT_TUTOR_PY}" "{DEFAULT_TUTOR_MAIN}"'
-
 @dataclass
 class LlmTutorOptions(Options):
-    fakeLlm: bool
+    llm_tutor_dir: str
+    solution_dir: str
+    pdf_dir: str
     sheet: Optional[str] = None
+    fakeLlm: bool
    
+   
+# alle strings sind als pfad hier weitergegeben
+def runLlmTutor (llmTutorPfad: str, fake_llm: bool, id: str, sampleSolution: str, studentSolution: str, pdf_task:str ):
+    args = ['python3', llmTutorPfad + '/src/praktomat_entry.py']
+
+    args = args + [
+            "--pdf", pdf_task,
+            "--model-solution", sampleSolution,
+            "--student-solution", studentSolution,
+            "--assignment", id,
+    ]
+
+    if fake_llm:
+            print("Dummy Result: \n")
+            print(args , "\n")
+            return 
+    else:
+         None
+    
+    
 
 def check(opts: LlmTutorOptions):
+    # test dir, pfad zum exercise.yaml (mount a dir tests/llm-tutor > externel)
+    exTest_dir = getSheetDir(opts)
+    exYaml = pjoin(exTest_dir, 'exercise.yaml')
+    if isFile(exYaml):
+        ex = parseExercise(opts.sheet, exYaml)
+    else:
+        ex = None
 
-    # 1) test-dir (llm-tutor) und exercise.yaml finden
-    if opts.testDir is None:
-        abort("testDir fehlt (erwarte --test-dir TEST_DIR)")
+    if ex is not None:
+        for assignemnt in ex.assignments:
+             
+            # pfad zu Musterlösung (mount a dir > tests/llm-tutor/sampleSolution > solution)
+            exSampleSolution_pfad = pjoin(getSolutionDir(opts.solution_dir), assignemnt.tests)
 
-    test_dir = abspath(opts.testDir)
-    exercise_path = pjoin(test_dir, "exercise.yaml")
+            # student Solution
+            nestedSourceDir = findSolutionDir(opts.sourceDir)
+            student_pfad = pjoin (nestedSourceDir, assignemnt.src)
 
-    if not isFile(exercise_path):
-        abort(f"exercise.yaml nicht gefunden: {exercise_path}")
+            # aufgabe pfad extrahieren
+            pdf = pjoin(getPdfDir(opts.pdf_dir), assignemnt.extraFiles)
 
-    # 2) YAML roh laden, um meta auszulesen
-    raw = yaml.safe_load(readFile(exercise_path))
-    if not isinstance(raw, dict):
-        abort("exercise.yaml hat kein gültiges YAML-Top-Level-Dict")
-
-    meta = raw.get("meta", {})
-    if meta is None:
-        meta = {}
-    if not isinstance(meta, dict):
-        abort("meta muss ein YAML-Dict sein (z.B. meta: {task_pdf: ..., model_solution: ...})")
-
-    pdf_rel = meta.get("task_pdf")
-    ms_rel = meta.get("model_solution")
-
-    if not pdf_rel or not ms_rel:
-        abort("meta.task_pdf und meta.model_solution müssen gesetzt sein")
-
-    task_pdf = pjoin(test_dir, pdf_rel)
-    model_solution = pjoin(test_dir, ms_rel)
-
-    if not isFile(task_pdf):
-        abort(f"Aufgaben-PDF nicht gefunden: {task_pdf}")
-    if not (isFile(model_solution) or isDir(model_solution)):
-        abort(f"Musterlösung nicht gefunden: {model_solution}")
-
-    # 3) Assignments parsen (liefert z.B. Aufgabe 3 + src: pizza.py)
-    ex = parseExercise(opts.sheet or "default", exercise_path)
-
-    if not ex.assignments:
-        abort("Keine Assignments in exercise.yaml gefunden (Keys müssen z.B. '3:' sein)")
-
-    # 4) Abgabe-Root finden
-    submission_root = findSolutionDir(abspath(opts.sourceDir))
-
-    # Lokaler Default (dein PC)
-    cmd_str = os.getenv("LLM_TUTOR_CMD", default_cmd)
-
-    any_called = False
-    for a in ex.assignments:
-        if not a.src:
-            continue
-
-        assignment_id = a.id  # "3"
-        student_path = findFile(a.src, submission_root, ignoreCase=True)
-        if not student_path:
-            abort(f"Student-Datei für Aufgabe {assignment_id} nicht gefunden: {a.src}")
-
-        cmd = shlex.split(cmd_str) + [
-            "--pdf", task_pdf,
-            "--model-solution", model_solution,
-            "--student-solution", student_path,
-            "--assignment", assignment_id,
-        ]
-
-        # for testing cases
-        if opts.fakeLlm:
-            print("Dummy Result: \n")
-            print(cmd , "\n")
-            return 
-    
-        res = runWithTimeout(cmd, timeout=testTimeoutSeconds(180), what="running LLM tutor")
-
-        if res.exitcode != 0:
-            sys.exit(1)
-
-        any_called = True
-
-    if not any_called:
-        abort("Kein Assignment mit src gefunden (src fehlt in exercise.yaml?)")
-
-    sys.exit(0)
-
+            # Result von Sprachmodell
+            runLlmTutor(llmTutorPfad=opts.llm_tutor_dir,
+                            fake_llm= opts.fakeLlm, 
+                            id= assignemnt.id,
+                            sampleSolution= exSampleSolution_pfad, 
+                            studentSolution= student_pfad,
+                            pdf_task= pdf)
 
 
 # python check.py --submission-dir ..\tests\llm-tutor\loesung --test-dir ..\tests\llm-tutor llm-tutor --fake-llm True

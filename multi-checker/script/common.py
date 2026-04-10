@@ -19,6 +19,14 @@ def getSheetDir(testDir: Optional[str], sheet: str):
         return '/external'
     return pjoin(testDir, sheet)
 
+def getSolutionDir(solutionDir: Optional[str]):
+    if solutionDir is None:
+        return '/solution'
+    
+def getPdfDir(pdfDir: Optional[str]):
+    if solutionDir is None:
+        return '/pdf'
+
 def replaceAll(l: list[str], repl: str, s: str) -> str:
     for x in l:
         s = s.replace(x, repl)
