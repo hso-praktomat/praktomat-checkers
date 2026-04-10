@@ -75,5 +75,11 @@ def check(opts: LlmTutorOptions):
                             studentSolution= student_pfad,
                             pdf_task= pdf)
 
+"""
+docker run --volume C:\Users\Lenovo\Documents\Uni_Offenburg\7.semester\Bachelor_Wehr\praktomat\praktomat-checkers\multi-checker\tests\llm-tutor:/external:ro \
+    —-volume C:\Users\Lenovo\Documents\Uni_Offenburg\7.semester\Bachelor_Wehr\praktomat\praktomat-checkers\multi-checker\tests\llm-tutor\loesung:/solution:ro \ 
+ 	—-volume C:\Users\Lenovo\Documents\Uni_Offenburg\7.semester\Bachelor_Wehr\praktomat\praktomat-checkers\multi-checker\tests\llm-tutor\pdfs:/pdf:ro \ 
+    --workdir /path/to/student/submission \
+    python3 /checker/check.py llm-tutor 
 
-# python check.py --submission-dir ..\tests\llm-tutor\loesung --test-dir ..\tests\llm-tutor llm-tutor --fake-llm True
+"""
