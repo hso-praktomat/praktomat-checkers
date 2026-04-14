@@ -68,8 +68,8 @@ def check(opts: LlmTutorOptions):
 
             # student Solution
             print("opts.sourceDir =", opts.sourceDir)
-            nestedSourceDir = findSolutionDir(opts.sourceDir)
-            student_pfad = pjoin (nestedSourceDir, assignemnt.src)
+            # nestedSourceDir = findSolutionDir(opts.sourceDir)
+            student_pfad = pjoin (opts.sourceDir, assignemnt.src)
 
             # Result von Sprachmodell
             runLlmTutor(llmTutorPfad=opts.llm_tutor_dir,
