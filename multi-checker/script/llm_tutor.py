@@ -38,7 +38,10 @@ def runLlmTutor (llmTutorPfad: str, fake_llm: bool, id: str, sampleSolution: str
             return 
     else:
         print("ich bin drine")
-        runWithTimeout(args, timeout=None, what= "running llm tutor")
+        res = runWithTimeout(args, timeout=None, what= "running llm tutor")
+        print(res.stdout)
+        print(res.stderr)
+    return res
     
     
 
