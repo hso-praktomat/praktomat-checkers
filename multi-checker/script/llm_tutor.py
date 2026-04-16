@@ -6,6 +6,7 @@ import yaml  # pip install pyyaml
 
 from utils import *
 from common import *
+from config import *
 from exercise import parseExercise
 
 
@@ -18,11 +19,12 @@ class LlmTutorOptions(Options):
     solution_dir: str
     pdf_dir: str
     fakeLlm: bool
+    configApi: str
     sheet: Optional[str] = None
    
    
 # alle strings sind als pfad hier weitergegeben
-def runLlmTutor (llmTutorPfad: str, fake_llm: bool, id: str, sampleSolution: str, studentSolution: str, pdf_task:str ):
+def runLlmTutor (llmTutorPfad: str, fake_llm: bool, id: str, sampleSolution: str, studentSolution: str, pdf_task:str , configApi:str):
     args = ['python3', llmTutorPfad + '/src/praktomat_entry.py']
 
     args = args + [
@@ -30,6 +32,7 @@ def runLlmTutor (llmTutorPfad: str, fake_llm: bool, id: str, sampleSolution: str
             "--model-solution", sampleSolution,
             "--student-solution", studentSolution,
             "--assignment", id,
+            "--api", configApi
     ]
 
     if fake_llm:
@@ -71,11 +74,15 @@ def check(opts: LlmTutorOptions):
             # nestedSourceDir = findSolutionDir(opts.sourceDir)
             student_pfad = pjoin (opts.sourceDir, assignemnt.src)
 
+            #api 
+            api = parseConfig(opts.configApi)
+
             # Result von Sprachmodell
             runLlmTutor(llmTutorPfad=opts.llm_tutor_dir,
                             fake_llm= opts.fakeLlm, 
                             id= assignemnt.id,
                             sampleSolution= exSampleSolution_pfad, 
                             studentSolution= student_pfad,
-                            pdf_task= pdf)
+                            pdf_task= pdf, 
+                            configApi = api)
 

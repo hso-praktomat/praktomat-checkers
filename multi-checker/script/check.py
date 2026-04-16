@@ -21,6 +21,8 @@ def parseArgs():
     parser.add_argument('--result-file', metavar='FILE', type=str,
                         help='File where test results are stored as a pickled python dict.\n' +
                             'See TestCtx.asDict for the format of the dict.')
+    parser.add_argument("--praktomat-checker-external-dir", metavar='DIR', type=str, 
+                        help="Direction with API key needed for llm-tutor")
     subparsers = parser.add_subparsers(help='Commands', dest='cmd')
     parser.add_argument('--debug', help='Enable debug output',
                          action='store_true', default=False)
@@ -56,9 +58,10 @@ def parseArgs():
     llm.add_argument('--fake-llm', action= 'store_true',default=False, 
                      help='used just to test the system')
 
-    #if other:
-    #    print(f'WARNING: ignoring unknown commandline arguments: {other}')
     (known, other) = parser.parse_known_args()
+    if other:
+        print(f'WARNING: ignoring unknown commandline arguments: {other}')
+   
     return known
 
 # "Labortest 2, Gruppe A" -> ["labortest_2", labortest_2_gruppe_a"]
@@ -177,6 +180,7 @@ def main():
             sourceDir=submissionDir,
             testDir=testDir,
             resultFile=resultFile,
+            api_dir = args.praktomat_checker_external_dir
           
            
         )
