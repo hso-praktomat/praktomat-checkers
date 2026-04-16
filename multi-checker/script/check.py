@@ -171,6 +171,8 @@ def main():
     elif cmd == 'llm-tutor':
         if not args.llm_tutor_dir:
             llm_tutor_dir = '/llm-tutor'
+        else:
+            llm_tutor_dir = args.llm_tutor_dir
         # sheet optional; für deinen Durchstoß nicht nötig
         opts = llm_tutor.LlmTutorOptions(
             llm_tutor_dir = llm_tutor_dir,

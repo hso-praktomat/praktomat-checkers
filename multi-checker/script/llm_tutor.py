@@ -40,6 +40,8 @@ def runLlmTutor (llmTutorPfad: str, fake_llm: bool, id: str, sampleSolution: str
             print(args , "\n")
             return 
     else:
+        print("llmTutorPfad =", llmTutorPfad)
+        print("args =", args)
         res = runWithTimeout(args, timeout=None, what= "running llm tutor")
         print(res.stdout)
         print(res.stderr)
