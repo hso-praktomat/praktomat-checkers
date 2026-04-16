@@ -180,7 +180,7 @@ def main():
             sourceDir=submissionDir,
             testDir=testDir,
             resultFile=resultFile,
-            api_dir = args.praktomat_checker_external_dir
+            configApi = args.praktomat_checker_external_dir
           
            
         )
