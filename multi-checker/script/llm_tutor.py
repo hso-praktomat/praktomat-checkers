@@ -75,7 +75,7 @@ def check(opts: LlmTutorOptions):
             student_pfad = pjoin (opts.sourceDir, assignemnt.src)
 
             #api 
-            api = parseConfig(opts.configApi)
+            api = parseConfig(pjoin(opts.configApi, 'api.yaml'))
 
             # Result von Sprachmodell
             runLlmTutor(llmTutorPfad=opts.llm_tutor_dir,
