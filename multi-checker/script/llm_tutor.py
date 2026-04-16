@@ -84,5 +84,5 @@ def check(opts: LlmTutorOptions):
                             sampleSolution= exSampleSolution_pfad, 
                             studentSolution= student_pfad,
                             pdf_task= pdf, 
-                            configApi = api)
+                            configApi = api.llmTutorConfig.apikey)
 
