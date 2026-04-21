@@ -64,7 +64,7 @@ def check(opts: LlmTutorOptions):
             # pfad zu Musterlösung (mount a dir > tests/llm-tutor/sampleSolution > solution)
             if not assignemnt.tests:
                 configError(f'No test file defined for assignment {assignemnt.id}')
-            exSampleSolution_pfad = pjoin(getSheetDir(opts.solution_dir), assignemnt.tests[0])
+            exSampleSolution_pfad = getSheetDir(opts.solution_dir, assignemnt.tests[0])
 
             # aufgabe pfad extrahieren
             if not assignemnt.extraFiles:
