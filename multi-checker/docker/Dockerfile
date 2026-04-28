@@ -47,5 +47,14 @@ ADD ./git-clone /git-clone
 RUN bash /git-clone https://github.com/skogsbaer/write-your-python-program.git 745fb2b5a59081c0f4993ddedd8f902bfb73b4df /wypp
 RUN rm -rf /wypp/.git
 
+# llm-tutor
+RUN mkdir /llm-tutor
+ADD ./git-clone /git-clone
+RUN bash /git-clone https://github.com/alaref-tasnim/LLM-Tutor.git 4991578011bfc156447fa987bb25a39361daab7a /llm-tutor
+RUN rm -rf /llm-tutor/.git
+
+# Install packages for llm-tutor .toml datei
+RUN pip3 install --break-system-packages -e /llm-tutor
+
 # Our checker scripts
 ADD checker /checker
