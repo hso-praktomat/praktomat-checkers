@@ -1,7 +1,7 @@
 from __future__ import annotations
+from shell import *
 from common import *
 from utils import *
-from shell import *
 import re
 from exercise import *
 
@@ -18,18 +18,18 @@ class CheckCtx:
     @staticmethod
     def empty(t: str, outFile: Optional[str]) -> CheckCtx:
         return CheckCtx(t, 'FAIL', None, [], outFile=outFile)
-    def appendCompileOutput(self, s: str):
+    def appendCompileOutput(self, s: str) -> None:
         if self.compileOutput:
             self.compileOutput = self.compileOutput + '\n' + s
         else:
             self.compileOutput = s
-    def asDict(self):
-        testList = []
+    def asDict(self) -> dict[str, Any]:
+        testList: list[dict[str, Any]] = []
         d = {'compileStatus': self.compileStatus, 'tests': testList}
         for t in self.tests:
             testList.append(t.asDict())
         return d
-    def serialize(self, path):
+    def serialize(self, path: str) -> None:
         import pickle
         d = self.asDict()
         with open(path, 'wb') as f:
@@ -51,7 +51,7 @@ class TestContext:
                 r.testErrors += x.testErrors
                 r.testFailures += x.testFailures
         return r
-    def asDict(self):
+    def asDict(self) -> dict[str, Any]:
         error = False
         totalTests = 0
         testErrors = 0
@@ -75,7 +75,7 @@ class TestResult:
     testErrors: int = 0
     testFailures: int = 0
     @property
-    def isSuccess(self):
+    def isSuccess(self) -> bool:
         return not self.error and self.testErrors == 0 and self.testFailures == 0
 
 @dataclass
@@ -83,7 +83,7 @@ class StyleResult:
     hasErrors: bool
     styleOutput: Optional[str]
 
-def outputResultsAndExit(ctx: CheckCtx, ecode=None):
+def outputResultsAndExit(ctx: CheckCtx, ecode: Optional[int]=None) -> None:
     if ctx.outFile:
         ctx.serialize(ctx.outFile)
     print(ctx.compileTitle + ' status: ' + ctx.compileStatus)
@@ -138,7 +138,7 @@ def outputResultsAndExit(ctx: CheckCtx, ecode=None):
         styleStatusShort = "ERROR" if ctx.styleResult.hasErrors else "OK"
         print('\nCoding style: ' + styleStatusShort)
     print(f'\nTotal points: {totalPoints:.1f}/{possibleTotalPoints:.1f} (preliminary, subject to change!)')
-    def printWithTitle(title, msg):
+    def printWithTitle(title: str, msg: str) -> None:
         delim = 2 * '=============================================================================='
         print()
         print(delim)
@@ -168,7 +168,7 @@ def outputResultsAndExit(ctx: CheckCtx, ecode=None):
             else:
                 sys.exit(0)
 
-def abortIfTestOkRequired(assignment: Assignment, result: TestResult, ctx: CheckCtx):
+def abortIfTestOkRequired(assignment: Assignment, result: TestResult, ctx: CheckCtx) -> None:
     if assignment.testOkRequired and not result.isSuccess:
         print(f'Test for assignment {assignment.id} is required to succeed but failed!')
         print()
@@ -177,7 +177,7 @@ def abortIfTestOkRequired(assignment: Assignment, result: TestResult, ctx: Check
         print('Aborting')
         outputResultsAndExit(ctx, ecode=1)
 
-def checkScript(assignment: Assignment, ctx: TestContext, sheetDir: str, checkCtx: CheckCtx):
+def checkScript(assignment: Assignment, ctx: TestContext, sheetDir: str, checkCtx: CheckCtx) -> None:
     script = assignment.testScript
     if not script:
         return

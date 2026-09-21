@@ -11,15 +11,15 @@ def abort(msg: str) -> NoReturn:
     print('FEHLER: ' + msg)
     sys.exit(1)
 
-def readFile(name):
+def readFile(name: str) -> str:
     with open(name, 'r', encoding='utf-8') as f:
         return f.read()
 
-def asList(x: Any) -> list:
+def asList(x: Any) -> list[Any]:
     if type(x) == list:
-        return x
+        return cast(list[Any], x)
     if type(x) == tuple:
-        return list(x)
+        return list(cast(tuple[Any, ...], x))
     else:
         return [x]
 
@@ -32,7 +32,7 @@ boms = {codecs.BOM_UTF8: 'utf_8',
         codecs.BOM_UTF16_BE: 'utf_16_be',
         codecs.BOM_UTF32_LE: 'utf_32_le',
         codecs.BOM_UTF32_BE: 'utf_32_be'}
-def fixEncoding(path):
+def fixEncoding(path: str) -> None:
     bytes_orig = open(path, 'rb').read()
     bytes = bytes_orig
     for b, enc in boms.items():
@@ -48,7 +48,7 @@ def fixEncoding(path):
         open(path, 'wb').write(bytes)
         print(f'Fixed encoding of {path}')
 
-def fixEncodingRecursively(startDir: str, ext: str):
+def fixEncodingRecursively(startDir: str, ext: str) -> None:
     files = run(f"find '{startDir}' -type f -name '*.{ext}'", captureStdout=splitLines).stdout
     for p in files:
         fixEncoding(p)
@@ -63,26 +63,26 @@ def findFile(p: str, sourceDir: str, ignoreCase: bool=False) -> Optional[str]:
                 return x
     return None
 
-def removeLeading(full: str, leading: str):
+def removeLeading(full: str, leading: str) -> str:
     if full.startswith(leading):
         return full[len(leading)+1:]
     else:
         return full
 
-_DEBUG = False
+_debug = False
 
-def enableDebug():
-    global _DEBUG
-    _DEBUG = True
+def enableDebug() -> None:
+    global _debug
+    _debug = True
 
-def isDebug():
-    return _DEBUG
+def isDebug() -> bool:
+    return _debug
 
-def debug(msg):
-    if _DEBUG:
+def debug(msg: object) -> None:
+    if _debug:
         print(f'[DEBUG] {msg}')
 
-def findSolutionDirAux(root: str, stopCondition: Optional[Callable], isSolutionRoot: bool) -> Optional[str]:
+def findSolutionDirAux(root: str, stopCondition: Optional[Callable[[str], bool]], isSolutionRoot: bool) -> Optional[str]:
     if isFile(root):
         return None
     if isNotAWrapperDir(root, isSolutionRoot):
@@ -106,7 +106,7 @@ def isNotAWrapperDir(directory: str, isSolutionRoot: bool) -> bool:
         return False
     return not isDir(pathnames[0])
 
-def findSolutionDir(root: str, stopCondition: Optional[Callable]=None) -> str:
+def findSolutionDir(root: str, stopCondition: Optional[Callable[[str], bool]]=None) -> str:
     """
     Finds the possibly nested solution directory in the given root directory.
     A stop condition can be passed that returns True when a directory name is
@@ -123,7 +123,7 @@ def findSolutionDir(root: str, stopCondition: Optional[Callable]=None) -> str:
         # Default to the given directory
         return root
 
-def withLimitedDir(sourceDir, subdirs, action):
+def withLimitedDir(sourceDir: str, subdirs: list[str], action: Callable[[str], None]) -> None:
     with tempDir(suffix=basename(sourceDir), delete=False) as tmp:
         for sub in subdirs:
             target = pjoin(tmp, sub)

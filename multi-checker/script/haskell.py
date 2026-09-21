@@ -10,7 +10,7 @@ from testContext import *
 class HaskellOptions(Options):
     sheet: Optional[str]
 
-def checkCompile(ctx: CheckCtx):
+def checkCompile(ctx: CheckCtx) -> None:
     cmd = 'stack test --only-locals'
     debug(f'Running "{cmd}"')
     tmpName = mkTempFile(suffix='.log')
@@ -37,7 +37,7 @@ def checkCompile(ctx: CheckCtx):
 haskellTestRe = re.compile(r'^Cases:\s*(\d+)\s*Tried:\s*(\d+)\s*Errors:\s*(\d+)\s*Failures:\s*(\d+)')
 magicLine = "__START_TEST__"
 
-def getTestResult(testFile, out: str):
+def getTestResult(testFile: str, out: str) -> TestResult:
     after = False
     lastTestLine = None
     out = out.replace('\r', '\n')
@@ -69,11 +69,11 @@ def getTestResult(testFile, out: str):
     else:
         return TestResult(testFile, cleanOut, True)
 
-def checkTest(assignment: Assignment, ctx: TestContext, testFile: str, incDirs: list[str], checkCtx: CheckCtx):
+def checkTest(assignment: Assignment, ctx: TestContext, testFile: str, incDirs: list[str], checkCtx: CheckCtx) -> None:
     prjName = 'ap' + str(assignment.sheet)
     testModName = removeExt(basename(testFile))
     srcFile = assignment.src
-    incOpts = []
+    incOpts: list[str] = []
     for d in incDirs:
         incOpts.append(f'--ghci-options -i{d}')
     cmd = f'stack --silent ghci "{srcFile}" "{testFile}" --flag {prjName}:test-mode ' + \
@@ -88,14 +88,14 @@ def checkTest(assignment: Assignment, ctx: TestContext, testFile: str, incDirs: 
     abortIfTestOkRequired(assignment, testResult, checkCtx)
 
 pragmaRe = re.compile(r'^\s*{-# OPTIONS_GHC -Wno.*$', re.MULTILINE)
-def checkHsFile(path):
+def checkHsFile(path: str) -> None:
     content = open(path).read()
     m = pragmaRe.search(content)
     if m:
         abort(f'Source file {path} contains illegal pragma: {m.group(0)}')
 
 BLACKLIST = ['package.yaml', 'stack.yaml']
-def doCheck(srcDir, sheetDir, sheet, resultFile):
+def doCheck(srcDir: str, sheetDir: str, sheet: Optional[str], resultFile: Optional[str]) -> None:
     exFile = pjoin(sheetDir, 'exercise.yaml')
     ex = parseExercise(sheet, exFile)
     debug(f'Exercise (file: {exFile}): {ex}')
@@ -128,7 +128,7 @@ def doCheck(srcDir, sheetDir, sheet, resultFile):
         checkScript(a, testCtx, sheetDir, ctx)
     outputResultsAndExit(ctx)
 
-def check(opts: HaskellOptions):
+def check(opts: HaskellOptions) -> None:
     nestedSourceDir = findSolutionDir(opts.sourceDir)
     with tempDir(dir='.') as d:
         with workingDir(d):
