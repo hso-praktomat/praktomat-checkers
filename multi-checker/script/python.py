@@ -9,7 +9,7 @@ from exercise import *
 from testContext import *
 from typing import *
 
-def configError(s):
+def configError(s: str) -> NoReturn:
     abort('Config error: ' + s)
 
 @dataclass
@@ -18,7 +18,7 @@ class PythonOptions(Options):
     assignments: Optional[str | list[str]]
     wypp: str
 
-def prepareEnv(testEnv: Optional[dict], searchDirs: list[str]) -> dict:
+def prepareEnv(testEnv: Optional[dict[str, str]], searchDirs: list[str]) -> dict[str, str]:
     if testEnv is None:
         testEnv = {}
     else:
@@ -42,7 +42,7 @@ def prepareEnv(testEnv: Optional[dict], searchDirs: list[str]) -> dict:
     return testEnv
 
 def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, typecheck: bool,
-            testFile: Optional[str]=None, testEnv: Optional[dict]=None, timeout: Optional[int]=None):
+            testFile: Optional[str]=None, testEnv: Optional[dict[str, str]]=None, timeout: Optional[int]=None) -> RunResult:
     thisDir = abspath('.')
     # print('pyPath='+pyPath)
     testEnv = prepareEnv(testEnv, [wyppPath + '/python/code:', thisDir])
@@ -57,8 +57,8 @@ def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, typecheck: bool
                          env=testEnv)
     return res
 
-def runUnittest(testFile: str, searchDirs: list[str], testEnv: Optional[dict]=None,
-                timeout: Optional[int]=None):
+def runUnittest(testFile: str, searchDirs: list[str], testEnv: Optional[dict[str, str]]=None,
+                timeout: Optional[int]=None) -> RunResult:
     if not isFile(testFile):
         abort(f'Test file {testFile} does not exist')
     testEnv = prepareEnv(testEnv, ['.'] + searchDirs)
@@ -84,7 +84,7 @@ def loadStudentCode(opts: PythonOptions, p: str, checkLoad: LoadCheck) -> LoadSt
     if checkLoad not in ['dont-load', 'load-no-typecheck', 'load-typecheck']:
         raise ValueError('Invalid value for checkLoad argument: ' + str(checkLoad))
     _out = ''
-    def printOut(s='', emptyNewline=True):
+    def printOut(s: str='', emptyNewline: bool=True) -> None:
         nonlocal _out
         if s or emptyNewline:
             _out = _out + s + '\n'
@@ -130,18 +130,18 @@ You find more error messages above.''')
 If you cannot make a test succeed, you have to comment it out.''')
     return mkResult('ok')
 
-def checkFileLoadsOk(opts: PythonOptions, p: str):
+def checkFileLoadsOk(opts: PythonOptions, p: str) -> LoadStudentCodeStatus:
     res = loadStudentCode(opts, p, 'load-typecheck')
     print(res.output)
     return res.status
 
-def checkAssignmentsLoadOk(opts: PythonOptions, ass: str | list[str] | None):
+def checkAssignmentsLoadOk(opts: PythonOptions, ass: str | list[str] | None) -> None:
     if isinstance(ass, str):
         ass = [ass]
     elif ass is None:
         ass = []
     delim = '=============================================================================='
-    stats = []
+    stats: list[tuple[str, LoadStudentCodeStatus]] = []
     for x in ass:
         possible_filenames = [
             f'aufgabe_{x.zfill(2)}.py',
@@ -176,6 +176,8 @@ def checkAssignmentsLoadOk(opts: PythonOptions, ass: str | list[str] | None):
             case 'fail':
                 print(f'{p}: failed')
                 err = True
+            case 'ok':
+                pass
     print()
     if err:
         print('Error: at least one assignment failed!')
@@ -186,7 +188,7 @@ def checkAssignmentsLoadOk(opts: PythonOptions, ass: str | list[str] | None):
 
 class PythonTestResult:
     @staticmethod
-    def parseWyppResult(testFile: str, s: str):
+    def parseWyppResult(testFile: str, s: str) -> Optional[TestResult]:
         r1 = re.compile(r'^Tutor:\s*(\d+) Tests, (\d+) Fehler')
         r2 = re.compile(r'^Tutor:\s*(\d+) Tests, alle erfolgreich')
         for l in s.split('\n'):
@@ -204,7 +206,7 @@ class PythonTestResult:
                 return TestResult(testFile=testFile, testOutput=s, error=False, totalTests=total,
                         testFailures=fail, testErrors=0)
     @staticmethod
-    def parseUnitResult(testFile: str, s: str):
+    def parseUnitResult(testFile: str, s: str) -> Optional[TestResult]:
         # Ran 3 tests in 0.000s
         # FAILED (errors=1)
         # FAILED (failures=1, errors=1, skipped=1)
@@ -215,7 +217,7 @@ class PythonTestResult:
         failures = 0
         skipped = 0
         r = re.compile('^Ran (\\d+) test')
-        def getKv(l, k):
+        def getKv(l: str, k: str) -> int:
             r = re.compile(f'{k}=(\\d+)')
             m = r.search(l)
             if m:
@@ -237,7 +239,7 @@ class PythonTestResult:
             return TestResult(testFile=testFile, testOutput=s, error=False,
                     totalTests=(total - skipped), testFailures=failures, testErrors=errors)
 
-def getTestResult(testFile, runRes: RunResult):
+def getTestResult(testFile: str, runRes: RunResult) -> TestResult:
     r = PythonTestResult.parseWyppResult(testFile, runRes.stdout)
     if r:
         return r
@@ -251,7 +253,7 @@ def checkTutorTests(opts: PythonOptions,
                     testCtx: TestContext,
                     a: Assignment,
                     srcDir: Optional[str],
-                    checkCtx: CheckCtx):
+                    checkCtx: CheckCtx) -> None:
     """
     Checks the tutor tests. Executed from within the source dir.
     """
@@ -279,7 +281,7 @@ def checkTutorTests(opts: PythonOptions,
         abortIfTestOkRequired(a, testRes, checkCtx)
     pass
 
-def checkAssignments(opts: PythonOptions, ex: Exercise, allAss: list[Assignment]):
+def checkAssignments(opts: PythonOptions, ex: Exercise, allAss: list[Assignment]) -> None:
     """
     Checks the given assignments by checking if the code loads successfully and
     if it passes the tutor tests.
@@ -287,8 +289,8 @@ def checkAssignments(opts: PythonOptions, ex: Exercise, allAss: list[Assignment]
 
     This function is called if an exercise.yaml file exists.
     """
-    allFiles = []
-    extras = set()
+    allFiles: list[tuple[str, LoadCheck]] = []
+    extras: set[str] = set()
     for a in allAss:
         if a.src is not None and a.src not in [x[0] for x in allFiles]:
             checkLoad: LoadCheck = 'dont-load'
@@ -305,7 +307,7 @@ def checkAssignments(opts: PythonOptions, ex: Exercise, allAss: list[Assignment]
     ctx = CheckCtx.empty('Load and student tests', opts.resultFile)
     compileStatus = 'OK'
     missing = 0
-    srcDirDict = {} # a.src -> directory where file is found
+    srcDirDict: dict[str, str] = {} # a.src -> directory where file is found
     for p, checkLoad in allFiles:
         res = loadStudentCode(opts, p, checkLoad)
         if res.srcDir:
@@ -329,14 +331,14 @@ def checkAssignments(opts: PythonOptions, ex: Exercise, allAss: list[Assignment]
     for a in allAss:
         testCtx = TestContext(assignment=a, sheet=ex.sheet, results=[])
         ctx.tests.append(testCtx)
-        checkTutorTests(opts, testCtx, a, srcDirDict.get(a.src), ctx)
+        checkTutorTests(opts, testCtx, a, srcDirDict.get(a.src) if a.src is not None else None, ctx)
         checkScript(a, testCtx, sheetDir(opts), ctx)
     outputResultsAndExit(ctx)
 
-def sheetDir(opts: PythonOptions):
+def sheetDir(opts: PythonOptions) -> str:
     return getSheetDir(opts.testDir, opts.sheet)
 
-def check(opts: PythonOptions):
+def check(opts: PythonOptions) -> None:
     sheet = opts.sheet
     exFile = pjoin(sheetDir(opts), 'exercise.yaml')
     if isFile(exFile):

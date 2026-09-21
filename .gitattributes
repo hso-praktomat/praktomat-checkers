@@ -1,0 +1,9 @@
+# Shell scripts are executed directly via their shebang on Linux/CI and must
+# keep LF line endings, regardless of a contributor's local core.autocrlf
+# setting (which would otherwise silently reintroduce CRLF on checkout).
+*.sh text eol=lf
+/multi-checker/check-ci text eol=lf
+/multi-checker/tests/runTests text eol=lf
+/multi-checker/docker/git-clone text eol=lf
+/multi-checker/docker/docker-build text eol=lf
+/checker-container/docker-build text eol=lf

@@ -1,0 +1,14 @@
+[tool.pyright]
+# The checker scripts under multi-checker/script/ are the code that gets type checked,
+# along with the test driver code under multi-checker/tests/.
+include = ["multi-checker/script", "multi-checker/tests"]
+# multi-checker/tests/python-wypp contains checker test fixtures (sample student
+# submissions) that import the external `wypp` package (not installed in this venv)
+# and some of which are intentionally invalid Python; it is excluded from type checking.
+exclude = ["**/__pycache__", "multi-checker/tests/python-wypp"]
+extraPaths = ["multi-checker/script", "multi-checker/tests"]
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.10"
+typeCheckingMode = "strict"
+reportWildcardImportFromLibrary = "none"
