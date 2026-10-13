@@ -25,15 +25,6 @@ def getSheetDir(testDir: Optional[str], sheet: Optional[str]):
     else:
         return testDir
 
-def getSolutionDir(solutionDir: Optional[str]):
-    if solutionDir is None:
-        return '/solution'
-    return solutionDir
-    
-def getPdfDir(pdfDir: Optional[str]):
-    if pdfDir is None:
-        return '/pdf'
-    return pdfDir
 
 def replaceAll(l: list[str], repl: str, s: str) -> str:
     for x in l:
