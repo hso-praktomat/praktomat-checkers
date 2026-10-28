@@ -1,5 +1,0 @@
-{
-    "extraPaths": ["script"],
-    "exclude": ["multi-checker/tests", ".venv", ".venv_linux", "**/node_modules", "**/__pycache__", "**/.*"],
-    "reportWildcardImportFromLibrary": "none"
-}

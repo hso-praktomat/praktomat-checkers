@@ -3,7 +3,8 @@
 Checkers for [Praktomat](https://github.com/hso-praktomat/praktomat-docker) that run in Docker.
 The only checker is `multi-checker`, a Python script that grades student submissions in Python
 (WYPP or unittest), Haskell (stack) and Java (Gradle + Checkstyle). It also has an `llm-tutor`
-command that passes a submission to the LLM tutor. README.md explains how Praktomat invokes it.
+command that passes a submission to the LLM tutor. See @README.md for the general behavior of
+this tool.
 
 ## Definition of done
 
@@ -11,7 +12,7 @@ A change is done only when both checks pass on the final state of the code:
 
 1. **Type check is clean.** Pyright reports `0 errors, 0 warnings` (commands below). Don't get
    there with `# type: ignore` / `# pyright: ignore`, casts to `Any` or a looser
-   `pyrightconfig.json`. Fix the types instead.
+   `[tool.pyright]` config. Fix the types instead.
 2. **The whole test suite passes.** `./runTests` in `multi-checker/tests` (no `-k`, nothing
    skipped or deselected) finishes with every test passing.
 
@@ -24,8 +25,14 @@ bug and show that the test passes. New behaviour gets a new `test_…` function 
 
 ## Type check
 
-Run `multi-checker/check-ci`. Pyright checks `multi-checker/script/*.py`; `multi-checker/tests`
-is excluded in `pyrightconfig.json`. The script picks the venv by OS:
+Run `multi-checker/check-ci`. Pyright runs in strict mode, configured under `[tool.pyright]` in
+`pyproject.toml`. It checks `multi-checker/script/` and the test driver code in
+`multi-checker/tests/` (`testUtils.py`, `haskellTests.py`, `javaTests.py`, `pythonTests.py`).
+`multi-checker/tests/python-wypp/` is excluded: it holds sample student submissions that import
+the external `wypp` package (not installed in the venv), and some of them are intentionally
+invalid Python.
+
+`check-ci` picks the venv by OS:
 
 - Linux (devcontainer, CI, Docker): `.venv_linux`. The devcontainer's `postCreateCommand`
   creates it with uv. CI creates it with Python 3.12 from `requirements.txt`.
@@ -33,12 +40,13 @@ is excluded in `pyrightconfig.json`. The script picks the venv by OS:
 
 Both venvs live in the same checkout because the devcontainer bind-mounts it. Never use or
 recreate `.venv` from Linux: it is the host's macOS venv, and its interpreter symlinks point to
-`/Users/...`. `pyrightconfig.json` deliberately names no venv, because a `venv` setting there
-would override the `--pythonpath` that `check-ci` passes. So run pyright only through
-`check-ci`; a bare `pyright` reports `shell` and `yaml` as unresolved.
+`/Users/...`. `pyproject.toml` deliberately names no venv, because a `venv` setting there would
+override the `--pythonpath` that `check-ci` passes. So run pyright only through `check-ci`; a
+bare `pyright` reports `shell` and `yaml` as unresolved.
 
-`requirements.txt` doesn't pin pyright. CI uses the latest release, so CI's result is the one
-that counts.
+Strict mode needs libpyshell 0.6.0 or newer, the first version that ships type information.
+With 0.5.0, pyright reports `Stub file not found for "shell"`. `requirements.txt` doesn't pin
+pyright. CI uses the latest release, so CI's result is the one that counts.
 
 ## Tests
 
@@ -105,7 +113,8 @@ The `llm-tutor` command has no tests (its fixtures were removed in 883483b). If 
 - Call `abort(msg)` for problems with the submission or the task configuration (it prints
   `FEHLER: …`) and `bug(msg)` for internal errors. stdout is the checker report shown in
   Praktomat, so keep it readable for students.
-- Python 3.12 (image and CI). Don't use features from newer versions.
+- The image and CI run Python 3.12, but pyright checks against Python 3.10 (`pythonVersion` in
+  `pyproject.toml`), so code must stay 3.10-compatible.
 - Use camelCase for functions, variables and parameters. `llm_tutor.py` doesn't; don't copy
   it. Modules use `from shell import *` (libpyshell: `run`, `pjoin`, `isFile`, `ls`, …) and
   `from utils import *`. Prefer those helpers over `subprocess` and `os.path`.

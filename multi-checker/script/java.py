@@ -24,14 +24,15 @@ checkstyleConfig = pjoin(os.path.realpath(os.path.dirname(__file__)), 'checkstyl
 
 # studentDir is the toplevel directory of the student's project
 def execGradle(task: str, offline: bool, studentDir: str, testDir: str='test-src',
-               testFilter: str='*', timeout: Optional[int] = None):
-    cands = []
-    buildFile = None
+               testFilter: str='*', timeout: Optional[int] = None) -> RunResult:
+    cands: list[str] = []
+    buildFile: Optional[str] = None
     for x in ['build.gradle.kts', 'build.gradle']:
-        buildFile = abspath(pjoin(studentDir, x))
-        if isFile(buildFile):
+        cand = abspath(pjoin(studentDir, x))
+        if isFile(cand):
+            buildFile = cand
             break
-        cands.append(buildFile)
+        cands.append(cand)
     if buildFile is None:
         abort(f'No build file found: {cands}')
     cmd = [
@@ -58,7 +59,7 @@ def execGradle(task: str, offline: bool, studentDir: str, testDir: str='test-src
     result = runWithTimeout(cmd, timeout, f'running gradle task {task}')
     return result
 
-def checkCompile(ctx: CheckCtx, opts: JavaOptions, studentDir: str, exResult: CompileStatus):
+def checkCompile(ctx: CheckCtx, opts: JavaOptions, studentDir: str, exResult: CompileStatus) -> None:
     result = execGradle('compileJava', opts.gradleOffline, studentDir=studentDir)
     out = result.stdout
     ctx.compileOutput = out
@@ -69,7 +70,7 @@ def checkCompile(ctx: CheckCtx, opts: JavaOptions, studentDir: str, exResult: Co
 
 gradleTestRe = re.compile(r'^(\d+) tests completed, (\d+) failed$')
 
-def getTestResult(testFilter: str, out: str, studentDir: str):
+def getTestResult(testFilter: str, out: str, studentDir: str) -> TestResult:
     out = out.replace('\r', '\n')
     testResultDir = abspath(pjoin(studentDir, '_build', 'test-results', 'test'))
     if isDir(testResultDir):
@@ -93,7 +94,7 @@ def getTestResult(testFilter: str, out: str, studentDir: str):
     else:
         return TestResult(testFilter, out, error=True)
 
-def checkTest(opts: JavaOptions, assignment: Assignment, studentDir: str, testDir: str, testFilter: str, ctx: TestContext, checkCtx: CheckCtx):
+def checkTest(opts: JavaOptions, assignment: Assignment, studentDir: str, testDir: str, testFilter: str, ctx: TestContext, checkCtx: CheckCtx) -> None:
     debug(f'Running tests matching {testFilter} ...')
     result = execGradle('test', opts.gradleOffline, studentDir=studentDir, testDir=testDir,
                         testFilter=testFilter, timeout=testTimeoutSeconds())
@@ -101,9 +102,9 @@ def checkTest(opts: JavaOptions, assignment: Assignment, studentDir: str, testDi
     ctx.results.append(testResult)
     abortIfTestOkRequired(assignment, testResult, checkCtx)
 
-def checkStyle(ctx: CheckCtx, studentDir: str, checkstylePath: str, config: str=checkstyleConfig):
-    sourceFiles = []
-    for root, dirs, files in os.walk(studentDir):
+def checkStyle(ctx: CheckCtx, studentDir: str, checkstylePath: str, config: str=checkstyleConfig) -> None:
+    sourceFiles: list[str] = []
+    for root, _dirs, files in os.walk(studentDir):
         for name in files:
             if name.lower().endswith('.java'):
                sourceFiles.append(os.path.join(root, name))
@@ -149,8 +150,8 @@ def srcExists(s: str) -> bool:
     else:
         return isDir(s)
 
-def checkFilesExist(ass: list[Assignment], prjDir: str):
-    missing = []
+def checkFilesExist(ass: list[Assignment], prjDir: str) -> CompileStatus:
+    missing: list[str] = []
     prjDir = prjDir.rstrip('/') + '/'
     for a in ass:
         if a.src is None:
@@ -178,13 +179,13 @@ def checkFilesExist(ass: list[Assignment], prjDir: str):
     else:
         return 'OK'
 
-def dirnameForSource(s: str):
+def dirnameForSource(s: str) -> str:
     if s.endswith('.java'):
         return dirname(s)
     else:
         return s
 
-def dirnameForFilter(s: str):
+def dirnameForFilter(s: str) -> str:
     s = s.replace('.', '/')
     # Try to find the first class name (assumption: it's the only capitalized element)
     # or wildcard, then continue with its parent directory
@@ -195,7 +196,7 @@ def dirnameForFilter(s: str):
             break
     return os.path.join('test-src', *pathElements)
 
-def checkWithSourceDir(opts: JavaOptions, projectDir: str, sheetDir: str, ass: list[Assignment]):
+def checkWithSourceDir(opts: JavaOptions, projectDir: str, sheetDir: str, ass: list[Assignment]) -> None:
     ctx = CheckCtx.empty('Compile', opts.resultFile)
     # do the checks
     debug(f'projectDir={projectDir}')
@@ -220,7 +221,7 @@ def checkWithSourceDir(opts: JavaOptions, projectDir: str, sheetDir: str, ass: l
             withLimitedDir(sheetDir, testDirectories, lambda d: checkTest(opts, a, projectDir, d, testFilter, testCtx, ctx))
     outputResultsAndExit(ctx)
 
-def check(opts: JavaOptions):
+def check(opts: JavaOptions) -> None:
     sheetDir = getSheetDir(opts.testDir, opts.sheet)
     exFile = pjoin(sheetDir, 'exercise.yaml')
     ex = parseExercise(opts.sheet, exFile)

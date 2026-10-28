@@ -1,6 +1,5 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Union
 from utils import *
 from exercise import YamlDict
 import yaml
@@ -11,7 +10,7 @@ class LlmTutorConfig:
     apikey: str
 
     @staticmethod
-    def parse(v: YamlDict):
+    def parse(v: YamlDict) -> LlmTutorConfig:
         apikey = v.get("apikey")
         if apikey is None:
             raise ValueError("Missing required config value: llmTutorConfig.apikey")
@@ -25,14 +24,14 @@ class Config:
     llmTutorConfig: LlmTutorConfig
 
     @staticmethod
-    def parse(v: YamlDict):
+    def parse(v: YamlDict) -> Config:
         llm_tutor_raw = v.get("llmTutorConfig", {})
         if llm_tutor_raw is None:
                 llm_tutor_raw = {}
         if not isinstance(llm_tutor_raw, dict):
             raise TypeError("Config value llmTutorConfig must be a dictionary")
 
-        llm_tutor_cfg = LlmTutorConfig.parse(YamlDict(llm_tutor_raw))
+        llm_tutor_cfg = LlmTutorConfig.parse(YamlDict(cast(Dict[Any, Any], llm_tutor_raw)))
         return Config(llmTutorConfig=llm_tutor_cfg)
     
 

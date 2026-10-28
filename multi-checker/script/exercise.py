@@ -1,19 +1,19 @@
 # AST and parser for exercise.yaml files
 from __future__ import annotations
+from shell import *
 from common import *
 from utils import *
-from shell import *
 import yaml
 import re
 from typing import *
 
 class YamlDict:
-    def __init__(self, dicts: Union[dict, list[dict]]):
+    def __init__(self, dicts: Union[dict[Any, Any], list[dict[Any, Any]]]) -> None:
         if isinstance(dicts, list):
             self.__dicts = dicts
         else:
             self.__dicts = [dicts]
-    def get(self, key: str, default=None):
+    def get(self, key: str, default: Any=None) -> Any:
         for d in self.__dicts:
             if key in d:
                 return d[key]
@@ -39,9 +39,9 @@ class YamlDict:
         if not isinstance(x, str):
             abort(f'Config option "{key} must be a string: {x}')
         return x
-    def items(self):
+    def items(self) -> ItemsView[Any, Any]:
         return self.__dicts[0].items()
-    def extend(self, d):
+    def extend(self, d: Optional[dict[Any, Any]]) -> YamlDict:
         if d is None:
             raise ValueError('d must not be None')
         return YamlDict([d] + self.__dicts)
@@ -51,17 +51,17 @@ class PythonAssignmentConfig:
     wypp: bool         # check that the file loads and that type annotations are correct
     checkLoad: bool    # only check that the file loads (without type checking)
     @staticmethod
-    def parse(v: YamlDict):
+    def parse(v: YamlDict) -> PythonAssignmentConfig:
         wypp = v.getBool('python-wypp', True)
         load = v.getBool('python-load', True)
         return PythonAssignmentConfig(wypp, load)
     @property
-    def typecheck(self):
+    def typecheck(self) -> bool:
         return self.wypp and self.checkLoad
 
 @dataclass
 class Assignment:
-    sheet: str
+    sheet: Optional[str]
     id: str
     points: int
     src: Optional[str]         # the name of the source file
@@ -74,7 +74,7 @@ class Assignment:
     pdf: Optional[str] = None
     sampleSolution: Optional[str]  = None
     @staticmethod
-    def parse(sheet: str, v: YamlDict, id: str) -> Assignment:
+    def parse(sheet: Optional[str], v: YamlDict, id: str) -> Assignment:
         src = v.getStr('src')
         tests = asList(v.get('test', [])) + asList(v.get('tests', []))
         testFilter = v.get('test-filter')
@@ -95,11 +95,11 @@ assignmentIdRe = re.compile(r'\d+[a-z]?')
 
 @dataclass
 class Exercise:
-    sheet: str
+    sheet: Optional[str]
     assignments: list[Assignment]
     @staticmethod
-    def parse(sheet: str, ymlDict: YamlDict) -> Exercise:
-        assignments = []
+    def parse(sheet: Optional[str], ymlDict: YamlDict) -> Exercise:
+        assignments: list[Assignment] = []
         for k, v in ymlDict.items():
             if type(k) == int:
                 k = str(k)
@@ -108,13 +108,13 @@ class Exercise:
             a = Assignment.parse(sheet, ymlDict.extend(v), k)
             assignments.append(a)
         return Exercise(sheet, assignments)
-    def ensureAssignmentsDefined(self, assignmentIds: list[str]):
+    def ensureAssignmentsDefined(self, assignmentIds: list[str]) -> None:
         allIds = [a.id for a in self.assignments]
         for x in assignmentIds:
             if x not in allIds:
                 abort(f'Assignment {x} not defined in exercise file')
 
-def parseExercise(sheet, yamlPath) -> Exercise:
+def parseExercise(sheet: Optional[str], yamlPath: str) -> Exercise:
     s = readFile(yamlPath)
     ymlDict = yaml.load(s, Loader=yaml.FullLoader)
     ex = Exercise.parse(sheet, YamlDict(ymlDict))

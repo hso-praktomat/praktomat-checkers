@@ -2,7 +2,7 @@
 
 from shell import *
 import sys
-import argparse
+from typing import Optional, Literal
 
 # The tests are run with docker. You need to have docker running locally, and you need to pull
 # the following image:
@@ -42,7 +42,9 @@ def debug(msg: str):
     if _DEBUG:
         print(f'[DEBUG] {msg}')
 
-def runCmd(cmd: str, onError='raise', capture=False, external=None, submissionDir=None, env=None):
+def runCmd(cmd: str, onError: Literal['raise', 'die', 'ignore']='raise', capture: bool=False,
+           external: Optional[str]=None, submissionDir: Optional[str]=None,
+           env: Optional[dict[str, str]]=None) -> RunResult:
     submissionDirDocker = '/submission'
     externalDirDocker = '/external'
     try:
@@ -78,7 +80,8 @@ def runCmd(cmd: str, onError='raise', capture=False, external=None, submissionDi
         except Exception:
             pass
 
-def expectOk(cmd: str, external=None, submissionDir=None, env=None):
+def expectOk(cmd: str, external: Optional[str]=None, submissionDir: Optional[str]=None,
+             env: Optional[dict[str, str]]=None) -> RunResult:
     print()
     info(f'Running test, cmd: {cmd}')
     capture = False if _DEBUG else True
@@ -89,7 +92,8 @@ def expectOk(cmd: str, external=None, submissionDir=None, env=None):
     info('OK')
     return res
 
-def expectFail(cmd: str, ecode=None, external=None, submissionDir=None, env=None):
+def expectFail(cmd: str, ecode: Optional[int]=None, external: Optional[str]=None,
+               submissionDir: Optional[str]=None, env: Optional[dict[str, str]]=None) -> RunResult:
     print()
     info(f'Running test, cmd: {cmd} ...')
     capture = False if _DEBUG else True
