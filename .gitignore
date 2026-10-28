@@ -3,4 +3,5 @@ __pycache__
 .vscode/
 .gradle/
 .venv/
+.venv_linux/
 _build/

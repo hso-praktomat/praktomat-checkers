@@ -9,9 +9,16 @@ import argparse
 dockerImage = 'skogsbaer/praktomat-multi-checker:latest'
 
 # Further, you need checkouts of the praktomat-tests and the praktomat-checkers repository under
-# the following location:
-praktomatTestsLocal = expandEnvVars('$HOME/devel/praktomat-tests')
+# the following location. For praktomat-tests, /praktomat-tests (where the devcontainer mounts it)
+# takes precedence over $HOME/devel/praktomat-tests. For praktomat-checkers, /work (the workspace
+# of the devcontainer) is the fallback if $HOME/devel/praktomat-checkers does not exist.
+if isDir('/praktomat-tests'):
+    praktomatTestsLocal = '/praktomat-tests'
+else:
+    praktomatTestsLocal = expandEnvVars('$HOME/devel/praktomat-tests')
 praktomatCheckersLocal = expandEnvVars('$HOME/devel/praktomat-checkers')
+if not isDir(praktomatCheckersLocal) and isDir('/work/multi-checker'):
+    praktomatCheckersLocal = '/work'
 
 _DEBUG = False
 

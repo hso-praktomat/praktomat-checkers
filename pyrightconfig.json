@@ -1,7 +1,5 @@
 {
-    "venvPath": ".",
-    "venv": ".venv",
     "extraPaths": ["script"],
-    "exclude": ["multi-checker/tests", ".venv", "**/node_modules", "**/__pycache__", "**/.*"],
+    "exclude": ["multi-checker/tests", ".venv", ".venv_linux", "**/node_modules", "**/__pycache__", "**/.*"],
     "reportWildcardImportFromLibrary": "none"
 }

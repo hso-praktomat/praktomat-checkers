@@ -15,9 +15,8 @@ A change is done only when both checks pass on the final state of the code:
 2. **The whole test suite passes.** `./runTests` in `multi-checker/tests` (no `-k`, nothing
    skipped or deselected) finishes with every test passing.
 
-If you can't run one of the two checks, the change isn't done. The devcontainer has no Docker,
-so the tests can't run there. Say which check you couldn't run and why, and leave that run to
-the user. Never report a change as finished because the type check alone passed.
+If you can't run one of the two checks, the change isn't done. Say which check you couldn't run
+and why, and leave that run to the user. Never report a change as finished because the type check alone passed.
 
 Bug fixes are test-first: add a test that reproduces the bug, show that it fails, then fix the
 bug and show that the test passes. New behaviour gets a new `test_…` function in the matching
@@ -25,15 +24,18 @@ bug and show that the test passes. New behaviour gets a new `test_…` function 
 
 ## Type check
 
-Pyright checks `multi-checker/script/*.py`; `multi-checker/tests` is excluded in
-`pyrightconfig.json`. Run it from the repo root:
+Run `multi-checker/check-ci`. Pyright checks `multi-checker/script/*.py`; `multi-checker/tests`
+is excluded in `pyrightconfig.json`. The script picks the venv by OS:
 
-- On the host (macOS) and in CI: `multi-checker/check-ci`. It runs `.venv/bin/pyright`; CI
-  builds `.venv` from `requirements.txt` with Python 3.12.
-- In the devcontainer: `uvx pyright`. `/work/.venv` is the host's macOS venv, bind-mounted, and
-  its interpreter symlinks point to `/Users/...`, so `check-ci` fails with `bad interpreter`.
-  Pyright still finds `shell` and `yaml` in `.venv/lib/python3.12/site-packages`. Don't delete
-  or recreate `.venv`; it belongs to the host.
+- Linux (devcontainer, CI, Docker): `.venv_linux`. The devcontainer's `postCreateCommand`
+  creates it with uv. CI creates it with Python 3.12 from `requirements.txt`.
+- macOS host: `.venv`.
+
+Both venvs live in the same checkout because the devcontainer bind-mounts it. Never use or
+recreate `.venv` from Linux: it is the host's macOS venv, and its interpreter symlinks point to
+`/Users/...`. `pyrightconfig.json` deliberately names no venv, because a `venv` setting there
+would override the `--pythonpath` that `check-ci` passes. So run pyright only through
+`check-ci`; a bare `pyright` reports `shell` and `yaml` as unresolved.
 
 `requirements.txt` doesn't pin pyright. CI uses the latest release, so CI's result is the one
 that counts.
@@ -52,14 +54,20 @@ cd multi-checker/tests
 
 Prerequisites, hard-coded in `testUtils.py`:
 
-- Docker running, with image `skogsbaer/praktomat-multi-checker:latest` present.
-- `pytest` and `libpyshell` importable by the `pytest` on `PATH` (`testUtils.py` does
-  `from shell import *`).
-- A checkout of praktomat-tests at `$HOME/devel/praktomat-tests`. It holds most fixtures; only
-  a few are in `multi-checker/tests/{python-wypp,java-aud,haskell}`.
-- **This repo at `$HOME/devel/praktomat-checkers`.** The tests mount *that* path into the
-  container and run *its* `check.py` and fixtures, not those of the checkout you are in. Run
-  from another clone or a git worktree and you test the wrong code.
+- Docker running, with image `skogsbaer/praktomat-multi-checker:latest` present. The
+  devcontainer runs its own Docker daemon (docker-in-docker). At container start,
+  `.devcontainer/load-test-image` copies the image from the host's daemon if it is missing. After
+  the image on the host has changed, run `.devcontainer/load-test-image --force`.
+  `/var/run/docker-host.sock` is the host's daemon; don't use it for anything else.
+- `pytest` and `libpyshell` (`testUtils.py` does `from shell import *`). On Linux, `runTests`
+  takes them from `.venv_linux`; elsewhere it uses the `pytest` on `PATH`.
+- A checkout of praktomat-tests at `/praktomat-tests` (the devcontainer mounts
+  `~/devel/praktomat-tests` there), otherwise at `$HOME/devel/praktomat-tests`. It holds most
+  fixtures; only a few are in `multi-checker/tests/{python-wypp,java-aud,haskell}`.
+- **This repo at `$HOME/devel/praktomat-checkers`, or else at `/work` (the devcontainer).**
+  The tests mount *that* path into the container and run *its* `check.py` and fixtures, not
+  those of the checkout you are in. Run from another clone or a git worktree and you test the
+  wrong code.
 
 What a test run picks up:
 

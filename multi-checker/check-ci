@@ -4,5 +4,19 @@ set -euo pipefail
 REPO_ROOT="$(dirname "$0")/.."
 cd "$REPO_ROOT"
 
-echo "Running pyright..."
-"$REPO_ROOT/.venv/bin/pyright"
+# Under Linux (CI, devcontainer, docker) we use .venv_linux, so that it does not clash with
+# the .venv of a macOS host sharing the same checkout.
+if [ "$(uname -s)" == "Linux" ]; then
+    VENV=.venv_linux
+else
+    VENV=.venv
+fi
+
+if [ ! -x "$VENV/bin/pyright" ]; then
+    echo "$VENV/bin/pyright not found. Create the venv with Python 3.12 and run" >&2
+    echo "  $VENV/bin/pip install -r requirements.txt" >&2
+    exit 1
+fi
+
+echo "Running pyright from $VENV ..."
+"$VENV/bin/pyright" --pythonpath "$VENV/bin/python"

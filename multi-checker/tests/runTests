@@ -1,4 +1,12 @@
 #!/bin/bash
 
+# Under Linux (devcontainer, docker), take pytest from .venv_linux (see ../check-ci)
+venvLinux="$(dirname "$0")/../../.venv_linux"
+if [ "$(uname -s)" == "Linux" ] && [ -x "$venvLinux/bin/pytest" ]; then
+    pytest="$venvLinux/bin/pytest"
+else
+    pytest=pytest
+fi
+
 # Pass option --capture=no for full output
-pytest --verbose haskellTests.py javaTests.py pythonTests.py "$@"
+"$pytest" --verbose haskellTests.py javaTests.py pythonTests.py "$@"
