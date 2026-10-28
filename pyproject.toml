@@ -7,8 +7,8 @@ include = ["multi-checker/script", "multi-checker/tests"]
 # and some of which are intentionally invalid Python; it is excluded from type checking.
 exclude = ["**/__pycache__", "multi-checker/tests/python-wypp"]
 extraPaths = ["multi-checker/script", "multi-checker/tests"]
-venvPath = "."
-venv = ".venv"
+# No venvPath/venv here: they would override the --pythonpath that multi-checker/check-ci passes
+# to select .venv (macOS) or .venv_linux (Linux).
 pythonVersion = "3.10"
 typeCheckingMode = "strict"
 reportWildcardImportFromLibrary = "none"

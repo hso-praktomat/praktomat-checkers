@@ -7,3 +7,4 @@
 /multi-checker/docker/git-clone text eol=lf
 /multi-checker/docker/docker-build text eol=lf
 /checker-container/docker-build text eol=lf
+/run-tests-on-host text eol=lf

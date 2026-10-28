@@ -1,4 +1,17 @@
 #!/bin/bash
 
+# Take pytest from the venv that ../check-ci uses: .venv_linux under Linux (devcontainer, docker),
+# .venv otherwise (macOS host). If that venv has no pytest, take it from the PATH.
+if [ "$(uname -s)" == "Linux" ]; then
+    venv="$(dirname "$0")/../../.venv_linux"
+else
+    venv="$(dirname "$0")/../../.venv"
+fi
+if [ -x "$venv/bin/pytest" ]; then
+    pytest="$venv/bin/pytest"
+else
+    pytest=pytest
+fi
+
 # Pass option --capture=no for full output
-pytest --verbose haskellTests.py javaTests.py pythonTests.py "$@"
+"$pytest" --verbose haskellTests.py javaTests.py pythonTests.py "$@"

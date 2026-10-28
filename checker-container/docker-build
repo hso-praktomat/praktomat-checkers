@@ -3,9 +3,16 @@
 TAG=skogsbaer/praktomat-checker-base:latest
 
 if [ "$1" == "--help" ]; then
-    echo "USAGE: $0 PLATFORM"
+    echo "USAGE: $0 [--no-push] PLATFORM"
     echo "PLATFORM is either linux/arm64 or linux/amd64 (default)"
     exit 1
+fi
+
+if [ "$1" == "--no-push" ]; then
+    shift
+    no_push=1
+else
+    no_push=0
 fi
 
 if [ -z "$1"  ]; then
@@ -20,7 +27,9 @@ docker build --platform "$platform" --tag $TAG . || exit 1
 echo
 echo "Successfully build image with tag $TAG."
 
-if [ $(hostname) == "progcheck" ]; then
+if [ $no_push == 1 ]; then
+    echo "Not pushing because of --no-push"
+elif [ $(hostname) == "progcheck" ]; then
     echo "Not pushing because we are running on progcheck"
 elif [ "$platform" == "linux/arm64" ]; then
     echo "Not pushing image for ARM64"

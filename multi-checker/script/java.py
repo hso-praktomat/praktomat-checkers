@@ -35,10 +35,11 @@ def execGradle(task: str, offline: bool, studentDir: str, testDir: str='test-src
         cands.append(cand)
     if buildFile is None:
         abort(f'No build file found: {cands}')
+    # Gradle 9 removed -b (--build-file), so we pass the directory containing the build file
     cmd = [
         'gradle',
-        '-b',
-        buildFile,
+        '-p',
+        dirname(buildFile),
         '-PtestFilter=' + testFilter,
         '-PtestDir=' + testDir,
         '-PstudentDir=' + studentDir,
