@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Builds the docker image from the Dockerfiles in this checkout (without pushing it) and runs all
+# tests in docker mode with it. Run it on the host; the devcontainer has no docker.
+# Arguments are passed to runTests, e.g. ./run-tests-on-host -k test_java02
+
+set -eo pipefail
+cd "$(dirname "$0")"
+
+if ! command -v docker > /dev/null; then
+    echo "docker not found. Run this script on the host, not in the devcontainer." >&2
+    exit 1
+fi
+
+case "$(uname -m)" in
+    arm64|aarch64) platform=linux/arm64;;
+    *) platform=linux/amd64;;
+esac
+
+multi-checker/docker/docker-build --build-base --no-push "$platform"
+
+cd multi-checker/tests
+env -u PRAKTOMAT_TESTS_LOCAL ./runTests "$@"

@@ -48,12 +48,17 @@ COPY ./get-deps.gradle.kts /get-gradle-deps/build.gradle.kts
 RUN cd /get-gradle-deps && gradle --no-daemon getDeps
 RUN rm -rf /get-gradle-deps
 
-# Python
-# Packages
-RUN apt-get update && apt-get install -yq \
-  python3-yaml \
+# Python 3.14 from the deadsnakes PPA, as in the devcontainer image skogsbaer-devimage
+RUN apt-get update && apt-get install -yq software-properties-common \
+  && add-apt-repository -y ppa:deadsnakes/ppa \
+  && apt-get update && apt-get install -yq python3.14 python3.14-venv \
   && rm -rf /var/lib/apt/lists/*
-RUN pip3 install --break-system-packages libPyshell==0.5.0 aiofiles aiohttp
+# pip for Python 3.14. Python 3.14 also sees the packages of the system's Python 3.12 in
+# /usr/lib/python3/dist-packages, so `python3.14 -m ensurepip` takes the system's pip as already
+# installed, and that pip fails under 3.14. Hence we install the pip bundled with Python 3.14 into
+# /usr/local/lib/python3.14, which comes first in Python 3.14's sys.path.
+RUN whl=$(ls /usr/lib/python3.14/ensurepip/_bundled/pip-*.whl) && \
+    python3.14 $whl/pip install --break-system-packages --ignore-installed $whl
 
 # WYPP, version 2.2.1 plus some fixes (2026-03-26)
 RUN mkdir /wypp
@@ -67,8 +72,14 @@ ADD ./git-clone /git-clone
 RUN bash /git-clone https://github.com/hso-praktomat/llm-tutor.git 9950dd6a5d6232c01d82e8f4d0cc2bf9eb2265b6 /llm-tutor
 RUN rm -rf /llm-tutor/.git
 
-# Install packages for llm-tutor .toml datei
-RUN pip3 install --break-system-packages --ignore-installed PyYAML -e /llm-tutor
+# Python packages, including those of llm-tutor. --ignore-installed gives Python 3.14 its own copies
+# instead of using (or trying to uninstall) the system's packages for Python 3.12.
+RUN python3.14 -m pip install --break-system-packages --ignore-installed \
+  pyyaml libPyshell==0.5.0 aiofiles aiohttp -e /llm-tutor
+
+# python3 is Python 3.14, also for Praktomat, which runs python3 /checker/check.py. This must come
+# after all apt-get calls, because the Python hooks of apt packages expect the system's Python 3.12.
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.14 1
 
 # Our checker scripts
 ADD checker /checker

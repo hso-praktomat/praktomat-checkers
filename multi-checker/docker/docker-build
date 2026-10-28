@@ -1,17 +1,21 @@
 #!/bin/bash
 
 if [ "$1" == "--help" ]; then
-    echo "USAGE: $0 [--build-base] [PLATFORM]"
+    echo "USAGE: $0 [--build-base] [--no-push] [PLATFORM]"
     echo "Platform is either linux/arm64 or linux/amd64 (default)"
     exit 1
 fi
 
-if [ "$1" == "--build-base" ]; then
+build_base=0
+no_push=""
+while [ "$1" == "--build-base" ] || [ "$1" == "--no-push" ]; do
+    if [ "$1" == "--build-base" ]; then
+        build_base=1
+    else
+        no_push="--no-push"
+    fi
     shift
-    build_base=1
-else
-    build_base=0
-fi
+done
 
 if [ -z "$1"  ]; then
     platform="linux/amd64"
@@ -21,7 +25,7 @@ fi
 
 if [ $build_base == 1 ]; then
     echo "Building docker base image ..."
-    $(dirname $0)/../../checker-container/docker-build "$platform" || exit 1
+    $(dirname $0)/../../checker-container/docker-build $no_push "$platform" || exit 1
     echo "Done building docker base image"
 fi
 
@@ -34,7 +38,9 @@ docker build --platform "$platform" --tag $TAG . || exit 1
 echo
 echo "Successfully build image with tag $TAG."
 
-if [ $(hostname) == "progcheck" ]; then
+if [ -n "$no_push" ]; then
+    echo "Not pushing because of --no-push"
+elif [ $(hostname) == "progcheck" ]; then
     echo "Not pushing because we are running on progcheck"
 elif [ "$platform" == "linux/arm64" ]; then
     echo "Not pushing image for ARM64"

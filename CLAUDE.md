@@ -35,7 +35,8 @@ invalid Python.
 `check-ci` picks the venv by OS:
 
 - Linux (devcontainer, CI, Docker): `.venv_linux`. The devcontainer's `postCreateCommand`
-  creates it with uv. CI creates it with Python 3.12 from `requirements.txt`.
+  creates it with uv from the image's Python (3.14). CI creates it with Python 3.14 from
+  `requirements.txt`.
 - macOS host: `.venv`.
 
 Both venvs live in the same checkout because the devcontainer bind-mounts it. Never use or
@@ -66,10 +67,16 @@ cd multi-checker/tests
 ./runTests --capture=no ...   # show the checker's output
 ```
 
+On the host, `./run-tests-on-host` (in the repo root) builds the image from the local Dockerfiles
+(`docker-build --build-base --no-push`) and runs the whole suite in Docker mode. Its arguments go
+to `runTests`. The devcontainer has no Docker: if a change touches the Dockerfiles, ask the user
+to run `./run-tests-on-host` on the host.
+
 Prerequisites, hard-coded in `testUtils.py` and the test files:
 
 - `pytest` and `libpyshell` (`testUtils.py` does `from shell import *`). On Linux, `runTests`
-  takes them from `.venv_linux`; elsewhere it uses the `pytest` on `PATH`.
+  takes them from `.venv_linux`; on the Mac from `.venv` if it contains pytest, otherwise it
+  uses the `pytest` on `PATH`.
 - A checkout of praktomat-tests at `/praktomat-tests` (the devcontainer mounts
   `~/devel/praktomat-tests` there), otherwise at `$HOME/devel/praktomat-tests`. It holds most
   fixtures; only a few are in `multi-checker/tests/{python-wypp,java-aud,haskell}`.
@@ -92,14 +99,14 @@ What a test run picks up:
 - Edits under `multi-checker/script/` take effect immediately in both modes. Docker mode mounts
   the script into the container.
 - Edits to `multi-checker/docker/` or `checker-container/` (toolchains, pinned WYPP and
-  llm-tutor commits, Python packages) take effect in Docker mode only after you rebuild the
-  image with `multi-checker/docker/docker-build [--build-base] linux/arm64`. Local mode never
-  sees them. **Run `docker-build` without `linux/arm64` only if the user asks:** with the
-  default platform `linux/amd64` it pushes the image to Docker Hub.
+  llm-tutor commits, Python packages) take effect in Docker mode only after the image is
+  rebuilt, which `./run-tests-on-host` does. Local mode never sees them. **Always pass
+  `--no-push` to `multi-checker/docker/docker-build` unless the user asks for a push:** without
+  it, the script pushes images for `linux/amd64` (the default platform) to Docker Hub.
 - **Keep the Docker image and the devcontainer image in sync.** If you change a tool or its
   version in the Dockerfiles, `skogsbaer-devimage` needs the same change. It is built outside
-  this repo, so tell the user. Known differences: local mode uses the WYPP checkout on the host
-  instead of the pinned commit, and Python 3.14 instead of the image's 3.12.
+  this repo, so tell the user. Known difference: local mode uses the WYPP checkout on the host
+  instead of the pinned commit.
 
 The `llm-tutor` command has no tests (its fixtures were removed in 883483b). If you change
 `llm_tutor.py`, add a test (e.g. using `--fake-llm`) or tell the user that the change is untested.
@@ -128,8 +135,8 @@ The `llm-tutor` command has no tests (its fixtures were removed in 883483b). If 
 - Call `abort(msg)` for problems with the submission or the task configuration (it prints
   `FEHLER: …`) and `bug(msg)` for internal errors. stdout is the checker report shown in
   Praktomat, so keep it readable for students.
-- The image and CI run Python 3.12 and the devcontainer runs 3.14, but pyright checks against
-  Python 3.10 (`pythonVersion` in `pyproject.toml`), so code must stay 3.10-compatible.
+- The image, the devcontainer and CI run Python 3.14, but pyright checks against Python 3.10
+  (`pythonVersion` in `pyproject.toml`), so code must stay 3.10-compatible.
 - Use camelCase for functions, variables and parameters. `llm_tutor.py` doesn't; don't copy
   it. Modules use `from shell import *` (libpyshell: `run`, `pjoin`, `isFile`, `ls`, …) and
   `from utils import *`. Prefer those helpers over `subprocess` and `os.path`.
