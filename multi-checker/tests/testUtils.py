@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 
 from shell import *
+import os
 import sys
 from typing import Optional, Literal
 
-# The tests are run with docker. You need to have docker running locally, and you need to pull
-# the following image:
+# By default, the tests are run with docker. You need to have docker running locally, and you need
+# to pull the following image:
 dockerImage = 'skogsbaer/praktomat-multi-checker:latest'
+
+# With PRAKTOMAT_TESTS_LOCAL=1 (set by the devcontainer), the tests run check.py directly on this
+# machine instead. Then the tools of the docker image must be installed locally under the same
+# paths (/wypp, /opt/praktomat-addons/checkstyle.jar, /external/tick-trick-track, gradle, stack, ...).
+runLocal = os.environ.get('PRAKTOMAT_TESTS_LOCAL') == '1'
 
 # Further, you need checkouts of the praktomat-tests and the praktomat-checkers repository under
 # the following location. For praktomat-tests, /praktomat-tests (where the devcontainer mounts it)
@@ -25,7 +31,10 @@ _DEBUG = False
 thisDir = f'{praktomatCheckersLocal}/multi-checker/tests'
 
 _praktomatCheckersDocker = '/praktomat-checkers'
-checkScript = f'{_praktomatCheckersDocker}/multi-checker/script/check.py'
+if runLocal:
+    checkScript = f'{praktomatCheckersLocal}/multi-checker/script/check.py'
+else:
+    checkScript = f'{_praktomatCheckersDocker}/multi-checker/script/check.py'
 
 checkScriptArgs = ''
 if _DEBUG:
@@ -58,6 +67,16 @@ def runCmd(cmd: str, onError: Literal['raise', 'die', 'ignore']='raise', capture
             cp(submissionDir, dirTmp)
             workDirArg = f'--workdir={submissionDirDocker}'
             submissionVolumeArg = f'--volume {dirTmp}:{submissionDirDocker}'
+        if runLocal:
+            if external is not None:
+                # check.py looks for the sheet in /external (where docker mounts it), unless
+                # --test-dir is given
+                cp(external, externalTmp)
+                cmd = cmd.replace(checkScript, f'{checkScript} --test-dir {externalTmp}', 1)
+            debug(cmd)
+            return run(cmd, onError=onError, captureStderr=capture, captureStdout=capture,
+                       stderrToStdout=capture, env=env,
+                       cwd=dirTmp if submissionDir is not None else None)
         if env:
             envStr = ' '.join([f'-e {k}="{v}"' for k,v in env.items()])
         else:

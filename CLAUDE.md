@@ -50,8 +50,14 @@ pyright. CI uses the latest release, so CI's result is the one that counts.
 
 ## Tests
 
-There are only integration tests. Each test runs `check.py` inside the Docker image against a
-sample submission and checks the exit code (sometimes also the output).
+There are only integration tests. Each test runs `check.py` against a sample submission and
+checks the exit code (sometimes also the output). The tests run in one of two modes:
+
+- **Docker** (the default, e.g. on the macOS host): `check.py` runs inside the image
+  `skogsbaer/praktomat-multi-checker:latest` built from `multi-checker/docker/`.
+- **Local** (`PRAKTOMAT_TESTS_LOCAL=1`, set by the devcontainer): `check.py` runs directly in the
+  devcontainer. Its image `skogsbaer-devimage` provides the tools of the Docker image under the
+  same paths and versions, and the devcontainer mounts the rest.
 
 ```sh
 cd multi-checker/tests
@@ -60,13 +66,8 @@ cd multi-checker/tests
 ./runTests --capture=no ...   # show the checker's output
 ```
 
-Prerequisites, hard-coded in `testUtils.py`:
+Prerequisites, hard-coded in `testUtils.py` and the test files:
 
-- Docker running, with image `skogsbaer/praktomat-multi-checker:latest` present. The
-  devcontainer runs its own Docker daemon (docker-in-docker). At container start,
-  `.devcontainer/load-test-image` copies the image from the host's daemon if it is missing. After
-  the image on the host has changed, run `.devcontainer/load-test-image --force`.
-  `/var/run/docker-host.sock` is the host's daemon; don't use it for anything else.
 - `pytest` and `libpyshell` (`testUtils.py` does `from shell import *`). On Linux, `runTests`
   takes them from `.venv_linux`; elsewhere it uses the `pytest` on `PATH`.
 - A checkout of praktomat-tests at `/praktomat-tests` (the devcontainer mounts
@@ -76,15 +77,29 @@ Prerequisites, hard-coded in `testUtils.py`:
   The tests mount *that* path into the container and run *its* `check.py` and fixtures, not
   those of the checkout you are in. Run from another clone or a git worktree and you test the
   wrong code.
+- Docker mode: Docker running with the image present, and a checkout of
+  github.com/skogsbaer/tick-trick-track at `$HOME/devel/tick-trick-track`. The tests mount it
+  at `/external/tick-trick-track`; `test_python12`–`14` need it.
+- Local mode: the devcontainer provides WYPP at `/wypp` (mount of
+  `~/devel/write-your-python-program`), tick-trick-track at `/external/tick-trick-track` (mount
+  of `~/devel/tick-trick-track`), Checkstyle at `/opt/praktomat-addons/checkstyle.jar`, Java 27
+  (`JAVA_HOME=/opt/jdk-27`), Gradle 9.8.2 with its dependency cache in `/root/.gradle`, the
+  Haskell packages in the `lts-24.3` snapshot, and `python3` (3.14) with pyyaml, libpyshell,
+  aiofiles and aiohttp.
 
 What a test run picks up:
 
-- Edits under `multi-checker/script/` take effect immediately, because the script is mounted.
+- Edits under `multi-checker/script/` take effect immediately in both modes. Docker mode mounts
+  the script into the container.
 - Edits to `multi-checker/docker/` or `checker-container/` (toolchains, pinned WYPP and
-  llm-tutor commits, Python packages) take effect only after you rebuild the image with
-  `multi-checker/docker/docker-build [--build-base] linux/arm64`. **Run `docker-build` without
-  `linux/arm64` only if the user asks:** with the default platform `linux/amd64` it pushes the
-  image to Docker Hub.
+  llm-tutor commits, Python packages) take effect in Docker mode only after you rebuild the
+  image with `multi-checker/docker/docker-build [--build-base] linux/arm64`. Local mode never
+  sees them. **Run `docker-build` without `linux/arm64` only if the user asks:** with the
+  default platform `linux/amd64` it pushes the image to Docker Hub.
+- **Keep the Docker image and the devcontainer image in sync.** If you change a tool or its
+  version in the Dockerfiles, `skogsbaer-devimage` needs the same change. It is built outside
+  this repo, so tell the user. Known differences: local mode uses the WYPP checkout on the host
+  instead of the pinned commit, and Python 3.14 instead of the image's 3.12.
 
 The `llm-tutor` command has no tests (its fixtures were removed in 883483b). If you change
 `llm_tutor.py`, add a test (e.g. using `--fake-llm`) or tell the user that the change is untested.
@@ -113,8 +128,8 @@ The `llm-tutor` command has no tests (its fixtures were removed in 883483b). If 
 - Call `abort(msg)` for problems with the submission or the task configuration (it prints
   `FEHLER: …`) and `bug(msg)` for internal errors. stdout is the checker report shown in
   Praktomat, so keep it readable for students.
-- The image and CI run Python 3.12, but pyright checks against Python 3.10 (`pythonVersion` in
-  `pyproject.toml`), so code must stay 3.10-compatible.
+- The image and CI run Python 3.12 and the devcontainer runs 3.14, but pyright checks against
+  Python 3.10 (`pythonVersion` in `pyproject.toml`), so code must stay 3.10-compatible.
 - Use camelCase for functions, variables and parameters. `llm_tutor.py` doesn't; don't copy
   it. Modules use `from shell import *` (libpyshell: `run`, `pjoin`, `isFile`, `ls`, …) and
   `from utils import *`. Prefer those helpers over `subprocess` and `os.path`.

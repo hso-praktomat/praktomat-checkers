@@ -16,12 +16,26 @@ RUN stack --resolver lts-24.3 install haskell-src-meta
 RUN stack --resolver lts-24.3 install main-tester
 RUN stack --resolver lts-24.3 install call-stack HUnit
 
-# Install Gradle
+# Install Java (Temurin, the same build as in the devcontainer image skogsbaer-devimage)
+ARG TARGETARCH
+RUN case "$TARGETARCH" in \
+      amd64) arch=x64; sha=1cf69a4848ffb728b3b260dfd45206a51566ab571a02a30092271d4c580bccbc;; \
+      arm64) arch=aarch64; sha=e4ec5c7276290c7bde0baecba9a29be4962f5388684296406a9799d465936087;; \
+      *) echo "Unsupported architecture: $TARGETARCH"; exit 1;; \
+    esac && \
+    curl -sSL -o /jdk.tar.gz https://github.com/adoptium/temurin27-binaries/releases/download/jdk-27%2B35/OpenJDK27U-jdk_${arch}_linux_hotspot_27_35.tar.gz && \
+    echo "$sha  /jdk.tar.gz" | sha256sum -c - && \
+    mkdir /opt/jdk-27 && \
+    tar -xzf /jdk.tar.gz -C /opt/jdk-27 --strip-components=1 && \
+    rm /jdk.tar.gz
+ENV JAVA_HOME=/opt/jdk-27
+ENV PATH=/opt/jdk-27/bin:$PATH
+
+# Install Gradle (9.8.0 is the first version running on Java 27)
 RUN apt-get update && apt-get install -yq \
-  openjdk-21-jdk \
   zip \
   && rm -rf /var/lib/apt/lists/*
-ARG GRADLE_VERSION=8.13
+ARG GRADLE_VERSION=9.8.2
 ADD https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip /gradle.zip
 RUN mkdir /opt/gradle
 RUN unzip -d /opt/gradle /gradle.zip
