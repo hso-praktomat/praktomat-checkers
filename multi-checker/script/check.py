@@ -12,7 +12,7 @@ import io
 defaultGradleBuildFile = pjoin(os.path.realpath(os.path.dirname(__file__)), 'build.gradle.kts')
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, line_buffering=True)
 
-def parseArgs():
+def parseArgs() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Checker for assignments')
     parser.add_argument('--submission-dir', metavar='DIR', type=str,
                         help='Directories with student submission')
@@ -67,13 +67,13 @@ def parseArgs():
 
 # "Labortest 2, Gruppe A" -> ["labortest_2", labortest_2_gruppe_a"]
 def candsFromTitle(origTitle: str) -> list[str]:
-    comps = []
+    comps: list[str] = []
     for x in origTitle.split(','):
         x = x.strip()
         x = replaceAll(["/", "\\", " ", "\t"], "_", x)
         x = x.lower()
         comps.append(x)
-    cands = []
+    cands: list[str] = []
     for i in range(len(comps)):
         c = "_".join(comps[:i+1])
         cands.append(c)
@@ -104,7 +104,7 @@ def getSheetFromEnv(testDir: Optional[str]) -> Optional[str]:
 def getAssignments(s: str|None) -> list[str] | None:
     assignments = None
     if s:
-        l = []
+        l: list[str] = []
         for x in s.split(','):
             x = x.strip()
             if x:
@@ -113,7 +113,7 @@ def getAssignments(s: str|None) -> list[str] | None:
             assignments = l
     return assignments
 
-def main():
+def main() -> None:
     args = parseArgs()
     if args.debug:
         enableDebug()

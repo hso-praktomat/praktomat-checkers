@@ -9,7 +9,7 @@ from config import *
 from exercise import parseExercise
 
 
-def configError(s) -> NoReturn:
+def configError(s: str) -> NoReturn:
     abort('Config error: ' + s)
 
 @dataclass
@@ -23,7 +23,7 @@ class LlmTutorOptions(Options):
    
    
 # alle strings sind als pfad hier weitergegeben
-def runLlmTutor (llmTutorPfad: str, fake_llm: bool, id: str, sampleSolution: str, studentSolution: str, pdf_task:str , configApi:str):
+def runLlmTutor (llmTutorPfad: str, fake_llm: bool, id: str, sampleSolution: str, studentSolution: str, pdf_task:str , configApi:str) -> None:
     args = ['python3', llmTutorPfad + '/src/praktomat_entry.py']
 
     args = args + [
@@ -49,7 +49,7 @@ def runLlmTutor (llmTutorPfad: str, fake_llm: bool, id: str, sampleSolution: str
     
     
 
-def check(opts: LlmTutorOptions):
+def check(opts: LlmTutorOptions) -> None:
     if os.getenv('ALLOW_LLM_UPLOAD') != '1':
         print('Uploading the solution to an LLM was not permitted. Aborting.')
         return

@@ -14,7 +14,7 @@ class Options:
     testDir: Optional[str]
     resultFile: Optional[str]
 
-def getSheetDir(testDir: Optional[str], sheet: Optional[str]):
+def getSheetDir(testDir: Optional[str], sheet: Optional[str]) -> str:
     if testDir is None:
         testDir = '/external'
     if sheet is None:
@@ -25,13 +25,22 @@ def getSheetDir(testDir: Optional[str], sheet: Optional[str]):
     else:
         return testDir
 
+def getSolutionDir(solutionDir: Optional[str]) -> str:
+    if solutionDir is None:
+        return '/solution'
+    return solutionDir
+    
+def getPdfDir(pdfDir: Optional[str]) -> str:
+    if pdfDir is None:
+        return '/pdf'
+    return pdfDir
 
 def replaceAll(l: list[str], repl: str, s: str) -> str:
     for x in l:
         s = s.replace(x, repl)
     return s
 
-def testTimeoutSeconds(default: int=60):
+def testTimeoutSeconds(default: int=60) -> int:
     fromEnv = os.getenv('PRAKTOMAT_CHECKER_TEST_TIMEOUT')
     if fromEnv:
         debug('Timeout from environment: ' + str(fromEnv))
@@ -41,7 +50,7 @@ def testTimeoutSeconds(default: int=60):
             pass
     return default
 
-def runWithTimeout(cmd: list[str], timeout: Optional[int], what: str, env: Optional[dict]=None):
+def runWithTimeout(cmd: list[str], timeout: Optional[int], what: str, env: Optional[dict[str, str]]=None) -> RunResult:
     # Note: I first tried using the unix timeout command. But the combination with gradle
     # and the subprocess did not work, the process just hung.
     debug(f'START Command: {" ".join(cmd)}')
