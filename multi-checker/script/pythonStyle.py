@@ -170,3 +170,18 @@ def checkStyle(files: list[str]) -> Optional[StyleResult]:
     out.append('')
     out.append(styleRules)
     return StyleResult(hasErrors=True, styleOutput='\n'.join(out))
+
+def checkStyleAndExit(files: list[str]) -> NoReturn:
+    """
+    Implements the python-style command: checks the coding style of the given files, prints
+    the result and exits with 0 if there are no problems, and with 1 otherwise.
+    """
+    for f in files:
+        if not isFile(f):
+            abort(f'File {f} does not exist')
+    res = checkStyle(files)
+    if res is None:
+        abort('Coding style not checked, because all files contain syntax errors')
+    print(res.styleOutput)
+    print(f'\nCoding style: {res.status}')
+    sys.exit(1 if res.hasErrors else 0)

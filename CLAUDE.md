@@ -114,9 +114,9 @@ The `llm-tutor` command has no tests (its fixtures were removed in 883483b). If 
 ## Layout
 
 - `multi-checker/script/`: the checker. It is copied into the image as `/checker` and started
-  as `python3 /checker/check.py <python|haskell|java|llm-tutor> ...`.
-  - `check.py` parses the arguments and dispatches to `python.py`, `haskell.py`, `java.py` or
-    `llm_tutor.py`.
+  as `python3 /checker/check.py <python|python-style|haskell|java|llm-tutor> ...`.
+  - `check.py` parses the arguments and dispatches to `python.py`, `pythonStyle.py`,
+    `haskell.py`, `java.py` or `llm_tutor.py`.
   - `exercise.py` parses each sheet's `exercise.yaml` (assignments, points, test files).
     `testContext.py` collects the results, prints the report and exits.
   - `common.py` and `utils.py` hold shared helpers (`runWithTimeout`, `findSolutionDir`,

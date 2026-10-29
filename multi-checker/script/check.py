@@ -1,6 +1,7 @@
 from utils import *
 from common import *
 import python
+import pythonStyle
 import haskell
 import java
 import llm_tutor
@@ -33,6 +34,9 @@ def parseArgs() -> argparse.Namespace:
                     help='Identifier for assignment(s), multiple assignments separated by commas')
     py.add_argument('--no-style-check', action='store_true', default=False,
                     help='Do not check the coding style of the submissions')
+    pyStyle = subparsers.add_parser('python-style', help='Only check the coding style of python files')
+    pyStyle.add_argument('files', metavar='FILE', nargs='+',
+                         help='Python files to check, relative to the current directory')
     hs = subparsers.add_parser('haskell', help='Check haskell assignment')
     hs.add_argument('--sheet', metavar='X', type=str, help='Identifier for sheet')
     java = subparsers.add_parser('java', help='Check Java assignment')
@@ -151,6 +155,8 @@ def main() -> None:
                                     styleCheck=not args.no_style_check)
         debug(f'Running python checks, options: {opts}')
         python.check(opts)
+    elif cmd == 'python-style':
+        pythonStyle.checkStyleAndExit(args.files)
     elif cmd == 'haskell':
         sheet = args.sheet
         if not sheet:

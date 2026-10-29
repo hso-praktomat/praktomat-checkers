@@ -199,3 +199,19 @@ def test_python_style_without_exercise_yaml():
     res = expectFail(styleCmd('--assignment 1,01'), 1, submissionDir=bad)
     expectStyleResult(res, 'ERROR', [('aufgabe_01.py', line, 'invalid-name') for line in [6, 7, 8, 9, 10, 13]])
 
+def test_python_style_command():
+    # The python-style command only checks the coding style of the given files
+    def cmd(files: str) -> str:
+        return f'python3 {checkScript} {checkScriptArgs} python-style {files}'
+    res = expectOk(cmd('aufgabe_01.py'), submissionDir=f'{styleTestDir}/good/camel-case')
+    expectStyleResult(res, 'OK', [])
+    res = expectFail(cmd('aufgabe_01.py aufgabe_02.py'), 1, submissionDir=f'{styleTestDir}/per-assignment/both-bad')
+    expectStyleResult(res, 'ERROR', [('aufgabe_01.py', 3, 'invalid-name'), ('aufgabe_02.py', 3, 'invalid-name')])
+    # aufgabe_03.py has a syntax error, so it is not checked
+    res = expectOk(cmd('aufgabe_01.py aufgabe_03.py'), submissionDir=localTestDir)
+    expectStyleResult(res, 'OK', [])
+    if 'aufgabe_03.py: coding style not checked because of syntax errors' not in res.stdout:
+        fail(f'expected that aufgabe_03.py is not checked\n\n---\n{res.stdout}\n---')
+    expectFail(cmd('aufgabe_03.py'), 1, submissionDir=localTestDir)
+    expectFail(cmd('does_not_exist.py'), 1, submissionDir=localTestDir)
+

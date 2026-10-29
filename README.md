@@ -19,6 +19,7 @@ To be used with python, haskell and Java submissions.
   The configuration in `multi-checker/script/python-style/` is deliberately lenient.
   The style check is disabled by the commandline option `--no-style-check` or by
   `python-style: false` in `exercise.yaml` (globally or per assignment).
+  `check.py python-style FILE...` runs only the style check.
 * Haskell submissions are checked for compile errors (via `stack test`) and instructors
   can also provide unit tests to be run against student's submission. The
   [praktomat-tests](https://git.hs-offenburg.de/swehr/praktomat-tests) repository contains
