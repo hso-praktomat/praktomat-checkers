@@ -22,19 +22,42 @@ styleCheckTimeout = 60
 
 maxIssuesPerFile = 30
 
-styleRules = '''Please follow the coding style guide. These are the rules that are checked automatically:
-- Names of functions, methods, parameters, variables and attributes start with a lowercase letter
-  and use camelCase. snake_case is also allowed, but use only one of the two styles in a file.
-- Names of classes, records and types (Literal, Union) start with an uppercase letter and use
-  CamelCase.
-- Lines have at most 120 characters.
-- Indent code with 4 spaces, do NOT use tabs. This might require to change the settings of your editor.
-- No space between the name of a function and the opening parenthesis: doSomething()
-- No space directly after an opening or before a closing bracket: spam(ham[1], {eggs: 2})
-- No space before but one space after a comma or a colon: f(a, b), {eggs: 2}, x: int
-- One space on both sides of =, ==, +=, <, <=, -> and other operators: x = y, def f() -> int
-- All parameters (except self) and the results of functions and methods have type annotations:
-  def calculateSomething(param: int) -> float'''
+@dataclass(frozen=True)
+class StyleRule:
+    description: str
+    # Prefixes of the codes of ruff for this rule. The naming rules are checked by pylint.
+    codePrefixes: tuple[str, ...]
+
+namesRule = StyleRule(
+    '- Names of functions, methods, parameters, variables and attributes start with a lowercase letter\n'
+    '  and use camelCase. snake_case is also allowed, but use only one of the two styles in a file.', ())
+typeNamesRule = StyleRule(
+    '- Names of classes, records and types (Literal, Union) start with an uppercase letter and use\n'
+    '  CamelCase.', ())
+
+# The rules of the style guide that are checked, in the order of the style guide
+styleRules = [
+    namesRule,
+    typeNamesRule,
+    StyleRule('- Lines have at most 120 characters.', ('E501',)),
+    StyleRule('- Indent code with 4 spaces, do NOT use tabs. '
+              'This might require to change the settings of your editor.', ('E11', 'W191')),
+    StyleRule('- No space between the name of a function and the opening parenthesis: doSomething()', ('E211',)),
+    StyleRule('- No space directly after an opening or before a closing bracket: spam(ham[1], {eggs: 2})',
+              ('E201', 'E202')),
+    StyleRule('- No space before but one space after a comma or a colon: f(a, b), {eggs: 2}, x: int',
+              ('E203', 'E231')),
+    StyleRule('- One space on both sides of =, ==, +=, <, <=, -> and other operators: x = y, def f() -> int',
+              ('E225',)),
+    StyleRule('- All parameters (except self) and the results of functions and methods have type annotations:\n'
+              '  def calculateSomething(param: int) -> float', ('ANN',)),
+]
+
+def ruleForCode(code: str) -> Optional[StyleRule]:
+    for r in styleRules:
+        if any(code.startswith(p) for p in r.codePrefixes):
+            return r
+    return None
 
 @dataclass
 class StyleIssue:
@@ -43,6 +66,7 @@ class StyleIssue:
     column: int
     code: str
     message: str
+    rule: Optional[StyleRule]   # None if unknown
     def format(self) -> str:
         return f'{self.path}:{self.line}:{self.column}: {self.message} [{self.code}]'
 
@@ -86,7 +110,7 @@ def runRuff(files: list[str]) -> list[StyleIssue]:
             continue
         path: str = d['filename']
         loc = d['location']
-        issues.append(StyleIssue(os.path.relpath(path), loc['row'], loc['column'], code, msg))
+        issues.append(StyleIssue(os.path.relpath(path), loc['row'], loc['column'], code, msg, ruleForCode(code)))
     return issues
 
 # Message of pylint for invalid-name, e.g.
@@ -98,23 +122,27 @@ _kindNames = {'Argument': 'Parameter', 'Class attribute': 'Attribute', 'Constant
 _upperCaseKinds = ['Class', 'Type alias', 'Type variable']
 _groupStyles = {'camel': 'camelCase', 'snake': 'snake_case'}
 
-def namingMessage(pylintMsg: str) -> str:
+def namingMessage(pylintMsg: str) -> tuple[str, Optional[StyleRule]]:
+    """
+    Returns a message for students and the violated rule.
+    """
     m = _pylintNameRe.match(pylintMsg)
     if not m:
-        return pylintMsg
+        return (pylintMsg, None)
     kind = m.group('kind')
     name = m.group('name')
     group = m.group('group')
     what = f'{_kindNames.get(kind, kind)} name "{name}"'
     if group in _groupStyles:
         otherGroup = 'snake' if group == 'camel' else 'camel'
-        return f'{what} is in {_groupStyles[otherGroup]}, but most names in this file are in ' \
-            f'{_groupStyles[group]}'
+        return (f'{what} is in {_groupStyles[otherGroup]}, but most names in this file are in '
+                f'{_groupStyles[group]}', namesRule)
     elif kind in _upperCaseKinds:
-        return f'{what} does not follow the naming conventions: use CamelCase, starting with an uppercase letter'
+        return (f'{what} does not follow the naming conventions: use CamelCase, starting with an uppercase '
+                'letter', typeNamesRule)
     else:
-        return f'{what} does not follow the naming conventions: use camelCase or snake_case, starting with ' \
-            'a lowercase letter'
+        return (f'{what} does not follow the naming conventions: use camelCase or snake_case, starting with '
+                'a lowercase letter', namesRule)
 
 def runPylint(files: list[str]) -> list[StyleIssue]:
     res = runStyleChecker(['pylint', '--rcfile', pjoin(styleConfigDir, 'pylintrc'), '--output-format=json']
@@ -129,9 +157,9 @@ def runPylint(files: list[str]) -> list[StyleIssue]:
             debug(f'Ignoring pylint message {d}')
             continue
         path: str = d['path']
+        (msg, rule) = namingMessage(d['message'])
         # pylint counts columns from 0, ruff from 1
-        issues.append(StyleIssue(os.path.relpath(path), d['line'], d['column'] + 1, d['symbol'],
-                                 namingMessage(d['message'])))
+        issues.append(StyleIssue(os.path.relpath(path), d['line'], d['column'] + 1, d['symbol'], msg, rule))
     return issues
 
 def checkStyle(files: list[str]) -> Optional[StyleResult]:
@@ -168,7 +196,12 @@ def checkStyle(files: list[str]) -> Optional[StyleResult]:
     out.append('')
     out.append(f'Found {len(issues)} problem(s) with the coding style.')
     out.append('')
-    out.append(styleRules)
+    # Show only the violated rules, or all rules if the rule of some problem is unknown
+    violated = set([i.rule for i in issues])
+    rules = styleRules if None in violated else [r for r in styleRules if r in violated]
+    out.append('Please follow these rules of the coding style guide:')
+    for r in rules:
+        out.append(r.description)
     return StyleResult(hasErrors=True, styleOutput='\n'.join(out))
 
 def checkStyleAndExit(files: list[str]) -> NoReturn:

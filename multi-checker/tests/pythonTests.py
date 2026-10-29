@@ -106,27 +106,40 @@ def test_python17():
         else:
             expectOk(cmd, external=external, submissionDir=dir)
 
-# Tests for the coding style check. Each submission in style/bad violates exactly one rule of the
-# style guide and passes with the style check disabled. The list contains the problems the
-# style check must report for aufgabe_01.py, as (line, code).
-badStyleTests: list[tuple[str, list[tuple[int, str]]]] = [
+# Tests for the coding style check. Each submission in style/bad violates one rule (or the
+# rules of one example of the style guide) and passes with the style check disabled.
+# The list contains the problems the style check must report for aufgabe_01.py, as (line, code),
+# and the beginnings of the violated style rules that must be shown.
+namesRule = '- Names of functions'
+typeNamesRule = '- Names of classes'
+lineLengthRule = '- Lines have at most'
+indentRule = '- Indent code'
+parenRule = '- No space between the name'
+bracketsRule = '- No space directly after'
+commaColonRule = '- No space before but one space after'
+operatorsRule = '- One space on both sides'
+annotationsRule = '- All parameters'
+badStyleTests: list[tuple[str, list[tuple[int, str]], list[str]]] = [
     ('naming-guide-example', [(6, 'invalid-name'), (7, 'invalid-name'), (8, 'invalid-name'),
-                              (9, 'invalid-name'), (10, 'invalid-name'), (13, 'invalid-name')]),
-    ('naming-uppercase', [(3, 'invalid-name'), (3, 'invalid-name'), (4, 'invalid-name')]),
-    ('naming-type-alias', [(4, 'invalid-name')]),
-    ('naming-inconsistent', [(7, 'invalid-name')]),
-    ('line-too-long', [(4, 'E501')]),
-    ('indent-guide-example', [(10, 'E111')]),
-    ('indent-tabs', [(4, 'W191'), (5, 'W191')]),
-    ('space-before-paren', [(6, 'E211')]),
+                              (9, 'invalid-name'), (10, 'invalid-name'), (13, 'invalid-name')],
+     [namesRule, typeNamesRule]),
+    ('naming-uppercase', [(3, 'invalid-name'), (3, 'invalid-name'), (4, 'invalid-name')], [namesRule]),
+    ('naming-type-alias', [(4, 'invalid-name')], [typeNamesRule]),
+    ('naming-inconsistent', [(7, 'invalid-name')], [namesRule]),
+    ('line-too-long', [(4, 'E501')], [lineLengthRule]),
+    ('indent-guide-example', [(10, 'E111')], [indentRule]),
+    ('indent-tabs', [(4, 'W191'), (5, 'W191')], [indentRule]),
+    ('space-before-paren', [(6, 'E211')], [parenRule]),
     ('whitespace-guide-example', [(13, 'E225'), (13, 'E201'), (13, 'E201'), (13, 'E202'),
-                                  (13, 'E201'), (13, 'E202'), (13, 'E231'), (13, 'E202')]),
-    ('whitespace-comma-colon', [(3, 'E231'), (6, 'E231'), (7, 'E231'), (8, 'E203')]),
-    ('whitespace-operators', [(3, 'E225'), (4, 'E225'), (6, 'E225'), (7, 'E225'), (9, 'E225')]),
-    ('annotations-guide-example', [(5, 'ANN001'), (5, 'ANN201')]),
-    ('annotations-missing-return', [(7, 'ANN201'), (10, 'ANN204'), (13, 'ANN201')]),
+                                  (13, 'E201'), (13, 'E202'), (13, 'E231'), (13, 'E202')],
+     [bracketsRule, commaColonRule, operatorsRule]),
+    ('whitespace-comma-colon', [(3, 'E231'), (6, 'E231'), (7, 'E231'), (8, 'E203')], [commaColonRule]),
+    ('whitespace-operators', [(3, 'E225'), (4, 'E225'), (6, 'E225'), (7, 'E225'), (9, 'E225')],
+     [operatorsRule]),
+    ('annotations-guide-example', [(5, 'ANN001'), (5, 'ANN201')], [annotationsRule]),
+    ('annotations-missing-return', [(7, 'ANN201'), (10, 'ANN204'), (13, 'ANN201')], [annotationsRule]),
     ('annotations-missing-param', [(4, 'ANN001'), (7, 'ANN001'), (7, 'ANN002'), (7, 'ANN003'),
-                                   (7, 'ANN201')]),
+                                   (7, 'ANN201')], [annotationsRule]),
 ]
 
 def styleCmd(extraArgs: str='') -> str:
@@ -134,10 +147,11 @@ def styleCmd(extraArgs: str='') -> str:
 
 _styleIssueRe = re.compile(r'^(\S+\.py):(\d+):\d+: .* \[([\w-]+)\]$')
 
-def expectStyleResult(res: RunResult, status: str, issues: list[tuple[str, int, str]]):
+def expectStyleResult(res: RunResult, status: str, issues: list[tuple[str, int, str]],
+                      rules: list[str]=[]):
     """
-    Checks the status of the style check in the summary and that the output reports exactly
-    the given problems, as (file, line, code).
+    Checks the status of the style check in the summary, that the output reports exactly
+    the given problems, as (file, line, code), and that it shows exactly the given style rules.
     """
     if f'Coding style: {status}' not in res.stdout:
         fail(f'expected "Coding style: {status}" in output\n\n---\n{res.stdout}\n---')
@@ -148,6 +162,9 @@ def expectStyleResult(res: RunResult, status: str, issues: list[tuple[str, int, 
             found.append((m.group(1), int(m.group(2)), m.group(3)))
     if sorted(found) != sorted(issues):
         fail(f'expected style problems {sorted(issues)} but got {sorted(found)}\n\n---\n{res.stdout}\n---')
+    shownRules = [l for l in res.stdout.split('\n') if l.startswith('- ')]
+    if len(shownRules) != len(rules) or not all(any(l.startswith(r) for l in shownRules) for r in rules):
+        fail(f'expected style rules {rules} but got {shownRules}\n\n---\n{res.stdout}\n---')
 
 def expectNoStyleCheck(res: RunResult):
     if 'Coding style:' in res.stdout:
@@ -160,20 +177,20 @@ def test_python_style_good():
         expectStyleResult(res, 'OK', [])
 
 def test_python_style_bad():
-    for d, issues in badStyleTests:
+    for d, issues, rules in badStyleTests:
         print(d)
         res = expectFail(styleCmd(), 1, external=f'{styleTestDir}/sheet', submissionDir=f'{styleTestDir}/bad/{d}')
-        expectStyleResult(res, 'ERROR', [('aufgabe_01.py', line, code) for (line, code) in issues])
+        expectStyleResult(res, 'ERROR', [('aufgabe_01.py', line, code) for (line, code) in issues], rules)
 
 def test_python_style_disabled_by_option():
-    for d, _ in badStyleTests:
+    for d, _, _ in badStyleTests:
         print(d)
         res = expectOk(styleCmd('--no-style-check'), external=f'{styleTestDir}/sheet',
                        submissionDir=f'{styleTestDir}/bad/{d}')
         expectNoStyleCheck(res)
 
 def test_python_style_disabled_in_exercise_yaml():
-    for d, _ in badStyleTests:
+    for d, _, _ in badStyleTests:
         print(d)
         res = expectOk(styleCmd(), external=f'{styleTestDir}/sheet-style-off',
                        submissionDir=f'{styleTestDir}/bad/{d}')
@@ -185,19 +202,21 @@ def test_python_style_per_assignment():
     res = expectOk(styleCmd(), external=sheet, submissionDir=f'{styleTestDir}/per-assignment/first-bad')
     expectStyleResult(res, 'OK', [])
     res = expectFail(styleCmd(), 1, external=sheet, submissionDir=f'{styleTestDir}/per-assignment/both-bad')
-    expectStyleResult(res, 'ERROR', [('aufgabe_02.py', 3, 'invalid-name')])
+    expectStyleResult(res, 'ERROR', [('aufgabe_02.py', 3, 'invalid-name')], [namesRule])
 
 def test_python_style_without_exercise_yaml():
     res = expectOk(styleCmd('--assignment 1'), submissionDir=f'{styleTestDir}/good/camel-case')
     expectStyleResult(res, 'OK', [])
     bad = f'{styleTestDir}/bad/naming-guide-example'
     res = expectFail(styleCmd('--assignment 1'), 1, submissionDir=bad)
-    expectStyleResult(res, 'ERROR', [('aufgabe_01.py', line, 'invalid-name') for line in [6, 7, 8, 9, 10, 13]])
+    expectStyleResult(res, 'ERROR', [('aufgabe_01.py', line, 'invalid-name') for line in [6, 7, 8, 9, 10, 13]],
+                      [namesRule, typeNamesRule])
     res = expectOk(styleCmd('--assignment 1 --no-style-check'), submissionDir=bad)
     expectNoStyleCheck(res)
     # Both assignments refer to aufgabe_01.py, its problems must be reported only once
     res = expectFail(styleCmd('--assignment 1,01'), 1, submissionDir=bad)
-    expectStyleResult(res, 'ERROR', [('aufgabe_01.py', line, 'invalid-name') for line in [6, 7, 8, 9, 10, 13]])
+    expectStyleResult(res, 'ERROR', [('aufgabe_01.py', line, 'invalid-name') for line in [6, 7, 8, 9, 10, 13]],
+                      [namesRule, typeNamesRule])
 
 def test_python_style_command():
     # The python-style command only checks the coding style of the given files
@@ -206,7 +225,8 @@ def test_python_style_command():
     res = expectOk(cmd('aufgabe_01.py'), submissionDir=f'{styleTestDir}/good/camel-case')
     expectStyleResult(res, 'OK', [])
     res = expectFail(cmd('aufgabe_01.py aufgabe_02.py'), 1, submissionDir=f'{styleTestDir}/per-assignment/both-bad')
-    expectStyleResult(res, 'ERROR', [('aufgabe_01.py', 3, 'invalid-name'), ('aufgabe_02.py', 3, 'invalid-name')])
+    expectStyleResult(res, 'ERROR', [('aufgabe_01.py', 3, 'invalid-name'), ('aufgabe_02.py', 3, 'invalid-name')],
+                      [namesRule])
     # aufgabe_03.py has a syntax error, so it is not checked
     res = expectOk(cmd('aufgabe_01.py aufgabe_03.py'), submissionDir=localTestDir)
     expectStyleResult(res, 'OK', [])
