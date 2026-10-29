@@ -242,7 +242,7 @@ def test_python_style_german():
     # with translated messages, and all rules must be shown translated.
     files = ' '.join([f'{d}/aufgabe_01.py' for (d, _, _) in badStyleTests])
     def run(lang: str) -> tuple[RunResult, dict[tuple[str, int, int, str], list[str]], list[str]]:
-        res = expectFail(f'python3 {checkScript} {checkScriptArgs} --lang {lang} python-style {files}', 1,
+        res = expectFail(f'python3 {checkScript} {checkScriptArgsNoLang} --lang {lang} python-style {files}', 1,
                          submissionDir=f'{styleTestDir}/bad')
         messages: dict[tuple[str, int, int, str], list[str]] = {}
         for l in res.stdout.split('\n'):
@@ -267,15 +267,18 @@ def test_python_style_german():
         fail(f'expected 9 translated rules, got\n{rulesEn}\n{rulesDe}')
 
 def test_python_wypp_lang():
-    # WYPP runs in the language of the checker, its test results are parsed in both languages
+    # WYPP runs in the language of the checker, given by --lang or by the locale. Its test results
+    # are parsed in both languages.
     sheet = f'{localTestDir}/03'
     submission = f'{localTestDir}/03/solution-partial'
-    for lang, expected in [('en', ['Assignment 1: 1.0/3.0 points, 33% OK', 'Assignment 2: 1.0/3.0 points, 33% OK',
-                                   'Tutor:  6 tests, 4 errors']),
-                           ('de', ['Aufgabe 1: 1.0/3.0 Punkte, 33% OK', 'Aufgabe 2: 1.0/3.0 Punkte, 33% OK',
-                                   'Tutor:  6 Tests, 4 Fehler'])]:
-        res = expectFail(f'python3 {checkScript} {checkScriptArgs} --lang {lang} python --wypp {wyppDir} --sheet 03',
-                         121, external=sheet, submissionDir=submission)
+    english = ['Assignment 1: 1.0/3.0 points, 33% OK', 'Assignment 2: 1.0/3.0 points, 33% OK',
+               'Tutor:  6 tests, 4 errors']
+    german = ['Aufgabe 1: 1.0/3.0 Punkte, 33% OK', 'Aufgabe 2: 1.0/3.0 Punkte, 33% OK', 'Tutor:  6 Tests, 4 Fehler']
+    for args, env, expected in [('--lang en', localeEnv(LANG='de_DE.UTF-8'), english),
+                                ('--lang de', localeEnv(LANG='en_US.UTF-8'), german),
+                                ('', localeEnv(LANG='de_DE.UTF-8'), german)]:
+        res = expectFail(f'python3 {checkScript} {checkScriptArgsNoLang} {args} python --wypp {wyppDir} --sheet 03',
+                         121, external=sheet, submissionDir=submission, env=env)
         for s in expected:
             if s not in res.stdout:
                 fail(f'expected "{s}" in output\n\n---\n{res.stdout}\n---')

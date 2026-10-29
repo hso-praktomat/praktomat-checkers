@@ -40,6 +40,8 @@ The messages of the checker are in English or German. The language is selected l
 WYPP: the option `--lang en|de` (before or after the command), otherwise the locale
 (`LC_ALL`, `LC_CTYPE`, `LANG`, e.g. `LANG=de_DE.UTF-8`), otherwise English. WYPP runs in
 the same language. Messages of external tools (unittest, Python, compilers) stay English.
+The docker image sets `LANG=de_DE.UTF-8`, so its messages are German unless the checker
+gets `--lang en`.
 
 Environment variables:
 

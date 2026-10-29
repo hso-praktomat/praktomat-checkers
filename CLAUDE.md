@@ -125,7 +125,10 @@ The `llm-tutor` command has no tests (its fixtures were removed in 883483b). If 
     `abort`, `bug`, …).
   - `build.gradle.kts` and `checkstyle.xml` are the defaults for Java submissions.
   - `i18n.py` selects the language of the messages (English or German) like WYPP: option
-    `--lang en|de`, otherwise the locale, otherwise English. It is passed on to WYPP.
+    `--lang en|de`, otherwise the locale, otherwise English. It is passed on to WYPP. The image
+    sets `LANG=de_DE.UTF-8` (in `checker-container/`), the devcontainer `LC_ALL=C.utf8`, so the
+    default language differs between Docker and local mode. The tests therefore pass `--lang en`
+    in `checkScriptArgs`; tests of the language use `checkScriptArgsNoLang` and `localeEnv`.
   - `pythonStyle.py` checks the coding style of Python submissions with ruff (layout, type
     annotations) and pylint (naming), configured in `python-style/`. Style violations give exit
     code `1`. The fixtures of its tests are in `multi-checker/tests/python-wypp/style/`.

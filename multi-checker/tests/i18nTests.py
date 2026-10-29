@@ -46,15 +46,8 @@ def test_translations_complete():
             fail(f'German translation has other placeholders than the English message:\n{k}\n{i18n.DE[k]}')
 
 # The language is selected as in WYPP: commandline option --lang, then the locale, then English.
-# The environment sets all variables for the locale, so that the result does not depend on the
-# environment of the tests.
-def localeEnv(**vars: str) -> dict[str, str]:
-    env = {'LC_ALL': '', 'LC_CTYPE': '', 'LC_MESSAGES': '', 'LANG': '', 'LANGUAGE': ''}
-    env.update(vars)
-    return env
-
 def outputLang(args: str, env: dict[str, str]) -> str:
-    cmd = f'python3 {checkScript} {checkScriptArgs} {args}'
+    cmd = f'python3 {checkScript} {checkScriptArgsNoLang} {args}'
     res = expectOk(cmd, submissionDir=f'{thisDir}/python-wypp/style/good/camel-case', env=env)
     if 'Coding style: OK' in res.stdout:
         return 'en'
@@ -89,5 +82,5 @@ def test_lang_option():
         l = outputLang(args, env)
         if l != lang:
             fail(f'expected language {lang} for {args}, got {l}')
-    expectFail(f'python3 {checkScript} {checkScriptArgs} --lang fr python-style aufgabe_01.py', 1,
+    expectFail(f'python3 {checkScript} {checkScriptArgsNoLang} --lang fr python-style aufgabe_01.py', 1,
                submissionDir=f'{thisDir}/python-wypp/style/good/camel-case')
