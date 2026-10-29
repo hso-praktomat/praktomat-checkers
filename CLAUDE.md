@@ -92,7 +92,7 @@ Prerequisites, hard-coded in `testUtils.py` and the test files:
   of `~/devel/tick-trick-track`), Checkstyle at `/opt/praktomat-addons/checkstyle.jar`, Java 27
   (`JAVA_HOME=/opt/jdk-27`), Gradle 9.8.2 with its dependency cache in `/root/.gradle`, the
   Haskell packages in the `lts-24.3` snapshot, and `python3` (3.14) with pyyaml, libpyshell,
-  aiofiles and aiohttp.
+  aiofiles, aiohttp, ruff and pylint (same versions as in the Dockerfile).
 
 What a test run picks up:
 
@@ -122,6 +122,9 @@ The `llm-tutor` command has no tests (its fixtures were removed in 883483b). If 
   - `common.py` and `utils.py` hold shared helpers (`runWithTimeout`, `findSolutionDir`,
     `abort`, `bug`, …).
   - `build.gradle.kts` and `checkstyle.xml` are the defaults for Java submissions.
+  - `pythonStyle.py` checks the coding style of Python submissions with ruff (layout, type
+    annotations) and pylint (naming), configured in `python-style/`. Style violations give exit
+    code `1`. The fixtures of its tests are in `multi-checker/tests/python-wypp/style/`.
 - `multi-checker/docker/`: the image with stack/GHC, JDK + Gradle, WYPP and llm-tutor, built on
   `checker-container/` (Ubuntu noble base plus Checkstyle).
 - `multi-checker/task-templates/`: a Praktomat task template that calls the checker.

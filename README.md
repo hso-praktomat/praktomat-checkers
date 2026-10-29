@@ -13,7 +13,12 @@ At the moment, there is only one checkers, the `multi-checker`
 To be used with python, haskell and Java submissions.
 
 * Python submission use [WYPP](https://github.com/skogsbaer/write-your-python-program)
-  or the unit testmodule.
+  or the unit testmodule. The coding style of the submitted files is checked with
+  ruff and pylint against the course's style guide (naming conventions, line length,
+  indentation, whitespace, type annotations); style violations make the check fail.
+  The configuration in `multi-checker/script/python-style/` is deliberately lenient.
+  The style check is disabled by the commandline option `--no-style-check` or by
+  `python-style: false` in `exercise.yaml` (globally or per assignment).
 * Haskell submissions are checked for compile errors (via `stack test`) and instructors
   can also provide unit tests to be run against student's submission. The
   [praktomat-tests](https://git.hs-offenburg.de/swehr/praktomat-tests) repository contains

@@ -82,6 +82,9 @@ class TestResult:
 class StyleResult:
     hasErrors: bool
     styleOutput: Optional[str]
+    @property
+    def status(self) -> str:
+        return 'ERROR' if self.hasErrors else 'OK'
 
 def outputResultsAndExit(ctx: CheckCtx, ecode: Optional[int]=None) -> None:
     if ctx.outFile:
@@ -135,8 +138,7 @@ def outputResultsAndExit(ctx: CheckCtx, ecode: Optional[int]=None) -> None:
             space = (maxAssignmentIdLen - len(id)) * ' '
             print(f'Assignment {id}:{space} {shortResStr}')
     if ctx.styleResult != None:
-        styleStatusShort = "ERROR" if ctx.styleResult.hasErrors else "OK"
-        print('\nCoding style: ' + styleStatusShort)
+        print('\nCoding style: ' + ctx.styleResult.status)
     print(f'\nTotal points: {totalPoints:.1f}/{possibleTotalPoints:.1f} (preliminary, subject to change!)')
     def printWithTitle(title: str, msg: str) -> None:
         delim = 2 * '=============================================================================='
@@ -157,6 +159,8 @@ def outputResultsAndExit(ctx: CheckCtx, ecode: Optional[int]=None) -> None:
             debug(testRes)
     if ecode is not None:
         sys.exit(ecode)
+    if ctx.styleResult is not None and ctx.styleResult.hasErrors:
+        sys.exit(1)
     match ctx.compileStatus:
         case 'FAIL':
             sys.exit(1)

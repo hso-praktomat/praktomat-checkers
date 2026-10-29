@@ -31,6 +31,8 @@ def parseArgs() -> argparse.Namespace:
     py.add_argument('--sheet', metavar='X', type=str, help='Identifier for sheet')
     py.add_argument('--assignment', metavar='X', type=str,
                     help='Identifier for assignment(s), multiple assignments separated by commas')
+    py.add_argument('--no-style-check', action='store_true', default=False,
+                    help='Do not check the coding style of the submissions')
     hs = subparsers.add_parser('haskell', help='Check haskell assignment')
     hs.add_argument('--sheet', metavar='X', type=str, help='Identifier for sheet')
     java = subparsers.add_parser('java', help='Check Java assignment')
@@ -145,7 +147,8 @@ def main() -> None:
         if not sheet:
             sheet = getSheetFromEnv(testDir)
         assignments = getAssignments(args.assignment)
-        opts = python.PythonOptions(submissionDir, testDir, resultFile, sheet, assignments, wypp)
+        opts = python.PythonOptions(submissionDir, testDir, resultFile, sheet, assignments, wypp,
+                                    styleCheck=not args.no_style_check)
         debug(f'Running python checks, options: {opts}')
         python.check(opts)
     elif cmd == 'haskell':
