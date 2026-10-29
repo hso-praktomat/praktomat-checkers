@@ -4,8 +4,18 @@ from common import *
 from utils import *
 import re
 from exercise import *
+from i18n import tr
 
 CompileStatus = Literal['OK', 'FAIL', 'OK_BUT_SOME_MISSING']
+
+def compileStatusText(s: CompileStatus) -> str:
+    match s:
+        case 'OK':
+            return 'OK'
+        case 'FAIL':
+            return tr('FAIL')
+        case 'OK_BUT_SOME_MISSING':
+            return tr('OK_BUT_SOME_MISSING')
 
 @dataclass
 class CheckCtx:
@@ -34,7 +44,7 @@ class CheckCtx:
         d = self.asDict()
         with open(path, 'wb') as f:
             pickle.dump(d, f)
-        print('Dumped test results to ' + abspath(path))
+        print(tr('Dumped test results to {file}', file=abspath(path)))
 
 @dataclass
 class TestContext:
@@ -84,20 +94,20 @@ class StyleResult:
     styleOutput: Optional[str]
     @property
     def status(self) -> str:
-        return 'ERROR' if self.hasErrors else 'OK'
+        return tr('ERROR') if self.hasErrors else 'OK'
 
 def outputResultsAndExit(ctx: CheckCtx, ecode: Optional[int]=None) -> None:
     if ctx.outFile:
         ctx.serialize(ctx.outFile)
-    print(ctx.compileTitle + ' status: ' + ctx.compileStatus)
+    print(tr('{title} status: {status}', title=tr(ctx.compileTitle), status=compileStatusText(ctx.compileStatus)))
     notOkTotal = 0
     hasErrors = False
     totalPoints = 0
     possibleTotalPoints = 0
     if not ctx.tests:
-        print('No tests found')
+        print(tr('No tests found'))
     else:
-        print('Test results:')
+        print(tr('Test results:'))
         maxAssignmentIdLen = max([len(testCtx.assignment.id) for testCtx in ctx.tests])
         maxPoints = max([testCtx.assignment.points for testCtx in ctx.tests])
         maxPointsLen = len(f'{maxPoints:.1f}')
@@ -108,8 +118,8 @@ def outputResultsAndExit(ctx: CheckCtx, ecode: Optional[int]=None) -> None:
             space1 = (maxPointsLen - len(assPointsFmt)) * ' '
             possibleTotalPoints += assPoints
             if res.error:
-                zero = f'0.0/{assPoints:.1f} points,'
-                shortResStr = f'{zero:15} ERROR'
+                zero = f'0.0/{assPoints:.1f} ' + tr('points') + ','
+                shortResStr = f'{zero:15} ' + tr('ERROR')
                 hasErrors = True
             else:
                 if res.totalTests > 0:
@@ -123,23 +133,25 @@ def outputResultsAndExit(ctx: CheckCtx, ecode: Optional[int]=None) -> None:
                         totalPoints = totalPoints + points
                         pointsFmt = f'{points:.1f}'
                         space = (maxPointsLen - len(pointsFmt)) * ' '
-                        pointsStr = f'{space}{pointsFmt}/{assPointsFmt} {space1}points,'
+                        pointsStr = f'{space}{pointsFmt}/{assPointsFmt} {space1}' + tr('points') + ','
                     else:
                         space = (maxPointsLen - 1) * ' '
-                        pointsStr = f'{space}?/{assPointsFmt} {space1}points,'
+                        pointsStr = f'{space}?/{assPointsFmt} {space1}' + tr('points') + ','
                     percentageStr = f'{percentage}% OK,'
-                    rest = f'({res.totalTests} tests, {res.testErrors} errors, {res.testFailures} failures)'
+                    rest = tr('({total} tests, {errors} errors, {failures} failures)', total=res.totalTests,
+                              errors=res.testErrors, failures=res.testFailures)
                     shortResStr = f'{pointsStr:15} {percentageStr:10} {rest}'
                 else:
                     space = (maxPointsLen - 1) * ' '
-                    q = f'{space}?/{assPointsFmt} {space1}points,'
-                    shortResStr = f'{q:15} no tests'
+                    q = f'{space}?/{assPointsFmt} {space1}' + tr('points') + ','
+                    shortResStr = f'{q:15} ' + tr('no tests')
             id = testCtx.assignment.id
             space = (maxAssignmentIdLen - len(id)) * ' '
-            print(f'Assignment {id}:{space} {shortResStr}')
+            print(tr('Assignment {id}:', id=id) + f'{space} {shortResStr}')
     if ctx.styleResult != None:
-        print('\nCoding style: ' + ctx.styleResult.status)
-    print(f'\nTotal points: {totalPoints:.1f}/{possibleTotalPoints:.1f} (preliminary, subject to change!)')
+        print('\n' + tr('Coding style: {status}', status=ctx.styleResult.status))
+    print('\n' + tr('Total points: {points}/{max} (preliminary, subject to change!)', points=f'{totalPoints:.1f}',
+                     max=f'{possibleTotalPoints:.1f}'))
     def printWithTitle(title: str, msg: str) -> None:
         delim = 2 * '=============================================================================='
         print()
@@ -149,12 +161,12 @@ def outputResultsAndExit(ctx: CheckCtx, ecode: Optional[int]=None) -> None:
         print()
         print(msg)
     if ctx.compileOutput:
-        printWithTitle(ctx.compileTitle + ' output', ctx.compileOutput)
+        printWithTitle(tr('{title} output', title=tr(ctx.compileTitle)), ctx.compileOutput)
     if ctx.styleResult != None and ctx.styleResult.styleOutput != None:
-        printWithTitle('Output of style check', ctx.styleResult.styleOutput)
+        printWithTitle(tr('Output of style check'), ctx.styleResult.styleOutput)
     for testCtx in ctx.tests:
         for testRes in testCtx.results:
-            title = f'Output for test of assignment {testCtx.assignment.id} ({testRes.testFile})'
+            title = tr('Output for test of assignment {id} ({file})', id=testCtx.assignment.id, file=testRes.testFile)
             printWithTitle(title, testRes.testOutput)
             debug(testRes)
     if ecode is not None:
@@ -174,11 +186,11 @@ def outputResultsAndExit(ctx: CheckCtx, ecode: Optional[int]=None) -> None:
 
 def abortIfTestOkRequired(assignment: Assignment, result: TestResult, ctx: CheckCtx) -> None:
     if assignment.testOkRequired and not result.isSuccess:
-        print(f'Test for assignment {assignment.id} is required to succeed but failed!')
+        print(tr('Test for assignment {id} is required to succeed but failed!', id=assignment.id))
         print()
         print(result.testOutput)
         print()
-        print('Aborting')
+        print(tr('Aborting'))
         outputResultsAndExit(ctx, ecode=1)
 
 def checkScript(assignment: Assignment, ctx: TestContext, sheetDir: str, checkCtx: CheckCtx) -> None:
@@ -187,7 +199,7 @@ def checkScript(assignment: Assignment, ctx: TestContext, sheetDir: str, checkCt
         return
     scriptPath = pjoin(sheetDir, script)
     if not isFile(scriptPath):
-        abort(f'Script {scriptPath} does not exist')
+        abort(tr('Script {file} does not exist', file=scriptPath))
     debug(f'Running {scriptPath}')
     scriptResult = run(scriptPath, onError='ignore', stderrToStdout=True, captureStdout=True)
     numErrors = 0 if (scriptResult.exitcode == 0) else 1

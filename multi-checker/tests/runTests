@@ -14,4 +14,4 @@ else
 fi
 
 # Pass option --capture=no for full output
-"$pytest" --verbose haskellTests.py javaTests.py pythonTests.py "$@"
+"$pytest" --verbose haskellTests.py javaTests.py pythonTests.py i18nTests.py "$@"

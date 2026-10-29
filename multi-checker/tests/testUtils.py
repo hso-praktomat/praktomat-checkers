@@ -3,7 +3,7 @@
 from shell import *
 import os
 import sys
-from typing import Optional, Literal
+from typing import Optional, Literal, NoReturn
 
 # By default, the tests are run with docker. You need to have docker running locally, and you need
 # to pull the following image:
@@ -40,7 +40,7 @@ checkScriptArgs = ''
 if _DEBUG:
     checkScriptArgs = "--debug"
 
-def fail(msg: str):
+def fail(msg: str) -> NoReturn:
     print(msg)
     sys.exit(1)
 

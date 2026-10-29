@@ -34,8 +34,9 @@ RUN apt-get clean && apt-get update && apt-get install -yq \
   curl \
   && rm -rf /var/lib/apt/lists/*
 
-# Setup locale
-RUN locale-gen en_US.UTF-8
+# Setup locale. de_DE.UTF-8 is needed for German messages of the checkers and of WYPP when they
+# take the language from the locale (e.g. LANG=de_DE.UTF-8); the default stays English.
+RUN locale-gen en_US.UTF-8 de_DE.UTF-8
 RUN update-locale LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US.UTF-8

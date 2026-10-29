@@ -235,3 +235,48 @@ def test_python_style_command():
     expectFail(cmd('aufgabe_03.py'), 1, submissionDir=localTestDir)
     expectFail(cmd('does_not_exist.py'), 1, submissionDir=localTestDir)
 
+_styleIssueWithMessageRe = re.compile(r'^(\S+\.py):(\d+):(\d+): (.*) \[([\w-]+)\]$')
+
+def test_python_style_german():
+    # Checks all bad submissions at once in English and German: the same problems must be reported,
+    # with translated messages, and all rules must be shown translated.
+    files = ' '.join([f'{d}/aufgabe_01.py' for (d, _, _) in badStyleTests])
+    def run(lang: str) -> tuple[RunResult, dict[tuple[str, int, int, str], list[str]], list[str]]:
+        res = expectFail(f'python3 {checkScript} {checkScriptArgs} --lang {lang} python-style {files}', 1,
+                         submissionDir=f'{styleTestDir}/bad')
+        messages: dict[tuple[str, int, int, str], list[str]] = {}
+        for l in res.stdout.split('\n'):
+            m = _styleIssueWithMessageRe.match(l)
+            if m:
+                key = (m.group(1), int(m.group(2)), int(m.group(3)), m.group(5))
+                messages.setdefault(key, []).append(m.group(4))
+        rules = [l for l in res.stdout.split('\n') if l.startswith('- ')]
+        return (res, messages, rules)
+    (resEn, messagesEn, rulesEn) = run('en')
+    (resDe, messagesDe, rulesDe) = run('de')
+    if 'Programmierstil: FEHLER' not in resDe.stdout:
+        fail(f'expected "Programmierstil: FEHLER" in output\n\n---\n{resDe.stdout}\n---')
+    expectedCount = sum([len(issues) for (_, issues, _) in badStyleTests])
+    if sum([len(ms) for ms in messagesEn.values()]) != expectedCount or messagesEn.keys() != messagesDe.keys():
+        fail(f'expected the same {expectedCount} problems\n\n---\n{resEn.stdout}\n---\n{resDe.stdout}\n---')
+    for key, msgsEn in messagesEn.items():
+        for (en, de) in zip(sorted(msgsEn), sorted(messagesDe[key])):
+            if en == de:
+                fail(f'message not translated: {key} {en}')
+    if len(rulesEn) != 9 or len(rulesDe) != 9 or any([en == de for (en, de) in zip(rulesEn, rulesDe)]):
+        fail(f'expected 9 translated rules, got\n{rulesEn}\n{rulesDe}')
+
+def test_python_wypp_lang():
+    # WYPP runs in the language of the checker, its test results are parsed in both languages
+    sheet = f'{localTestDir}/03'
+    submission = f'{localTestDir}/03/solution-partial'
+    for lang, expected in [('en', ['Assignment 1: 1.0/3.0 points, 33% OK', 'Assignment 2: 1.0/3.0 points, 33% OK',
+                                   'Tutor:  6 tests, 4 errors']),
+                           ('de', ['Aufgabe 1: 1.0/3.0 Punkte, 33% OK', 'Aufgabe 2: 1.0/3.0 Punkte, 33% OK',
+                                   'Tutor:  6 Tests, 4 Fehler'])]:
+        res = expectFail(f'python3 {checkScript} {checkScriptArgs} --lang {lang} python --wypp {wyppDir} --sheet 03',
+                         121, external=sheet, submissionDir=submission)
+        for s in expected:
+            if s not in res.stdout:
+                fail(f'expected "{s}" in output\n\n---\n{res.stdout}\n---')
+

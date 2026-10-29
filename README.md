@@ -36,6 +36,11 @@ both languages, so we created only one checker for simplicity.
 
 Commandline options: invoke with `--help`
 
+The messages of the checker are in English or German. The language is selected like in
+WYPP: the option `--lang en|de` (before or after the command), otherwise the locale
+(`LC_ALL`, `LC_CTYPE`, `LANG`, e.g. `LANG=de_DE.UTF-8`), otherwise English. WYPP runs in
+the same language. Messages of external tools (unittest, Python, compilers) stay English.
+
 Environment variables:
 
 * `PRAKTOMAT_CHECKER_TEST_TIMEOUT`: timeout in seconds

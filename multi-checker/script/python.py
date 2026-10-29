@@ -8,10 +8,11 @@ from common import *
 from exercise import *
 from testContext import *
 from pythonStyle import checkStyle
+from i18n import tr, trKey, getLang
 from typing import *
 
 def configError(s: str) -> NoReturn:
-    abort('Config error: ' + s)
+    abort(tr('Config error: {msg}', msg=s))
 
 @dataclass
 class PythonOptions(Options):
@@ -48,24 +49,25 @@ def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, typecheck: bool
     thisDir = abspath('.')
     # print('pyPath='+pyPath)
     testEnv = prepareEnv(testEnv, [wyppPath + '/python/code:', thisDir])
-    args = ['python3', wyppPath + '/python/code/wypp/runYourProgram.py', '--lang', 'de']
+    args = ['python3', wyppPath + '/python/code/wypp/runYourProgram.py', '--lang', getLang()]
     if testFile:
         args = args + ['--test-file', testFile]
     args = args + ['--check-runnable' if onlyRunnable else '--check']
     if not typecheck:
         args = args + ['--no-typechecking']
     args = args + [studentFile]
-    res = runWithTimeout(args, timeout, f'running {studentFile} via WYPP, testFile={testFile}',
+    res = runWithTimeout(args, timeout, tr('running {file} via WYPP, testFile={testFile}', file=studentFile,
+                                            testFile=testFile),
                          env=testEnv)
     return res
 
 def runUnittest(testFile: str, searchDirs: list[str], testEnv: Optional[dict[str, str]]=None,
                 timeout: Optional[int]=None) -> RunResult:
     if not isFile(testFile):
-        abort(f'Test file {testFile} does not exist')
+        abort(tr('Test file {file} does not exist', file=testFile))
     testEnv = prepareEnv(testEnv, ['.'] + searchDirs)
     args = ['python3', testFile]
-    res = runWithTimeout(args, timeout, f'running unittests in {testFile}', env=testEnv)
+    res = runWithTimeout(args, timeout, tr('running unittests in {file}', file=testFile), env=testEnv)
     return res
 
 LoadStudentCodeStatus = Literal['ok', 'fail', 'not_found']
@@ -99,40 +101,38 @@ def loadStudentCode(opts: PythonOptions, p: str, checkLoad: LoadCheck) -> LoadSt
     if not studentFile:
         pyFilesList = run(f'find . -name "*.py"', captureStdout=splitLines, onError='ignore').stdout
         pyFiles = '\n'.join(pyFilesList[:20])
-        printOut(f'''ERROR: File {p} not part of the submission. I found the following files:
-
-{pyFiles}''')
+        printOut(tr('ERROR: File {file} not part of the submission. I found the following files:\n\n{files}',
+                    file=p, files=pyFiles))
         return mkResult('not_found')
     _srcDir = dirname(studentFile)
     _studentFile = studentFile
     fixEncoding(studentFile)
     if checkLoad == 'dont-load':
-        printOut(f'Only checking that file {studentFile} exists, not loading.')
+        printOut(tr('Only checking that file {file} exists, not loading.', file=studentFile))
         return mkResult('ok')
     printOut()
-    printOut(f'## Checking that {p} loads successfully ...')
+    printOut(tr('## Checking that {file} loads successfully ...', file=p))
     typecheck = checkLoad == 'load-typecheck'
     runRes = runWypp(studentFile, opts.wypp, onlyRunnable=True, typecheck=typecheck,
                      timeout=testTimeoutSeconds())
     printOut(runRes.stdout, emptyNewline=False)
     if runRes.exitcode == 0:
-        printOut(f'## OK: {p} loads successfully')
+        printOut(tr('## OK: {file} loads successfully', file=p))
     else:
-        printOut(f'''File {p} could not be loaded.
-You find more error messages above.''')
+        printOut(tr('File {file} could not be loaded.\nYou find more error messages above.', file=p))
         return mkResult('fail')
     printOut()
-    printOut(f'## Executing tests in {p} ...')
+    printOut(tr('## Executing tests in {file} ...', file=p))
     testRes = runWypp(studentFile, opts.wypp, onlyRunnable=False, typecheck=typecheck,
                       timeout=testTimeoutSeconds())
     printOut(testRes.stdout, emptyNewline=False)
     if testRes.exitcode == 0:
-        printOut(f'## OK: no test failures in {p}')
+        printOut(tr('## OK: no test failures in {file}', file=p))
     elif testRes.exitcode == TIMEOUT_EXIT_CODE:
-        printOut(f'Timeout for tests in {p}. Probably there is an infinite loop!')
+        printOut(tr('Timeout for tests in {file}. Probably there is an infinite loop!', file=p))
     else:
-        printOut(f'''File {p} contains test failures!
-If you cannot make a test succeed, you have to comment it out.''')
+        printOut(tr('File {file} contains test failures!\n'
+                    'If you cannot make a test succeed, you have to comment it out.', file=p))
     return mkResult('ok')
 
 def checkFileLoadsOk(opts: PythonOptions, p: str) -> LoadStudentCodeResult:
@@ -165,7 +165,7 @@ def checkAssignmentsLoadOk(opts: PythonOptions, ass: str | list[str] | None) -> 
                 p = name
                 break
         print(f'\n{delim}')
-        print(f'Checking assignment {x} (file: {p})')
+        print(tr('Checking assignment {id} (file: {file})', id=x, file=p))
         res = checkFileLoadsOk(opts, p)
         stats.append((p, res.status))
         if opts.styleCheck and res.studentFile is not None:
@@ -173,43 +173,44 @@ def checkAssignmentsLoadOk(opts: PythonOptions, ass: str | list[str] | None) -> 
     styleResult = checkStyle(styleFiles)
     if styleResult is not None:
         print(f'\n{delim}')
-        print('Coding style')
+        print(tr('Coding style'))
         print()
         print(styleResult.styleOutput)
     print('\n')
     print(delim)
-    print('Summary')
+    print(tr('Summary'))
     print()
     warn = False
     err = False
     for (p, stat) in stats:
         match stat:
             case 'not_found':
-                print(f'{p}: not found')
+                print(tr('{file}: not found', file=p))
                 warn = True
             case 'fail':
-                print(f'{p}: failed')
+                print(tr('{file}: failed', file=p))
                 err = True
             case 'ok':
                 pass
     if styleResult is not None:
-        print(f'Coding style: {styleResult.status}')
+        print(tr('Coding style: {status}', status=styleResult.status))
     print()
     if err:
-        print('Error: at least one assignment failed!')
+        print(tr('Error: at least one assignment failed!'))
         sys.exit(1)
     if styleResult is not None and styleResult.hasErrors:
-        print('Error: the code violates the coding style guide!')
+        print(tr('Error: the code violates the coding style guide!'))
         sys.exit(1)
     if warn:
-        print('Warn: at least one assignment not found')
+        print(tr('Warn: at least one assignment not found'))
         sys.exit(OK_WITH_WARNINGS_EXIT_CODE)
 
 class PythonTestResult:
     @staticmethod
     def parseWyppResult(testFile: str, s: str) -> Optional[TestResult]:
-        r1 = re.compile(r'^Tutor:\s*(\d+) Tests, (\d+) Fehler')
-        r2 = re.compile(r'^Tutor:\s*(\d+) Tests, alle erfolgreich')
+        # Summary of WYPP in German or English, e.g. "Tutor:  6 Tests, 4 Fehler" or "Tutor:  6 tests, 4 errors"
+        r1 = re.compile(r'^Tutor:\s*(\d+) [Tt]ests?, (\d+) (?:Fehler|errors?)')
+        r2 = re.compile(r'^Tutor:\s*(\d+) [Tt]ests?, (?:alle erfolgreich|all successful)')
         for l in s.split('\n'):
             m1 = r1.match(l)
             m2 = r2.match(l)
@@ -282,7 +283,7 @@ def checkTutorTests(opts: PythonOptions,
         if a.pythonConfig.wypp:
             src = a.src
             if src is None:
-                abort(f'Configuration error: src option not set for assignment {a.id}')
+                abort(tr('Configuration error: src option not set for assignment {id}', id=a.id))
                 return
             if srcDir:
                 src = pjoin(srcDir, src)
@@ -326,7 +327,7 @@ def checkAssignments(opts: PythonOptions, ex: Exercise, allAss: list[Assignment]
     # Lenient: the coding style of a file is not checked if one of its assignments disables the check
     noStyleCheck = set([a.src for a in allAss if not a.pythonConfig.style])
     styleFiles: list[str] = []
-    ctx = CheckCtx.empty('Load and student tests', opts.resultFile)
+    ctx = CheckCtx.empty(trKey('Load and student tests'), opts.resultFile)
     compileStatus = 'OK'
     missing = 0
     srcDirDict: dict[str, str] = {} # a.src -> directory where file is found
@@ -348,7 +349,7 @@ def checkAssignments(opts: PythonOptions, ex: Exercise, allAss: list[Assignment]
     if compileStatus == 'OK' and missing > 0:
         if missing == len(allFiles):
             compileStatus = 'FAIL'
-            print('All files missing')
+            print(tr('All files missing'))
         else:
             compileStatus = 'OK_BUT_SOME_MISSING'
     ctx.compileStatus = compileStatus
@@ -376,7 +377,7 @@ def check(opts: PythonOptions) -> None:
     with workingDir(nestedSourceDir):
         if ex is None:
             if ass is None:
-                configError(f'Option --assignment not given, exercise file {exFile} not found')
+                configError(tr('Option --assignment not given, exercise file {file} not found', file=exFile))
             checkAssignmentsLoadOk(opts, ass)
         else:
             if ass is None:

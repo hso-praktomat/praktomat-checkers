@@ -27,7 +27,8 @@ bug and show that the test passes. New behaviour gets a new `test_…` function 
 
 Run `multi-checker/check-ci`. Pyright runs in strict mode, configured under `[tool.pyright]` in
 `pyproject.toml`. It checks `multi-checker/script/` and the test driver code in
-`multi-checker/tests/` (`testUtils.py`, `haskellTests.py`, `javaTests.py`, `pythonTests.py`).
+`multi-checker/tests/` (`testUtils.py`, `haskellTests.py`, `javaTests.py`, `pythonTests.py`,
+`i18nTests.py`).
 `multi-checker/tests/python-wypp/` is excluded: it holds sample student submissions that import
 the external `wypp` package (not installed in the venv), and some of them are intentionally
 invalid Python.
@@ -62,7 +63,7 @@ checks the exit code (sometimes also the output). The tests run in one of two mo
 
 ```sh
 cd multi-checker/tests
-./runTests                    # full suite: pytest --verbose haskellTests.py javaTests.py pythonTests.py
+./runTests                    # full suite: pytest --verbose haskellTests.py javaTests.py pythonTests.py i18nTests.py
 ./runTests -k test_java02     # a single test, while iterating
 ./runTests --capture=no ...   # show the checker's output
 ```
@@ -92,7 +93,8 @@ Prerequisites, hard-coded in `testUtils.py` and the test files:
   of `~/devel/tick-trick-track`), Checkstyle at `/opt/praktomat-addons/checkstyle.jar`, Java 27
   (`JAVA_HOME=/opt/jdk-27`), Gradle 9.8.2 with its dependency cache in `/root/.gradle`, the
   Haskell packages in the `lts-24.3` snapshot, and `python3` (3.14) with pyyaml, libpyshell,
-  aiofiles, aiohttp, ruff and pylint (same versions as in the Dockerfile).
+  aiofiles, aiohttp, ruff and pylint (same versions as in the Dockerfile), and the locales
+  `en_US.UTF-8` and `de_DE.UTF-8`.
 
 What a test run picks up:
 
@@ -122,6 +124,8 @@ The `llm-tutor` command has no tests (its fixtures were removed in 883483b). If 
   - `common.py` and `utils.py` hold shared helpers (`runWithTimeout`, `findSolutionDir`,
     `abort`, `bug`, …).
   - `build.gradle.kts` and `checkstyle.xml` are the defaults for Java submissions.
+  - `i18n.py` selects the language of the messages (English or German) like WYPP: option
+    `--lang en|de`, otherwise the locale, otherwise English. It is passed on to WYPP.
   - `pythonStyle.py` checks the coding style of Python submissions with ruff (layout, type
     annotations) and pylint (naming), configured in `python-style/`. Style violations give exit
     code `1`. The fixtures of its tests are in `multi-checker/tests/python-wypp/style/`.
@@ -136,8 +140,13 @@ The `llm-tutor` command has no tests (its fixtures were removed in 883483b). If 
   are missing. `1` means compile/load failure, configuration error or internal error. The tests
   assert exact codes and check that a `1` never comes from an uncaught exception.
 - Call `abort(msg)` for problems with the submission or the task configuration (it prints
-  `FEHLER: …`) and `bug(msg)` for internal errors. stdout is the checker report shown in
-  Praktomat, so keep it readable for students.
+  `ERROR: …`, in German `FEHLER: …`) and `bug(msg)` for internal errors. stdout is the checker
+  report shown in Praktomat, so keep it readable for students.
+- Pass every message for students and instructors through `tr` from `i18n.py`, with the English
+  text as key and placeholders for values (`tr('File {file} not found', file=p)`, no f-strings),
+  and add the German translation to `DE`. Messages built before the language is known are marked
+  with `trKey` and translated with `tr` when shown. `test_translations_complete` checks that
+  every key has a translation. Messages of `bug` stay English.
 - The image, the devcontainer and CI run Python 3.14, but pyright checks against Python 3.10
   (`pythonVersion` in `pyproject.toml`), so code must stay 3.10-compatible.
 - Use camelCase for functions, variables and parameters. `llm_tutor.py` doesn't; don't copy
