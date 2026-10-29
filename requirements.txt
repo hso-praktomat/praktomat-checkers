@@ -1,4 +1,6 @@
 pyyaml
 libpyshell
+ruff
+pylint
 pyright
 pytest

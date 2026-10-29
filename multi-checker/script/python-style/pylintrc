@@ -1,0 +1,37 @@
+# Configuration of pylint for checking the naming conventions (rule 3 of the style guide) of
+# python submissions, see pythonStyle.py. All other rules are checked by ruff, see ruff.toml.
+#
+# - Functions, methods, parameters, variables and attributes use camelCase or snake_case, but
+#   consistently within a file. The regexes for these names have three groups: names in camelCase,
+#   names in snake_case, and names that are allowed in both styles (group exempt, e.g. names
+#   consisting of a single word, dunder names, UPPER_CASE constants). pylint reports the names of
+#   the less frequent of the camel and snake groups, for all kinds of names in name-group together.
+# - Names of classes, records and types (Literal, Union) are in CamelCase.
+# - Lenient: names may start with underscores, constants may be in UPPER_CASE, enum members
+#   may have any name, and test functions may use the test_ prefix of unittest in any file.
+#   Non-ASCII characters (\u0080-\uffff) count as lowercase letters, so names may contain umlauts;
+#   class names may also start with an uppercase umlaut.
+
+[MAIN]
+persistent=no
+jobs=1
+
+[MESSAGES CONTROL]
+disable=all
+enable=invalid-name
+
+[BASIC]
+module-naming-style=any
+class-const-naming-style=any
+name-group=function:method:argument:variable:attr:class_attribute:inlinevar:const
+function-rgx=(?:(?P<exempt>__\w+__|_+|_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*_?|test_\w*)|(?P<camel>_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*[A-Z][a-zA-Z0-9\u0080-\uffff]*_?)|(?P<snake>_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*(?:_[a-z0-9\u0080-\uffff]+)+_?))$
+method-rgx=(?:(?P<exempt>__\w+__|_+|_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*_?|test_\w*)|(?P<camel>_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*[A-Z][a-zA-Z0-9\u0080-\uffff]*_?)|(?P<snake>_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*(?:_[a-z0-9\u0080-\uffff]+)+_?))$
+argument-rgx=(?:(?P<exempt>__\w+__|_+|_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*_?)|(?P<camel>_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*[A-Z][a-zA-Z0-9\u0080-\uffff]*_?)|(?P<snake>_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*(?:_[a-z0-9\u0080-\uffff]+)+_?))$
+attr-rgx=(?:(?P<exempt>__\w+__|_+|_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*_?)|(?P<camel>_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*[A-Z][a-zA-Z0-9\u0080-\uffff]*_?)|(?P<snake>_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*(?:_[a-z0-9\u0080-\uffff]+)+_?))$
+inlinevar-rgx=(?:(?P<exempt>__\w+__|_+|_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*_?)|(?P<camel>_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*[A-Z][a-zA-Z0-9\u0080-\uffff]*_?)|(?P<snake>_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*(?:_[a-z0-9\u0080-\uffff]+)+_?))$
+variable-rgx=(?:(?P<exempt>__\w+__|_+|_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*_?|_{0,2}[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*)|(?P<camel>_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*[A-Z][a-zA-Z0-9\u0080-\uffff]*_?)|(?P<snake>_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*(?:_[a-z0-9\u0080-\uffff]+)+_?))$
+const-rgx=(?:(?P<exempt>__\w+__|_+|_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*_?|_{0,2}[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*)|(?P<camel>_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*[A-Z][a-zA-Z0-9\u0080-\uffff]*_?)|(?P<snake>_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*(?:_[a-z0-9\u0080-\uffff]+)+_?))$
+class-attribute-rgx=(?:(?P<exempt>__\w+__|_+|_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*_?|_{0,2}[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*)|(?P<camel>_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*[A-Z][a-zA-Z0-9\u0080-\uffff]*_?)|(?P<snake>_{0,2}[a-z\u0080-\uffff][a-z0-9\u0080-\uffff]*(?:_[a-z0-9\u0080-\uffff]+)+_?))$
+class-rgx=_{0,2}[A-Z\u00c4\u00d6\u00dc][a-zA-Z0-9\u0080-\uffff]*$
+typealias-rgx=_{0,2}[A-Z\u00c4\u00d6\u00dc][a-zA-Z0-9\u0080-\uffff]*$
+typevar-rgx=_{0,2}[A-Z][a-zA-Z0-9_]*$

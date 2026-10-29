@@ -1,6 +1,6 @@
 from wypp import *
 
-def my_solution(n):
+def my_solution(n: int) -> int:
     sum = 0
     for i in range(1, n+1):
         sum = sum + i

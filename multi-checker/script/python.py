@@ -7,6 +7,7 @@ from utils import *
 from common import *
 from exercise import *
 from testContext import *
+from pythonStyle import checkStyle
 from typing import *
 
 def configError(s: str) -> NoReturn:
@@ -17,6 +18,7 @@ class PythonOptions(Options):
     sheet: Optional[str]
     assignments: Optional[str | list[str]]
     wypp: str
+    styleCheck: bool
 
 def prepareEnv(testEnv: Optional[dict[str, str]], searchDirs: list[str]) -> dict[str, str]:
     if testEnv is None:
@@ -73,6 +75,7 @@ class LoadStudentCodeResult:
     status: LoadStudentCodeStatus
     output: str
     srcDir: Optional[str]
+    studentFile: Optional[str]
 
 LoadCheck = Literal['dont-load', 'load-no-typecheck', 'load-typecheck']
 
@@ -89,8 +92,9 @@ def loadStudentCode(opts: PythonOptions, p: str, checkLoad: LoadCheck) -> LoadSt
         if s or emptyNewline:
             _out = _out + s + '\n'
     _srcDir = None
+    _studentFile = None
     def mkResult(status: LoadStudentCodeStatus) -> LoadStudentCodeResult:
-        return LoadStudentCodeResult(status, _out, _srcDir)
+        return LoadStudentCodeResult(status, _out, _srcDir, _studentFile)
     studentFile = findFile(p, '.', ignoreCase=True)
     if not studentFile:
         pyFilesList = run(f'find . -name "*.py"', captureStdout=splitLines, onError='ignore').stdout
@@ -100,6 +104,7 @@ def loadStudentCode(opts: PythonOptions, p: str, checkLoad: LoadCheck) -> LoadSt
 {pyFiles}''')
         return mkResult('not_found')
     _srcDir = dirname(studentFile)
+    _studentFile = studentFile
     fixEncoding(studentFile)
     if checkLoad == 'dont-load':
         printOut(f'Only checking that file {studentFile} exists, not loading.')
@@ -130,10 +135,10 @@ You find more error messages above.''')
 If you cannot make a test succeed, you have to comment it out.''')
     return mkResult('ok')
 
-def checkFileLoadsOk(opts: PythonOptions, p: str) -> LoadStudentCodeStatus:
+def checkFileLoadsOk(opts: PythonOptions, p: str) -> LoadStudentCodeResult:
     res = loadStudentCode(opts, p, 'load-typecheck')
     print(res.output)
-    return res.status
+    return res
 
 def checkAssignmentsLoadOk(opts: PythonOptions, ass: str | list[str] | None) -> None:
     if isinstance(ass, str):
@@ -142,6 +147,7 @@ def checkAssignmentsLoadOk(opts: PythonOptions, ass: str | list[str] | None) -> 
         ass = []
     delim = '=============================================================================='
     stats: list[tuple[str, LoadStudentCodeStatus]] = []
+    styleFiles: list[str] = []
     for x in ass:
         possible_filenames = [
             f'aufgabe_{x.zfill(2)}.py',
@@ -160,8 +166,16 @@ def checkAssignmentsLoadOk(opts: PythonOptions, ass: str | list[str] | None) -> 
                 break
         print(f'\n{delim}')
         print(f'Checking assignment {x} (file: {p})')
-        stat = checkFileLoadsOk(opts, p)
-        stats.append((p, stat))
+        res = checkFileLoadsOk(opts, p)
+        stats.append((p, res.status))
+        if opts.styleCheck and res.studentFile is not None:
+            styleFiles.append(res.studentFile)
+    styleResult = checkStyle(styleFiles)
+    if styleResult is not None:
+        print(f'\n{delim}')
+        print('Coding style')
+        print()
+        print(styleResult.styleOutput)
     print('\n')
     print(delim)
     print('Summary')
@@ -178,9 +192,14 @@ def checkAssignmentsLoadOk(opts: PythonOptions, ass: str | list[str] | None) -> 
                 err = True
             case 'ok':
                 pass
+    if styleResult is not None:
+        print(f'Coding style: {styleResult.status}')
     print()
     if err:
         print('Error: at least one assignment failed!')
+        sys.exit(1)
+    if styleResult is not None and styleResult.hasErrors:
+        print('Error: the code violates the coding style guide!')
         sys.exit(1)
     if warn:
         print('Warn: at least one assignment not found')
@@ -304,6 +323,9 @@ def checkAssignments(opts: PythonOptions, ex: Exercise, allAss: list[Assignment]
                 extras.add(e)
     for e in extras:
         cp(pjoin(sheetDir(opts), e), '.')
+    # Lenient: the coding style of a file is not checked if one of its assignments disables the check
+    noStyleCheck = set([a.src for a in allAss if not a.pythonConfig.style])
+    styleFiles: list[str] = []
     ctx = CheckCtx.empty('Load and student tests', opts.resultFile)
     compileStatus = 'OK'
     missing = 0
@@ -312,6 +334,8 @@ def checkAssignments(opts: PythonOptions, ex: Exercise, allAss: list[Assignment]
         res = loadStudentCode(opts, p, checkLoad)
         if res.srcDir:
             srcDirDict[p] = res.srcDir
+        if opts.styleCheck and p not in noStyleCheck and res.studentFile is not None:
+            styleFiles.append(res.studentFile)
         ctx.appendCompileOutput(res.output)
         match res.status:
             case 'fail':
@@ -328,6 +352,7 @@ def checkAssignments(opts: PythonOptions, ex: Exercise, allAss: list[Assignment]
         else:
             compileStatus = 'OK_BUT_SOME_MISSING'
     ctx.compileStatus = compileStatus
+    ctx.styleResult = checkStyle(styleFiles)
     for a in allAss:
         testCtx = TestContext(assignment=a, sheet=ex.sheet, results=[])
         ctx.tests.append(testCtx)

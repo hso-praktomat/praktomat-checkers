@@ -74,8 +74,10 @@ RUN rm -rf /llm-tutor/.git
 
 # Python packages, including those of llm-tutor. --ignore-installed gives Python 3.14 its own copies
 # instead of using (or trying to uninstall) the system's packages for Python 3.12.
+# ruff and pylint (with its astroid) check the coding style of python submissions; their versions
+# must match those in the devcontainer image skogsbaer-devimage.
 RUN python3.14 -m pip install --break-system-packages --ignore-installed \
-  pyyaml libPyshell==0.5.0 aiofiles aiohttp -e /llm-tutor
+  pyyaml libPyshell==0.5.0 aiofiles aiohttp ruff==0.17.1 pylint==4.1.3 astroid==4.3.4 -e /llm-tutor
 
 # python3 is Python 3.14, also for Praktomat, which runs python3 /checker/check.py. This must come
 # after all apt-get calls, because the Python hooks of apt packages expect the system's Python 3.12.

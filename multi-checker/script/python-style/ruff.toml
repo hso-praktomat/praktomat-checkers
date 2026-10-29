@@ -1,0 +1,31 @@
+# Configuration of ruff for checking the coding style of python submissions, see pythonStyle.py.
+# It implements the rules of the style guide that are about layout (rules 4 to 7) and type
+# annotations (rule 8). The naming rules (rule 3) are checked by pylint, see pylintrc.
+# If in doubt, the configuration is lenient, so some rules that are close to the style guide
+# are deliberately not selected.
+
+line-length = 120
+indent-width = 4
+
+[lint]
+# The pycodestyle rules E1xx and E2xx are only available in preview mode
+preview = true
+explicit-preview-rules = true
+select = [
+    # Rule 4: lines have at most 120 characters
+    "E501",
+    # Rule 5: indent with 4 spaces, no tabs. Not selected: indentation of comments (E114-E116)
+    "E111", "E117", "W191",
+    # Rule 6: no space between the function name and the opening parenthesis
+    "E211",
+    # Rule 7: whitespace inside brackets, around commas, colons and operators. Not selected:
+    # missing whitespace around arithmetic operators (E226-E228, so i+1 is OK), multiple spaces
+    # (E221, E222, E241), whitespace around keyword equals (E251, E252) and keywords (E27x)
+    "E201", "E202", "E203", "E225", "E231",
+    # Rule 8: type annotations for all parameters (except self and cls) and results.
+    # Missing return types of __init__ are filtered out in pythonStyle.py.
+    "ANN001", "ANN002", "ANN003", "ANN201", "ANN202", "ANN204", "ANN205", "ANN206",
+]
+
+[lint.flake8-annotations]
+suppress-dummy-args = true
