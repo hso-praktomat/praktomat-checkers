@@ -13,20 +13,20 @@ At the moment, there is only one checkers, the `multi-checker`
 To be used with python, haskell and Java submissions.
 
 * Python submission use [WYPP](https://github.com/skogsbaer/write-your-python-program)
-  or the unit testmodule. The coding style of the submitted files is checked with
-  ruff and pylint against the course's style guide (naming conventions, line length,
-  indentation, whitespace, type annotations); style violations make the check fail.
+  or the unit testmodule. The submitted files are checked with ruff and pylint against
+  the course's coding conventions (naming conventions, line length, indentation,
+  whitespace, type annotations); violations make the check fail.
   The configuration in `multi-checker/script/python-style/` is deliberately lenient.
-  The style check is disabled by the commandline option `--no-style-check` or by
-  `python-style: false` in `exercise.yaml` (globally or per assignment).
-  `check.py python-style FILE...` runs only the style check.
+  The check of the coding conventions is disabled by the commandline option
+  `--no-style-check` or by `python-style: false` in `exercise.yaml` (globally or per
+  assignment). `check.py python-style FILE...` runs only this check.
 * Haskell submissions are checked for compile errors (via `stack test`) and instructors
   can also provide unit tests to be run against student's submission. The
   [praktomat-tests](https://git.hs-offenburg.de/swehr/praktomat-tests) repository contains
   examples for such unit tests.
 * Java submissions are checked using Gradle. The submission will be compiled and the specified
-  tests will be run against the student's submission. Also, a coding style check will be
-  performed.
+  tests will be run against the student's submission. Also, the coding conventions will be
+  checked.
 
 See `multi-checker/tests/runTests.py` for examples showcasing these checkers.
 

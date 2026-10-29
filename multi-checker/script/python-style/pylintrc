@@ -1,4 +1,4 @@
-# Configuration of pylint for checking the naming conventions (rule 3 of the style guide) of
+# Configuration of pylint for checking the naming conventions (rule 3 of the coding conventions) of
 # python submissions, see pythonStyle.py. All other rules are checked by ruff, see ruff.toml.
 #
 # - Functions, methods, parameters, variables and attributes use camelCase or snake_case, but

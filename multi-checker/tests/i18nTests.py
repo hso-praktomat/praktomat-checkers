@@ -49,9 +49,9 @@ def test_translations_complete():
 def outputLang(args: str, env: dict[str, str]) -> str:
     cmd = f'python3 {checkScript} {checkScriptArgsNoLang} {args}'
     res = expectOk(cmd, submissionDir=f'{thisDir}/python-wypp/style/good/camel-case', env=env)
-    if 'Coding style: OK' in res.stdout:
+    if 'Coding conventions: OK' in res.stdout:
         return 'en'
-    if 'Programmierstil: OK' in res.stdout:
+    if 'Programmierkonventionen: OK' in res.stdout:
         return 'de'
     fail(f'unknown language of output\n\n---\n{res.stdout}\n---')
 

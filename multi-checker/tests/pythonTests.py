@@ -8,8 +8,8 @@ python2TestDir = f'{praktomatTestsLocal}/python-prog2/'
 localTestDir = f'{thisDir}/python-wypp'
 styleTestDir = f'{localTestDir}/style'
 
-# Some sample solutions in praktomat-tests are older than the coding style guide and violate it.
-# The tests using them are not about the coding style, so they disable the style check.
+# Some sample solutions in praktomat-tests are older than the coding conventions and violate them.
+# The tests using them are not about the coding conventions, so they disable their check.
 noStyleCheck = '--no-style-check'
 
 def test_python01():
@@ -106,7 +106,7 @@ def test_python17():
         else:
             expectOk(cmd, external=external, submissionDir=dir)
 
-# Tests for the coding style check. Each submission in style/bad violates one rule (or the
+# Tests for the check of the coding conventions. Each submission in style/bad violates one rule (or the
 # rules of one example of the style guide) and passes with the style check disabled.
 # The list contains the problems the style check must report for aufgabe_01.py, as (line, code),
 # and the beginnings of the violated style rules that must be shown.
@@ -153,8 +153,8 @@ def expectStyleResult(res: RunResult, status: str, issues: list[tuple[str, int, 
     Checks the status of the style check in the summary, that the output reports exactly
     the given problems, as (file, line, code), and that it shows exactly the given style rules.
     """
-    if f'Coding style: {status}' not in res.stdout:
-        fail(f'expected "Coding style: {status}" in output\n\n---\n{res.stdout}\n---')
+    if f'Coding conventions: {status}' not in res.stdout:
+        fail(f'expected "Coding conventions: {status}" in output\n\n---\n{res.stdout}\n---')
     found: list[tuple[str, int, str]] = []
     for l in res.stdout.split('\n'):
         m = _styleIssueRe.match(l)
@@ -167,7 +167,7 @@ def expectStyleResult(res: RunResult, status: str, issues: list[tuple[str, int, 
         fail(f'expected style rules {rules} but got {shownRules}\n\n---\n{res.stdout}\n---')
 
 def expectNoStyleCheck(res: RunResult):
-    if 'Coding style:' in res.stdout:
+    if 'Coding conventions:' in res.stdout:
         fail(f'expected no style check\n\n---\n{res.stdout}\n---')
 
 def test_python_style_good():
@@ -219,7 +219,7 @@ def test_python_style_without_exercise_yaml():
                       [namesRule, typeNamesRule])
 
 def test_python_style_command():
-    # The python-style command only checks the coding style of the given files
+    # The python-style command only checks the coding conventions of the given files
     def cmd(files: str) -> str:
         return f'python3 {checkScript} {checkScriptArgs} python-style {files}'
     res = expectOk(cmd('aufgabe_01.py'), submissionDir=f'{styleTestDir}/good/camel-case')
@@ -230,7 +230,7 @@ def test_python_style_command():
     # aufgabe_03.py has a syntax error, so it is not checked
     res = expectOk(cmd('aufgabe_01.py aufgabe_03.py'), submissionDir=localTestDir)
     expectStyleResult(res, 'OK', [])
-    if 'aufgabe_03.py: coding style not checked because of syntax errors' not in res.stdout:
+    if 'aufgabe_03.py: coding conventions not checked because of syntax errors' not in res.stdout:
         fail(f'expected that aufgabe_03.py is not checked\n\n---\n{res.stdout}\n---')
     expectFail(cmd('aufgabe_03.py'), 1, submissionDir=localTestDir)
     expectFail(cmd('does_not_exist.py'), 1, submissionDir=localTestDir)
@@ -254,8 +254,8 @@ def test_python_style_german():
         return (res, messages, rules)
     (resEn, messagesEn, rulesEn) = run('en')
     (resDe, messagesDe, rulesDe) = run('de')
-    if 'Programmierstil: FEHLER' not in resDe.stdout:
-        fail(f'expected "Programmierstil: FEHLER" in output\n\n---\n{resDe.stdout}\n---')
+    if 'Programmierkonventionen: FEHLER' not in resDe.stdout:
+        fail(f'expected "Programmierkonventionen: FEHLER" in output\n\n---\n{resDe.stdout}\n---')
     expectedCount = sum([len(issues) for (_, issues, _) in badStyleTests])
     if sum([len(ms) for ms in messagesEn.values()]) != expectedCount or messagesEn.keys() != messagesDe.keys():
         fail(f'expected the same {expectedCount} problems\n\n---\n{resEn.stdout}\n---\n{resDe.stdout}\n---')

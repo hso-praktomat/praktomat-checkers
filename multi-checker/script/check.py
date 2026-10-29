@@ -39,8 +39,8 @@ def parseArgs() -> argparse.Namespace:
     py.add_argument('--assignment', metavar='X', type=str,
                     help='Identifier for assignment(s), multiple assignments separated by commas')
     py.add_argument('--no-style-check', action='store_true', default=False,
-                    help='Do not check the coding style of the submissions')
-    pyStyle = subparsers.add_parser('python-style', help='Only check the coding style of python files',
+                    help='Do not check the coding conventions of the submissions')
+    pyStyle = subparsers.add_parser('python-style', help='Only check the coding conventions of python files',
                                     parents=[langParser])
     pyStyle.add_argument('files', metavar='FILE', nargs='+',
                          help='Python files to check, relative to the current directory')

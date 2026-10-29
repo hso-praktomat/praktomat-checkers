@@ -1,5 +1,5 @@
-# Checking the coding style of python submissions with ruff and pylint.
-# The rules come from the coding style guide of the course; python-style/ruff.toml and
+# Checking the coding conventions of python submissions with ruff and pylint.
+# The rules come from the coding conventions of the course; python-style/ruff.toml and
 # python-style/pylintrc explain which rules are checked by which tool.
 from __future__ import annotations
 from dataclasses import dataclass
@@ -37,7 +37,7 @@ typeNamesRule = StyleRule(trKey(
     '- Names of classes, records and types (Literal, Union) start with an uppercase letter and use\n'
     '  CamelCase.'), ())
 
-# The rules of the style guide that are checked, in the order of the style guide
+# The rules of the coding conventions that are checked, in their order in the document of the course
 styleRules = [
     namesRule,
     typeNamesRule,
@@ -86,7 +86,7 @@ def runStyleChecker(args: list[str]) -> RunResult:
     res = run(cmd, onError='ignore', captureStdout=True, captureStderr=True, timeout=styleCheckTimeout)
     debug(f'Exit code: {res.exitcode}\nStdout:\n{res.stdout}\nStderr:\n{res.stderr}')
     if res.exitcode == TIMEOUT_EXIT_CODE:
-        bug(f'Timeout after {styleCheckTimeout}s while checking the coding style with {args[0]}')
+        bug(f'Timeout after {styleCheckTimeout}s while checking the coding conventions with {args[0]}')
     return res
 
 def parseJson(what: str, res: RunResult) -> list[dict[str, Any]]:
@@ -203,7 +203,7 @@ def runPylint(files: list[str]) -> list[StyleIssue]:
     res = runStyleChecker(['pylint', '--rcfile', pjoin(styleConfigDir, 'pylintrc'), '--output-format=json']
                           + files)
     # The exit code of pylint is a bit mask, 32 means usage error. Fatal errors (1) for some file,
-    # e.g. a crash of pylint, are ignored, because in doubt the style check is lenient.
+    # e.g. a crash of pylint, are ignored, because in doubt the check is lenient.
     if res.exitcode < 0 or res.exitcode & 32:
         bug(f'pylint failed with exit code {res.exitcode}:\n{res.stdout}\n{res.stderr}')
     issues: list[StyleIssue] = []
@@ -219,7 +219,7 @@ def runPylint(files: list[str]) -> list[StyleIssue]:
 
 def checkStyle(files: list[str]) -> Optional[StyleResult]:
     """
-    Checks the coding style of the given files. Files with syntax errors are not checked,
+    Checks the coding conventions of the given files. Files with syntax errors are not checked,
     their errors are reported when loading them. Returns None if no file was checked.
     Executed from within the source dir.
     """
@@ -230,14 +230,14 @@ def checkStyle(files: list[str]) -> Optional[StyleResult]:
         if hasValidSyntax(f):
             checkedFiles.append(f)
         else:
-            out.append(tr('{file}: coding style not checked because of syntax errors', file=f))
+            out.append(tr('{file}: coding conventions not checked because of syntax errors', file=f))
     if not checkedFiles:
         return None
-    out.insert(0, tr('Checking coding style of {files}', files=', '.join(checkedFiles)) + '\n')
+    out.insert(0, tr('Checking coding conventions of {files}', files=', '.join(checkedFiles)) + '\n')
     issues = runRuff(checkedFiles) + runPylint(checkedFiles)
     issues.sort(key=lambda i: (i.path, i.line, i.column, i.code))
     if not issues:
-        out.append(tr('No problems with the coding style found.'))
+        out.append(tr('No violations of the coding conventions found.'))
         return StyleResult(hasErrors=False, styleOutput='\n'.join(out))
     issuesPerFile: dict[str, int] = {}
     for i in issues:
@@ -247,21 +247,21 @@ def checkStyle(files: list[str]) -> Optional[StyleResult]:
             out.append(i.format())
     for path, n in issuesPerFile.items():
         if n > maxIssuesPerFile:
-            out.append(tr('... and {n} more problems in {file}', n=n - maxIssuesPerFile, file=path))
+            out.append(tr('... and {n} more violations in {file}', n=n - maxIssuesPerFile, file=path))
     out.append('')
-    out.append(tr('Found {n} problem(s) with the coding style.', n=len(issues)))
+    out.append(tr('Found {n} violation(s) of the coding conventions.', n=len(issues)))
     out.append('')
     # Show only the violated rules, or all rules if the rule of some problem is unknown
     violated = set([i.rule for i in issues])
     rules = styleRules if None in violated else [r for r in styleRules if r in violated]
-    out.append(tr('Please follow these rules of the coding style guide:'))
+    out.append(tr('Please follow these coding conventions:'))
     for r in rules:
         out.append(tr(r.description))
     return StyleResult(hasErrors=True, styleOutput='\n'.join(out))
 
 def checkStyleAndExit(files: list[str]) -> NoReturn:
     """
-    Implements the python-style command: checks the coding style of the given files, prints
+    Implements the python-style command: checks the coding conventions of the given files, prints
     the result and exits with 0 if there are no problems, and with 1 otherwise.
     """
     for f in files:
@@ -269,7 +269,7 @@ def checkStyleAndExit(files: list[str]) -> NoReturn:
             abort(tr('File {file} does not exist', file=f))
     res = checkStyle(files)
     if res is None:
-        abort(tr('Coding style not checked, because all files contain syntax errors'))
+        abort(tr('Coding conventions not checked, because all files contain syntax errors'))
     print(res.styleOutput)
-    print('\n' + tr('Coding style: {status}', status=res.status))
+    print('\n' + tr('Coding conventions: {status}', status=res.status))
     sys.exit(1 if res.hasErrors else 0)

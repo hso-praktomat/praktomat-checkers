@@ -51,7 +51,7 @@ class YamlDict:
 class PythonAssignmentConfig:
     wypp: bool         # check that the file loads and that type annotations are correct
     checkLoad: bool    # only check that the file loads (without type checking)
-    style: bool        # check the coding style
+    style: bool        # check the coding conventions
     @staticmethod
     def parse(v: YamlDict) -> PythonAssignmentConfig:
         wypp = v.getBool('python-wypp', True)

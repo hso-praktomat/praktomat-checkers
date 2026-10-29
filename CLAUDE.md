@@ -129,9 +129,10 @@ The `llm-tutor` command has no tests (its fixtures were removed in 883483b). If 
     sets `LANG=de_DE.UTF-8` (in `checker-container/`), the devcontainer `LC_ALL=C.utf8`, so the
     default language differs between Docker and local mode. The tests therefore pass `--lang en`
     in `checkScriptArgs`; tests of the language use `checkScriptArgsNoLang` and `localeEnv`.
-  - `pythonStyle.py` checks the coding style of Python submissions with ruff (layout, type
-    annotations) and pylint (naming), configured in `python-style/`. Style violations give exit
-    code `1`. The fixtures of its tests are in `multi-checker/tests/python-wypp/style/`.
+  - `pythonStyle.py` checks the coding conventions of Python submissions with ruff (layout, type
+    annotations) and pylint (naming), configured in `python-style/`. Violations give exit
+    code `1`. In messages, say "coding conventions" (German "Programmierkonventionen"), not
+    "coding style". The fixtures of its tests are in `multi-checker/tests/python-wypp/style/`.
 - `multi-checker/docker/`: the image with stack/GHC, JDK + Gradle, WYPP and llm-tutor, built on
   `checker-container/` (Ubuntu noble base plus Checkstyle).
 - `multi-checker/task-templates/`: a Praktomat task template that calls the checker.

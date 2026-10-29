@@ -173,7 +173,7 @@ def checkAssignmentsLoadOk(opts: PythonOptions, ass: str | list[str] | None) -> 
     styleResult = checkStyle(styleFiles)
     if styleResult is not None:
         print(f'\n{delim}')
-        print(tr('Coding style'))
+        print(tr('Coding conventions'))
         print()
         print(styleResult.styleOutput)
     print('\n')
@@ -193,13 +193,13 @@ def checkAssignmentsLoadOk(opts: PythonOptions, ass: str | list[str] | None) -> 
             case 'ok':
                 pass
     if styleResult is not None:
-        print(tr('Coding style: {status}', status=styleResult.status))
+        print(tr('Coding conventions: {status}', status=styleResult.status))
     print()
     if err:
         print(tr('Error: at least one assignment failed!'))
         sys.exit(1)
     if styleResult is not None and styleResult.hasErrors:
-        print(tr('Error: the code violates the coding style guide!'))
+        print(tr('Error: the code violates the coding conventions!'))
         sys.exit(1)
     if warn:
         print(tr('Warn: at least one assignment not found'))
@@ -324,7 +324,7 @@ def checkAssignments(opts: PythonOptions, ex: Exercise, allAss: list[Assignment]
                 extras.add(e)
     for e in extras:
         cp(pjoin(sheetDir(opts), e), '.')
-    # Lenient: the coding style of a file is not checked if one of its assignments disables the check
+    # Lenient: the coding conventions of a file are not checked if one of its assignments disables the check
     noStyleCheck = set([a.src for a in allAss if not a.pythonConfig.style])
     styleFiles: list[str] = []
     ctx = CheckCtx.empty(trKey('Load and student tests'), opts.resultFile)

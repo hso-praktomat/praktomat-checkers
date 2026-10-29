@@ -129,11 +129,11 @@ def checkStyle(ctx: CheckCtx, studentDir: str, checkstylePath: str, config: str=
         out = out.replace(x, '')
     hasErrors = 'ERROR' in out or result.exitcode != 0
     if hasErrors:
-        print(tr('Checking code style FAILED'))
+        print(tr('Checking coding conventions FAILED'))
         print()
         print(out)
         print()
-        print(tr('Here are the style rules to follow:'))
+        print(tr('Here are the coding conventions to follow:'))
         print(tr('- Naming conventions'))
         print(tr('  - All identifiers except for constants in camel case, do not use underscores to separate words'))
         print(tr('  - Names of classes, interfaces, records and enums start with an uppercase letters'))

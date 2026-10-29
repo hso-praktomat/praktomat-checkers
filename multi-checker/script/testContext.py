@@ -149,7 +149,7 @@ def outputResultsAndExit(ctx: CheckCtx, ecode: Optional[int]=None) -> None:
             space = (maxAssignmentIdLen - len(id)) * ' '
             print(tr('Assignment {id}:', id=id) + f'{space} {shortResStr}')
     if ctx.styleResult != None:
-        print('\n' + tr('Coding style: {status}', status=ctx.styleResult.status))
+        print('\n' + tr('Coding conventions: {status}', status=ctx.styleResult.status))
     print('\n' + tr('Total points: {points}/{max} (preliminary, subject to change!)', points=f'{totalPoints:.1f}',
                      max=f'{possibleTotalPoints:.1f}'))
     def printWithTitle(title: str, msg: str) -> None:
@@ -163,7 +163,7 @@ def outputResultsAndExit(ctx: CheckCtx, ecode: Optional[int]=None) -> None:
     if ctx.compileOutput:
         printWithTitle(tr('{title} output', title=tr(ctx.compileTitle)), ctx.compileOutput)
     if ctx.styleResult != None and ctx.styleResult.styleOutput != None:
-        printWithTitle(tr('Output of style check'), ctx.styleResult.styleOutput)
+        printWithTitle(tr('Output of coding conventions check'), ctx.styleResult.styleOutput)
     for testCtx in ctx.tests:
         for testRes in testCtx.results:
             title = tr('Output for test of assignment {id} ({file})', id=testCtx.assignment.id, file=testRes.testFile)

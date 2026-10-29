@@ -130,7 +130,7 @@ DE: dict[str, str] = {
     'Total points: {points}/{max} (preliminary, subject to change!)':
         'Gesamtpunkte: {points}/{max} (vorläufig, Änderungen vorbehalten!)',
     '{title} output': 'Ausgabe: {title}',
-    'Output of style check': 'Ausgabe der Prüfung des Programmierstils',
+    'Output of coding conventions check': 'Ausgabe der Prüfung der Programmierkonventionen',
     'Output for test of assignment {id} ({file})': 'Ausgabe des Tests für Aufgabe {id} ({file})',
     'Test for assignment {id} is required to succeed but failed!':
         'Der Test für Aufgabe {id} muss erfolgreich sein, ist aber fehlgeschlagen!',
@@ -156,13 +156,13 @@ DE: dict[str, str] = {
         'Die Datei {file} enthält fehlgeschlagene Tests!\n'
         'Wenn du einen Test nicht zum Laufen bringst, musst du ihn auskommentieren.',
     'Checking assignment {id} (file: {file})': 'Prüfe Aufgabe {id} (Datei: {file})',
-    'Coding style': 'Programmierstil',
+    'Coding conventions': 'Programmierkonventionen',
     'Summary': 'Zusammenfassung',
     '{file}: not found': '{file}: nicht gefunden',
     '{file}: failed': '{file}: fehlgeschlagen',
-    'Coding style: {status}': 'Programmierstil: {status}',
+    'Coding conventions: {status}': 'Programmierkonventionen: {status}',
     'Error: at least one assignment failed!': 'Fehler: mindestens eine Aufgabe ist fehlgeschlagen!',
-    'Error: the code violates the coding style guide!': 'Fehler: der Code verletzt den Coding Style Guide!',
+    'Error: the code violates the coding conventions!': 'Fehler: der Code verletzt die Programmierkonventionen!',
     'Warn: at least one assignment not found': 'Warnung: mindestens eine Aufgabe wurde nicht gefunden',
     'Configuration error: src option not set for assignment {id}':
         'Konfigurationsfehler: Die Option src ist für Aufgabe {id} nicht gesetzt',
@@ -170,7 +170,7 @@ DE: dict[str, str] = {
     'All files missing': 'Alle Dateien fehlen',
     'Option --assignment not given, exercise file {file} not found':
         'Die Option --assignment fehlt und die Datei {file} wurde nicht gefunden',
-    # pythonStyle.py: rules of the style guide
+    # pythonStyle.py: the coding conventions
     '- Names of functions, methods, parameters, variables and attributes start with a lowercase letter\n'
     '  and use camelCase. snake_case is also allowed, but use only one of the two styles in a file.':
         '- Namen von Funktionen, Methoden, Parametern, Variablen und Attributen beginnen mit einem Kleinbuchstaben\n'
@@ -231,22 +231,22 @@ DE: dict[str, str] = {
     '{what} does not follow the naming conventions: use camelCase or snake_case, starting with a lowercase letter':
         '{what} entspricht nicht den Namenskonventionen: verwende camelCase oder snake_case, beginnend mit einem '
         'Kleinbuchstaben',
-    # pythonStyle.py: output of the style check
-    '{file}: coding style not checked because of syntax errors':
-        '{file}: Programmierstil wegen Syntaxfehlern nicht geprüft',
-    'Checking coding style of {files}': 'Prüfe den Programmierstil von {files}',
-    'No problems with the coding style found.': 'Keine Probleme mit dem Programmierstil gefunden.',
-    '... and {n} more problems in {file}': '... und {n} weitere Probleme in {file}',
-    'Found {n} problem(s) with the coding style.': '{n} Problem(e) mit dem Programmierstil gefunden.',
-    'Please follow these rules of the coding style guide:': 'Bitte halte dich an diese Regeln des Coding Style Guides:',
+    # pythonStyle.py: output of the check of the coding conventions
+    '{file}: coding conventions not checked because of syntax errors':
+        '{file}: Programmierkonventionen wegen Syntaxfehlern nicht geprüft',
+    'Checking coding conventions of {files}': 'Prüfe die Programmierkonventionen in {files}',
+    'No violations of the coding conventions found.': 'Keine Verstöße gegen die Programmierkonventionen gefunden.',
+    '... and {n} more violations in {file}': '... und {n} weitere Verstöße in {file}',
+    'Found {n} violation(s) of the coding conventions.': '{n} Verstoß/Verstöße gegen die Programmierkonventionen gefunden.',
+    'Please follow these coding conventions:': 'Bitte halte dich an diese Programmierkonventionen:',
     'File {file} does not exist': 'Die Datei {file} existiert nicht',
-    'Coding style not checked, because all files contain syntax errors':
-        'Programmierstil nicht geprüft, weil alle Dateien Syntaxfehler enthalten',
+    'Coding conventions not checked, because all files contain syntax errors':
+        'Programmierkonventionen nicht geprüft, weil alle Dateien Syntaxfehler enthalten',
     # java.py
     'No build file found: {files}': 'Keine Build-Datei gefunden: {files}',
     'running gradle task {task}': 'beim Ausführen des Gradle-Tasks {task}',
-    'Checking code style FAILED': 'Prüfung des Programmierstils FEHLGESCHLAGEN',
-    'Here are the style rules to follow:': 'Diese Regeln für den Programmierstil musst du einhalten:',
+    'Checking coding conventions FAILED': 'Prüfung der Programmierkonventionen FEHLGESCHLAGEN',
+    'Here are the coding conventions to follow:': 'Diese Programmierkonventionen musst du einhalten:',
     '- Naming conventions': '- Namenskonventionen',
     '  - All identifiers except for constants in camel case, do not use underscores to separate words':
         '  - Alle Bezeichner außer Konstanten in camelCase, keine Unterstriche zum Trennen von Wörtern',
