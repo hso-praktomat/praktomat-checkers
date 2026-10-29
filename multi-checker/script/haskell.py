@@ -5,6 +5,7 @@ from shell import *
 import re
 from exercise import *
 from testContext import *
+from i18n import tr, trKey
 
 @dataclass
 class HaskellOptions(Options):
@@ -29,10 +30,10 @@ def checkCompile(ctx: CheckCtx) -> None:
         ctx.compileOutput = out
         ctx.compileStatus = 'OK'
     else:
-        print(f'"{cmd}" failed\n\n{out}')
+        print(tr('"{cmd}" failed\n\n{output}', cmd=cmd, output=out))
         findOut = run("find . -type f | xargs ls -l", onError='ignore', stderrToStdout=True, captureStdout=True).stdout
         debug(f"Directory listing:\n{findOut}")
-        abort("Aborting")
+        abort(tr('Aborting'))
 
 haskellTestRe = re.compile(r'^Cases:\s*(\d+)\s*Tried:\s*(\d+)\s*Errors:\s*(\d+)\s*Failures:\s*(\d+)')
 magicLine = "__START_TEST__"
@@ -59,7 +60,7 @@ def getTestResult(testFile: str, out: str) -> TestResult:
     if lastTestLine:
         m = haskellTestRe.match(lastTestLine)
         if not m:
-            print('Cannot parse test output!')
+            print(tr('Cannot parse test output!'))
             return TestResult(testFile, cleanOut, True)
         cases = int(m.group(1))
         tried = int(m.group(2))
@@ -92,7 +93,7 @@ def checkHsFile(path: str) -> None:
     content = open(path).read()
     m = pragmaRe.search(content)
     if m:
-        abort(f'Source file {path} contains illegal pragma: {m.group(0)}')
+        abort(tr('Source file {file} contains illegal pragma: {pragma}', file=path, pragma=m.group(0)))
 
 BLACKLIST = ['package.yaml', 'stack.yaml']
 def doCheck(srcDir: str, sheetDir: str, sheet: Optional[str], resultFile: Optional[str]) -> None:
@@ -113,12 +114,12 @@ def doCheck(srcDir: str, sheetDir: str, sheet: Optional[str], resultFile: Option
     missing = 0
     for a in ex.assignments:
         if a.src and not isFile(a.src):
-            print(f'ERROR: File {a.src} not included in submission. I found the following .hs files:')
+            print(tr('ERROR: File {file} not included in submission. I found the following .hs files:', file=a.src))
             run(f'find . -name "*.hs" | head -20')
             missing += 1
     if missing == len(ex.assignments):
-        abort('All source files missing!')
-    ctx = CheckCtx.empty('Compile', resultFile)
+        abort(tr('All source files missing!'))
+    ctx = CheckCtx.empty(trKey('Compile'), resultFile)
     checkCompile(ctx)
     for a in ex.assignments:
         testCtx = TestContext(assignment=a, sheet=sheet, results=[])

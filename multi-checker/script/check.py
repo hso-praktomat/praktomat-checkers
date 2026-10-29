@@ -1,9 +1,11 @@
 from utils import *
 from common import *
 import python
+import pythonStyle
 import haskell
 import java
 import llm_tutor
+from i18n import tr, parseLang, setLang
 import argparse
 import re
 import traceback
@@ -23,19 +25,28 @@ def parseArgs() -> argparse.Namespace:
                             'See TestCtx.asDict for the format of the dict.')
     parser.add_argument("--config-dir", metavar='DIR', type=str, 
                         help="Directory with API key needed for llm-tutor")
+    langHelp = 'Language of the messages: en or de. Default: the language of the locale, otherwise en'
+    parser.add_argument('--lang', metavar='LANG', type=str, help=langHelp)
+    # --lang is also allowed after the command. SUPPRESS keeps the value given before the command.
+    langParser = argparse.ArgumentParser(add_help=False)
+    langParser.add_argument('--lang', metavar='LANG', type=str, help=langHelp, default=argparse.SUPPRESS)
     subparsers = parser.add_subparsers(help='Commands', dest='cmd')
     parser.add_argument('--debug', help='Enable debug output',
                          action='store_true', default=False)
-    py = subparsers.add_parser('python', help='Check python assignment')
+    py = subparsers.add_parser('python', help='Check python assignment', parents=[langParser])
     py.add_argument('--wypp', metavar='DIR', type=str, help='Path to wypp')
     py.add_argument('--sheet', metavar='X', type=str, help='Identifier for sheet')
     py.add_argument('--assignment', metavar='X', type=str,
                     help='Identifier for assignment(s), multiple assignments separated by commas')
     py.add_argument('--no-style-check', action='store_true', default=False,
-                    help='Do not check the coding style of the submissions')
-    hs = subparsers.add_parser('haskell', help='Check haskell assignment')
+                    help='Do not check the coding conventions of the submissions')
+    pyStyle = subparsers.add_parser('python-style', help='Only check the coding conventions of python files',
+                                    parents=[langParser])
+    pyStyle.add_argument('files', metavar='FILE', nargs='+',
+                         help='Python files to check, relative to the current directory')
+    hs = subparsers.add_parser('haskell', help='Check haskell assignment', parents=[langParser])
     hs.add_argument('--sheet', metavar='X', type=str, help='Identifier for sheet')
-    java = subparsers.add_parser('java', help='Check Java assignment')
+    java = subparsers.add_parser('java', help='Check Java assignment', parents=[langParser])
     java.add_argument('--sheet', metavar='X', type=str, help='Identifier for sheet')
     java.add_argument('--checkstyle', metavar='JAR', type=str,
                         help='Path to the CheckStyle JAR file',
@@ -50,7 +61,7 @@ def parseArgs() -> argparse.Namespace:
     java.add_argument('--assignment', metavar='X', type=str,
                       help='Identifier for assignment(s), multiple assignments separated by commas')
     
-    llm = subparsers.add_parser('llm-tutor', help='Run LLM tutor feedback check')
+    llm = subparsers.add_parser('llm-tutor', help='Run LLM tutor feedback check', parents=[langParser])
     llm.add_argument('--llm-tutor-dir', metavar='DIR', type=str, help='Path to llm-tutor-dir')
     llm.add_argument('--solution-dir', metavar='DIR', type=str,
                         help='Directories with sample solution')
@@ -119,9 +130,14 @@ def main() -> None:
     args = parseArgs()
     if args.debug:
         enableDebug()
+    if args.lang is not None:
+        lang = parseLang(args.lang)
+        if lang is None:
+            abort(tr('Invalid language {lang}, must be en or de', lang=args.lang))
+        setLang(lang)
     cmd = args.cmd
     if not cmd:
-        abort('command not given on commandline')
+        abort(tr('command not given on commandline'))
     testDir = args.test_dir
     if testDir is not None:
         testDir = abspath(testDir)
@@ -151,6 +167,8 @@ def main() -> None:
                                     styleCheck=not args.no_style_check)
         debug(f'Running python checks, options: {opts}')
         python.check(opts)
+    elif cmd == 'python-style':
+        pythonStyle.checkStyleAndExit(args.files)
     elif cmd == 'haskell':
         sheet = args.sheet
         if not sheet:

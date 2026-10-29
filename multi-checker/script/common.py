@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import *
 from shell import *
 from utils import *
+from i18n import tr
 
 OK_WITH_WARNINGS_EXIT_CODE = 121
 
@@ -64,7 +65,7 @@ def runWithTimeout(cmd: list[str], timeout: Optional[int], what: str, env: Optio
     debug(f'Stderr:\n{res.stderr}')
     try:
         if timeout and ecode == TIMEOUT_EXIT_CODE:
-            msg = f'Timeout after {timeout}s while {what}'
+            msg = tr('Timeout after {timeout}s while {what}', timeout=timeout, what=what)
             debug(msg)
             newStdout = res.stdout
             if newStdout:

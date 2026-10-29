@@ -7,10 +7,11 @@ from utils import *
 from common import *
 from config import *
 from exercise import parseExercise
+from i18n import tr
 
 
 def configError(s: str) -> NoReturn:
-    abort('Config error: ' + s)
+    abort(tr('Config error: {msg}', msg=s))
 
 @dataclass
 class LlmTutorOptions(Options):
@@ -51,7 +52,7 @@ def runLlmTutor (llmTutorPfad: str, fake_llm: bool, id: str, sampleSolution: str
 
 def check(opts: LlmTutorOptions) -> None:
     if os.getenv('ALLOW_LLM_UPLOAD') != '1':
-        print('Uploading the solution to an LLM was not permitted. Aborting.')
+        print(tr('Uploading the solution to an LLM was not permitted. Aborting.'))
         return
 
     # Direction with the exercise.yaml file
@@ -67,7 +68,7 @@ def check(opts: LlmTutorOptions) -> None:
              
             # pfad zu Musterlösung 
             if assignment.sampleSolution is None:
-                configError(f'No test file defined for assignment {assignment.id}')
+                configError(tr('No test file defined for assignment {id}', id=assignment.id))
             # Default solution dir is /solution, but can be overridden by --solution-dir
             if opts.solution_dir:
                 exSampleSolution_pfad = pjoin(opts.solution_dir, assignment.sampleSolution)
@@ -76,7 +77,7 @@ def check(opts: LlmTutorOptions) -> None:
 
 
             if assignment.pdf is None:
-                configError(f'No extra file defined for assignment {assignment.id}')
+                configError(tr('No extra file defined for assignment {id}', id=assignment.id))
             # Default pdf dir is /pdf, but can be overridden by --pdf-dir
             if opts.pdf_dir:
                 pdf = pjoin(opts.pdf_dir, assignment.pdf)
@@ -90,7 +91,7 @@ def check(opts: LlmTutorOptions) -> None:
             debug(f'Contents of dourceDir: {ls(opts.sourceDir)}')
 
             if assignment.src is None:
-                configError(f'No source file defined for assignment {assignment.id}')
+                configError(tr('No source file defined for assignment {id}', id=assignment.id))
             student_pfad = pjoin(nestedSourceDir, assignment.src)
             debug(f'studentPfad = {student_pfad}')
 

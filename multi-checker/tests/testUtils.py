@@ -3,7 +3,7 @@
 from shell import *
 import os
 import sys
-from typing import Optional, Literal
+from typing import Optional, Literal, NoReturn
 
 # By default, the tests are run with docker. You need to have docker running locally, and you need
 # to pull the following image:
@@ -36,11 +36,23 @@ if runLocal:
 else:
     checkScript = f'{_praktomatCheckersDocker}/multi-checker/script/check.py'
 
-checkScriptArgs = ''
+checkScriptArgsNoLang = ''
 if _DEBUG:
-    checkScriptArgs = "--debug"
+    checkScriptArgsNoLang = "--debug"
+# The tests check English messages. --lang en makes them independent of the locale, e.g. of
+# LANG=de_DE.UTF-8 in the docker image. Tests of the language use checkScriptArgsNoLang.
+checkScriptArgs = f'--lang en {checkScriptArgsNoLang}'
 
-def fail(msg: str):
+def localeEnv(**vars: str) -> dict[str, str]:
+    """
+    Returns an environment that sets all variables for the locale, so that the language of the
+    checker does not depend on the environment of the tests.
+    """
+    env = {'LC_ALL': '', 'LC_CTYPE': '', 'LC_MESSAGES': '', 'LANG': '', 'LANGUAGE': ''}
+    env.update(vars)
+    return env
+
+def fail(msg: str) -> NoReturn:
     print(msg)
     sys.exit(1)
 

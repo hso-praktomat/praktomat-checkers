@@ -34,8 +34,9 @@ RUN apt-get clean && apt-get update && apt-get install -yq \
   curl \
   && rm -rf /var/lib/apt/lists/*
 
-# Setup locale
-RUN locale-gen en_US.UTF-8
-RUN update-locale LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8
-ENV LANG=en_US.UTF-8
+# Setup locale. LANG=de_DE.UTF-8 makes the messages of the checkers and of WYPP German, unless the
+# checker gets --lang en. LANGUAGE stays English, so other tools using gettext stay English.
+RUN locale-gen en_US.UTF-8 de_DE.UTF-8
+RUN update-locale LANG=de_DE.UTF-8 LANGUAGE=en_US.UTF-8
+ENV LANG=de_DE.UTF-8
 ENV LANGUAGE=en_US.UTF-8

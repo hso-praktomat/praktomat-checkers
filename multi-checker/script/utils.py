@@ -1,6 +1,7 @@
 import sys
 from typing import *
 from shell import *
+from i18n import tr
 import codecs
 
 def bug(msg: str) -> NoReturn:
@@ -8,7 +9,7 @@ def bug(msg: str) -> NoReturn:
     sys.exit(1)
 
 def abort(msg: str) -> NoReturn:
-    print('FEHLER: ' + msg)
+    print(tr('ERROR: {msg}', msg=msg))
     sys.exit(1)
 
 def readFile(name: str) -> str:
@@ -46,7 +47,7 @@ def fixEncoding(path: str) -> None:
             bytes = bytes.replace(r.encode('iso-8859-1'), r.encode('utf-8'))
     if bytes != bytes_orig:
         open(path, 'wb').write(bytes)
-        print(f'Fixed encoding of {path}')
+        print(tr('Fixed encoding of {file}', file=path))
 
 def fixEncodingRecursively(startDir: str, ext: str) -> None:
     files = run(f"find '{startDir}' -type f -name '*.{ext}'", captureStdout=splitLines).stdout

@@ -3,6 +3,7 @@ from __future__ import annotations
 from shell import *
 from common import *
 from utils import *
+from i18n import tr
 import yaml
 import re
 from typing import *
@@ -23,21 +24,21 @@ class YamlDict:
         if x is None:
             return default
         if not isinstance(x, bool):
-            abort(f'Config option "{key} must be a boolean')
+            abort(tr('Config option "{key}" must be a boolean', key=key))
         return x
     def getInt(self, key: str, default: int) -> int:
         x = self.get(key)
         if x is None:
             return default
         if not isinstance(x, int):
-            abort(f'Config option "{key} must be an int')
+            abort(tr('Config option "{key}" must be an int', key=key))
         return x
     def getStr(self, key: str) -> Optional[str]:
         x = self.get(key)
         if x is None:
             return None
         if not isinstance(x, str):
-            abort(f'Config option "{key} must be a string: {x}')
+            abort(tr('Config option "{key}" must be a string: {value}', key=key, value=x))
         return x
     def items(self) -> ItemsView[Any, Any]:
         return self.__dicts[0].items()
@@ -50,7 +51,7 @@ class YamlDict:
 class PythonAssignmentConfig:
     wypp: bool         # check that the file loads and that type annotations are correct
     checkLoad: bool    # only check that the file loads (without type checking)
-    style: bool        # check the coding style
+    style: bool        # check the coding conventions
     @staticmethod
     def parse(v: YamlDict) -> PythonAssignmentConfig:
         wypp = v.getBool('python-wypp', True)
@@ -114,7 +115,7 @@ class Exercise:
         allIds = [a.id for a in self.assignments]
         for x in assignmentIds:
             if x not in allIds:
-                abort(f'Assignment {x} not defined in exercise file')
+                abort(tr('Assignment {id} not defined in exercise file', id=x))
 
 def parseExercise(sheet: Optional[str], yamlPath: str) -> Exercise:
     s = readFile(yamlPath)

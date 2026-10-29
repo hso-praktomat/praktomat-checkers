@@ -13,19 +13,20 @@ At the moment, there is only one checkers, the `multi-checker`
 To be used with python, haskell and Java submissions.
 
 * Python submission use [WYPP](https://github.com/skogsbaer/write-your-python-program)
-  or the unit testmodule. The coding style of the submitted files is checked with
-  ruff and pylint against the course's style guide (naming conventions, line length,
-  indentation, whitespace, type annotations); style violations make the check fail.
+  or the unit testmodule. The submitted files are checked with ruff and pylint against
+  the course's coding conventions (naming conventions, line length, indentation,
+  whitespace, type annotations); violations make the check fail.
   The configuration in `multi-checker/script/python-style/` is deliberately lenient.
-  The style check is disabled by the commandline option `--no-style-check` or by
-  `python-style: false` in `exercise.yaml` (globally or per assignment).
+  The check of the coding conventions is disabled by the commandline option
+  `--no-style-check` or by `python-style: false` in `exercise.yaml` (globally or per
+  assignment). `check.py python-style FILE...` runs only this check.
 * Haskell submissions are checked for compile errors (via `stack test`) and instructors
   can also provide unit tests to be run against student's submission. The
   [praktomat-tests](https://git.hs-offenburg.de/swehr/praktomat-tests) repository contains
   examples for such unit tests.
 * Java submissions are checked using Gradle. The submission will be compiled and the specified
-  tests will be run against the student's submission. Also, a coding style check will be
-  performed.
+  tests will be run against the student's submission. Also, the coding conventions will be
+  checked.
 
 See `multi-checker/tests/runTests.py` for examples showcasing these checkers.
 
@@ -34,6 +35,13 @@ But the checker script (files in `multi-checker/script/`) shares some logic betw
 both languages, so we created only one checker for simplicity.
 
 Commandline options: invoke with `--help`
+
+The messages of the checker are in English or German. The language is selected like in
+WYPP: the option `--lang en|de` (before or after the command), otherwise the locale
+(`LC_ALL`, `LC_CTYPE`, `LANG`, e.g. `LANG=de_DE.UTF-8`), otherwise English. WYPP runs in
+the same language. Messages of external tools (unittest, Python, compilers) stay English.
+The docker image sets `LANG=de_DE.UTF-8`, so its messages are German unless the checker
+gets `--lang en`.
 
 Environment variables:
 

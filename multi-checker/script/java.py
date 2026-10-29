@@ -7,6 +7,7 @@ import os
 import os.path
 from exercise import *
 from testContext import *
+from i18n import tr, trKey
 import xml.etree.ElementTree as ET
 
 # Checking Java code using Gradle
@@ -34,7 +35,7 @@ def execGradle(task: str, offline: bool, studentDir: str, testDir: str='test-src
             break
         cands.append(cand)
     if buildFile is None:
-        abort(f'No build file found: {cands}')
+        abort(tr('No build file found: {files}', files=cands))
     # Gradle 9 removed -b (--build-file), so we pass the directory containing the build file
     cmd = [
         'gradle',
@@ -57,7 +58,7 @@ def execGradle(task: str, offline: bool, studentDir: str, testDir: str='test-src
     if offline:
         cmd.append('--offline')
     debug(f'Running "{cmd}"')
-    result = runWithTimeout(cmd, timeout, f'running gradle task {task}')
+    result = runWithTimeout(cmd, timeout, tr('running gradle task {task}', task=task))
     return result
 
 def checkCompile(ctx: CheckCtx, opts: JavaOptions, studentDir: str, exResult: CompileStatus) -> None:
@@ -128,21 +129,21 @@ def checkStyle(ctx: CheckCtx, studentDir: str, checkstylePath: str, config: str=
         out = out.replace(x, '')
     hasErrors = 'ERROR' in out or result.exitcode != 0
     if hasErrors:
-        print('Checking code style FAILED')
+        print(tr('Checking coding conventions FAILED'))
         print()
         print(out)
         print()
-        print('Here are the style rules to follow:')
-        print('- Naming conventions')
-        print('  - All identifiers except for constants in camel case, do not use underscores to separate words')
-        print('  - Names of classes, interfaces, records and enums start with an uppercase letters')
-        print('  - Names of methods and variables start with a lowercase letter')
-        print('  - Names of constants are written in SCREAMING_CASE')
-        print('- Indentation')
-        print('  - Indent a block with four spaces')
-        print('  - Do NOT use tabs, this might require to change the settings of your IDE')
+        print(tr('Here are the coding conventions to follow:'))
+        print(tr('- Naming conventions'))
+        print(tr('  - All identifiers except for constants in camel case, do not use underscores to separate words'))
+        print(tr('  - Names of classes, interfaces, records and enums start with an uppercase letters'))
+        print(tr('  - Names of methods and variables start with a lowercase letter'))
+        print(tr('  - Names of constants are written in SCREAMING_CASE'))
+        print(tr('- Indentation'))
+        print(tr('  - Indent a block with four spaces'))
+        print(tr('  - Do NOT use tabs, this might require to change the settings of your IDE'))
         print()
-        abort('Aborting')
+        abort(tr('Aborting'))
     ctx.styleResult = StyleResult(hasErrors=hasErrors, styleOutput=result.stdout.replace('\r', '\n'))
 
 def srcExists(s: str) -> bool:
@@ -162,20 +163,20 @@ def checkFilesExist(ass: list[Assignment], prjDir: str) -> CompileStatus:
         if not srcExists(srcFile) and a.src not in missing:
             missing.append(a.src)
     if missing:
-        print('ERROR: The following files are missing in your submission:')
+        print(tr('ERROR: The following files are missing in your submission:'))
         for f in missing:
             print(f'- {f}')
         print()
         files = run(f"find '{prjDir}' -name '*.java'", captureStdout=splitLines).stdout
         if files:
-            print(f'The following .java files are present:')
+            print(tr('The following .java files are present:'))
             for f in files:
                 print('- ' + removeLeading(f, prjDir))
         else:
-            print(f'No java files found in your submission')
+            print(tr('No java files found in your submission'))
         if len(missing) == len(ass):
             print()
-            abort('All files missing, aborting')
+            abort(tr('All files missing, aborting'))
         return 'OK_BUT_SOME_MISSING'
     else:
         return 'OK'
@@ -198,7 +199,7 @@ def dirnameForFilter(s: str) -> str:
     return os.path.join('test-src', *pathElements)
 
 def checkWithSourceDir(opts: JavaOptions, projectDir: str, sheetDir: str, ass: list[Assignment]) -> None:
-    ctx = CheckCtx.empty('Compile', opts.resultFile)
+    ctx = CheckCtx.empty(trKey('Compile'), opts.resultFile)
     # do the checks
     debug(f'projectDir={projectDir}')
     cp(opts.gradleBuildFile, projectDir)
@@ -215,7 +216,8 @@ def checkWithSourceDir(opts: JavaOptions, projectDir: str, sheetDir: str, ass: l
             testDirectories.append(dirnameForFilter(a.testFilter))
         for td in testDirectories:
             if not isDir(pjoin(sheetDir, td)):
-                abort(f'Configuration error: test directory {td} does not exist in {sheetDir}.')
+                abort(tr('Configuration error: test directory {dir} does not exist in {sheetDir}.', dir=td,
+                         sheetDir=sheetDir))
 
         if len(testDirectories) > 0:
             testFilter = a.testFilter or '*'
@@ -237,7 +239,7 @@ def check(opts: JavaOptions) -> None:
         subs = set([dirnameForSource(a.src) for a in ass if a.src is not None])
         for sub in subs:
             if not isDir(pjoin(projectDir, sub)):
-                abort(f'Directory {sub} required for one of the selected assignments does not exist')
+                abort(tr('Directory {dir} required for one of the selected assignments does not exist', dir=sub))
         withLimitedDir(projectDir, list(subs), lambda d: checkWithSourceDir(opts, d, sheetDir, ass))
     else:
         checkWithSourceDir(opts, projectDir, sheetDir, ex.assignments)

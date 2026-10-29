@@ -1,7 +1,7 @@
-# Configuration of ruff for checking the coding style of python submissions, see pythonStyle.py.
-# It implements the rules of the style guide that are about layout (rules 4 to 7) and type
+# Configuration of ruff for checking the coding conventions of python submissions, see pythonStyle.py.
+# It implements the rules of the coding conventions that are about layout (rules 4 to 7) and type
 # annotations (rule 8). The naming rules (rule 3) are checked by pylint, see pylintrc.
-# If in doubt, the configuration is lenient, so some rules that are close to the style guide
+# If in doubt, the configuration is lenient, so some rules that are close to the coding conventions
 # are deliberately not selected.
 
 line-length = 120
