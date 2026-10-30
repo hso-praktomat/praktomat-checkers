@@ -106,10 +106,9 @@ def loadStudentCode(opts: PythonOptions, p: str, checkLoad: LoadCheck, styleChec
     if checkLoad not in ['dont-load', 'load-no-typecheck', 'load-typecheck']:
         raise ValueError('Invalid value for checkLoad argument: ' + str(checkLoad))
     _out = ''
-    def printOut(s: str='', emptyNewline: bool=True) -> None:
+    def printOut(s: str='') -> None:
         nonlocal _out
-        if s or emptyNewline:
-            _out = _out + s + '\n'
+        _out = _out + s + '\n'
     _srcDir = None
     _studentFile = None
     def mkResult(status: LoadStudentCodeStatus) -> LoadStudentCodeResult:
@@ -148,7 +147,11 @@ def loadStudentCode(opts: PythonOptions, p: str, checkLoad: LoadCheck, styleChec
     # A single run of WYPP: its exit code tells a crash while loading from failing checks
     runRes = runWypp(studentFile, opts.wypp, typecheck=checkLoad == 'load-typecheck',
                      timeout=testTimeoutSeconds())
-    printOut(runRes.stdout, emptyNewline=False)
+    if runRes.stdout:
+        # one blank line before and after the output of WYPP
+        printOut()
+        printOut(runRes.stdout)
+        printOut()
     if runRes.exitcode == 0:
         printOut(tr('## OK: {file} loads successfully and has no test failures', file=p))
     elif runRes.exitcode == WYPP_CHECKS_FAILED_EXIT_CODE:
