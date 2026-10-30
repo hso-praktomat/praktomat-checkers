@@ -156,17 +156,18 @@ DE: dict[str, str] = {
         'Die Datei {file} enthält fehlgeschlagene Tests!\n'
         'Wenn du einen Test nicht zum Laufen bringst, musst du ihn auskommentieren.',
     'Checking assignment {id} (file: {file})': 'Prüfe Aufgabe {id} (Datei: {file})',
-    'Coding conventions': 'Programmierkonventionen',
     'Summary': 'Zusammenfassung',
     '{file}: not found': '{file}: nicht gefunden',
     '{file}: failed': '{file}: fehlgeschlagen',
     'Coding conventions: {status}': 'Programmierkonventionen: {status}',
     'Error: at least one assignment failed!': 'Fehler: mindestens eine Aufgabe ist fehlgeschlagen!',
-    'Error: the code violates the coding conventions!': 'Fehler: der Code verletzt die Programmierkonventionen!',
     'Warn: at least one assignment not found': 'Warnung: mindestens eine Aufgabe wurde nicht gefunden',
     'Configuration error: src option not set for assignment {id}':
         'Konfigurationsfehler: Die Option src ist für Aufgabe {id} nicht gesetzt',
     'Load and student tests': 'Laden und eigene Tests',
+    '## Checking coding conventions of {file} ...': '## Prüfe die Programmierkonventionen in {file} ...',
+    '## OK: {file} follows the coding conventions': '## OK: {file} hält die Programmierkonventionen ein',
+    'File {file} violates the coding conventions.': 'Die Datei {file} verletzt die Programmierkonventionen.',
     'All files missing': 'Alle Dateien fehlen',
     'Option --assignment not given, exercise file {file} not found':
         'Die Option --assignment fehlt und die Datei {file} wurde nicht gefunden',

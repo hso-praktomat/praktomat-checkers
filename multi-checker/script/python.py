@@ -81,10 +81,11 @@ class LoadStudentCodeResult:
 
 LoadCheck = Literal['dont-load', 'load-no-typecheck', 'load-typecheck']
 
-def loadStudentCode(opts: PythonOptions, p: str, checkLoad: LoadCheck) -> LoadStudentCodeResult:
+def loadStudentCode(opts: PythonOptions, p: str, checkLoad: LoadCheck, styleCheck: bool) -> LoadStudentCodeResult:
     """
-    Checks that the student file loads ok and that the student tests are successful.
-    Executed from within source dir.
+    Checks that the student file loads ok and that the student tests are successful. Then, if
+    styleCheck is set and the file loaded ok, checks its coding conventions; a violation makes
+    the file fail. Executed from within source dir.
     """
     if checkLoad not in ['dont-load', 'load-no-typecheck', 'load-typecheck']:
         raise ValueError('Invalid value for checkLoad argument: ' + str(checkLoad))
@@ -97,6 +98,22 @@ def loadStudentCode(opts: PythonOptions, p: str, checkLoad: LoadCheck) -> LoadSt
     _studentFile = None
     def mkResult(status: LoadStudentCodeStatus) -> LoadStudentCodeResult:
         return LoadStudentCodeResult(status, _out, _srcDir, _studentFile)
+    def checkConventions(studentFile: str) -> LoadStudentCodeStatus:
+        if not styleCheck:
+            return 'ok'
+        printOut()
+        printOut(tr('## Checking coding conventions of {file} ...', file=p))
+        res = checkStyle([studentFile])
+        if res is None:
+            printOut(tr('{file}: coding conventions not checked because of syntax errors', file=p))
+            return 'ok'
+        if res.hasErrors:
+            printOut(res.styleOutput or '')
+            printOut()
+            printOut(tr('File {file} violates the coding conventions.', file=p))
+            return 'fail'
+        printOut(tr('## OK: {file} follows the coding conventions', file=p))
+        return 'ok'
     studentFile = findFile(p, '.', ignoreCase=True)
     if not studentFile:
         pyFilesList = run(f'find . -name "*.py"', captureStdout=splitLines, onError='ignore').stdout
@@ -109,7 +126,7 @@ def loadStudentCode(opts: PythonOptions, p: str, checkLoad: LoadCheck) -> LoadSt
     fixEncoding(studentFile)
     if checkLoad == 'dont-load':
         printOut(tr('Only checking that file {file} exists, not loading.', file=studentFile))
-        return mkResult('ok')
+        return mkResult(checkConventions(studentFile))
     printOut()
     printOut(tr('## Checking that {file} loads successfully ...', file=p))
     typecheck = checkLoad == 'load-typecheck'
@@ -133,10 +150,10 @@ def loadStudentCode(opts: PythonOptions, p: str, checkLoad: LoadCheck) -> LoadSt
     else:
         printOut(tr('File {file} contains test failures!\n'
                     'If you cannot make a test succeed, you have to comment it out.', file=p))
-    return mkResult('ok')
+    return mkResult(checkConventions(studentFile))
 
 def checkFileLoadsOk(opts: PythonOptions, p: str) -> LoadStudentCodeResult:
-    res = loadStudentCode(opts, p, 'load-typecheck')
+    res = loadStudentCode(opts, p, 'load-typecheck', opts.styleCheck)
     print(res.output)
     return res
 
@@ -147,7 +164,6 @@ def checkAssignmentsLoadOk(opts: PythonOptions, ass: str | list[str] | None) -> 
         ass = []
     delim = '=============================================================================='
     stats: list[tuple[str, LoadStudentCodeStatus]] = []
-    styleFiles: list[str] = []
     for x in ass:
         possible_filenames = [
             f'aufgabe_{x.zfill(2)}.py',
@@ -168,14 +184,6 @@ def checkAssignmentsLoadOk(opts: PythonOptions, ass: str | list[str] | None) -> 
         print(tr('Checking assignment {id} (file: {file})', id=x, file=p))
         res = checkFileLoadsOk(opts, p)
         stats.append((p, res.status))
-        if opts.styleCheck and res.studentFile is not None:
-            styleFiles.append(res.studentFile)
-    styleResult = checkStyle(styleFiles)
-    if styleResult is not None:
-        print(f'\n{delim}')
-        print(tr('Coding conventions'))
-        print()
-        print(styleResult.styleOutput)
     print('\n')
     print(delim)
     print(tr('Summary'))
@@ -192,14 +200,9 @@ def checkAssignmentsLoadOk(opts: PythonOptions, ass: str | list[str] | None) -> 
                 err = True
             case 'ok':
                 pass
-    if styleResult is not None:
-        print(tr('Coding conventions: {status}', status=styleResult.status))
     print()
     if err:
         print(tr('Error: at least one assignment failed!'))
-        sys.exit(1)
-    if styleResult is not None and styleResult.hasErrors:
-        print(tr('Error: the code violates the coding conventions!'))
         sys.exit(1)
     if warn:
         print(tr('Warn: at least one assignment not found'))
@@ -326,17 +329,14 @@ def checkAssignments(opts: PythonOptions, ex: Exercise, allAss: list[Assignment]
         cp(pjoin(sheetDir(opts), e), '.')
     # Lenient: the coding conventions of a file are not checked if one of its assignments disables the check
     noStyleCheck = set([a.src for a in allAss if not a.pythonConfig.style])
-    styleFiles: list[str] = []
     ctx = CheckCtx.empty(trKey('Load and student tests'), opts.resultFile)
     compileStatus = 'OK'
     missing = 0
     srcDirDict: dict[str, str] = {} # a.src -> directory where file is found
     for p, checkLoad in allFiles:
-        res = loadStudentCode(opts, p, checkLoad)
+        res = loadStudentCode(opts, p, checkLoad, opts.styleCheck and p not in noStyleCheck)
         if res.srcDir:
             srcDirDict[p] = res.srcDir
-        if opts.styleCheck and p not in noStyleCheck and res.studentFile is not None:
-            styleFiles.append(res.studentFile)
         ctx.appendCompileOutput(res.output)
         match res.status:
             case 'fail':
@@ -353,7 +353,6 @@ def checkAssignments(opts: PythonOptions, ex: Exercise, allAss: list[Assignment]
         else:
             compileStatus = 'OK_BUT_SOME_MISSING'
     ctx.compileStatus = compileStatus
-    ctx.styleResult = checkStyle(styleFiles)
     for a in allAss:
         testCtx = TestContext(assignment=a, sheet=ex.sheet, results=[])
         ctx.tests.append(testCtx)
