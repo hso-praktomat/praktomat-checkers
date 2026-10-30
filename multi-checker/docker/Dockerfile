@@ -77,10 +77,10 @@ RUN python3.14 -m pip install --break-system-packages --ignore-installed \
 # after all apt-get calls, because the Python hooks of apt packages expect the system's Python 3.12.
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.14 1
 
-# WYPP, version 2.5.1
+# WYPP, version 2.5.2. The checker needs at least 2.5.2, see WYPP_CHECKS_FAILED_EXIT_CODE in python.py
 RUN mkdir /wypp
 ADD ./git-clone /git-clone
-RUN bash /git-clone https://github.com/skogsbaer/write-your-python-program.git 2.5.1 /wypp
+RUN bash /git-clone https://github.com/skogsbaer/write-your-python-program.git 2.5.2 /wypp
 RUN rm -rf /wypp/.git
 
 # Our checker scripts

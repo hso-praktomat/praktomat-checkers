@@ -89,7 +89,8 @@ Prerequisites, hard-coded in `testUtils.py` and the test files:
   github.com/skogsbaer/tick-trick-track at `$HOME/devel/tick-trick-track`. The tests mount it
   at `/external/tick-trick-track`; `test_python12`–`14` need it.
 - Local mode: the devcontainer provides WYPP at `/wypp` (mount of
-  `~/devel/write-your-python-program`), tick-trick-track at `/external/tick-trick-track` (mount
+  `~/devel/write-your-python-program`, at least version 2.5.2: the checker relies on its exit codes for
+  `--check`), tick-trick-track at `/external/tick-trick-track` (mount
   of `~/devel/tick-trick-track`), Checkstyle at `/opt/praktomat-addons/checkstyle.jar`, Java 27
   (`JAVA_HOME=/opt/jdk-27`), Gradle 9.8.2 with its dependency cache in `/root/.gradle`, the
   Haskell packages in the `lts-24.3` snapshot, and `python3` (3.14) with pyyaml, libpyshell,
