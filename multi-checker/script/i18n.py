@@ -146,8 +146,7 @@ DE: dict[str, str] = {
         'Es wird nur geprüft, ob die Datei {file} existiert, sie wird nicht geladen.',
     '## Checking that {file} loads successfully ...': '## Prüfe, ob {file} erfolgreich geladen werden kann ...',
     '## OK: {file} loads successfully': '## OK: {file} kann erfolgreich geladen werden',
-    'File {file} could not be loaded.\nYou find more error messages above.':
-        'Die Datei {file} konnte nicht geladen werden.\nWeitere Fehlermeldungen findest du weiter oben.',
+    'File {file} could not be loaded.': 'Die Datei {file} konnte nicht geladen werden.',
     '## Executing tests in {file} ...': '## Führe die Tests in {file} aus ...',
     '## OK: no test failures in {file}': '## OK: keine fehlgeschlagenen Tests in {file}',
     'Timeout for tests in {file}. Probably there is an infinite loop!':

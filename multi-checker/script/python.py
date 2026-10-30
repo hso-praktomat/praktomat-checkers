@@ -136,7 +136,7 @@ def loadStudentCode(opts: PythonOptions, p: str, checkLoad: LoadCheck, styleChec
     if runRes.exitcode == 0:
         printOut(tr('## OK: {file} loads successfully', file=p))
     else:
-        printOut(tr('File {file} could not be loaded.\nYou find more error messages above.', file=p))
+        printOut(tr('File {file} could not be loaded.', file=p))
         return mkResult('fail')
     printOut()
     printOut(tr('## Executing tests in {file} ...', file=p))
