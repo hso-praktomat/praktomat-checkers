@@ -60,12 +60,6 @@ RUN apt-get update && apt-get install -yq software-properties-common \
 RUN whl=$(ls /usr/lib/python3.14/ensurepip/_bundled/pip-*.whl) && \
     python3.14 $whl/pip install --break-system-packages --ignore-installed $whl
 
-# WYPP, version 2.2.1 plus some fixes (2026-03-26)
-RUN mkdir /wypp
-ADD ./git-clone /git-clone
-RUN bash /git-clone https://github.com/skogsbaer/write-your-python-program.git 324674a3f12b0f4d5dc75d5123b9842f9aee54ea /wypp
-RUN rm -rf /wypp/.git
-
 # llm-tutor
 RUN mkdir /llm-tutor
 ADD ./git-clone /git-clone
@@ -82,6 +76,12 @@ RUN python3.14 -m pip install --break-system-packages --ignore-installed \
 # python3 is Python 3.14, also for Praktomat, which runs python3 /checker/check.py. This must come
 # after all apt-get calls, because the Python hooks of apt packages expect the system's Python 3.12.
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.14 1
+
+# WYPP, version 2.5.1
+RUN mkdir /wypp
+ADD ./git-clone /git-clone
+RUN bash /git-clone https://github.com/skogsbaer/write-your-python-program.git 2.5.1 /wypp
+RUN rm -rf /wypp/.git
 
 # Our checker scripts
 ADD checker /checker

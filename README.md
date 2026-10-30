@@ -15,7 +15,8 @@ To be used with python, haskell and Java submissions.
 * Python submission use [WYPP](https://github.com/skogsbaer/write-your-python-program)
   or the unit testmodule. The submitted files are checked with ruff and pylint against
   the course's coding conventions (naming conventions, line length, indentation,
-  whitespace, type annotations); violations make the check fail.
+  whitespace, type annotations). Each file is checked right after it loaded successfully,
+  and a violation makes the file fail.
   The configuration in `multi-checker/script/python-style/` is deliberately lenient.
   The check of the coding conventions is disabled by the commandline option
   `--no-style-check` or by `python-style: false` in `exercise.yaml` (globally or per

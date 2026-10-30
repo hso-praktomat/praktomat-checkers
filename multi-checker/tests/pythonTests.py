@@ -147,14 +147,36 @@ def styleCmd(extraArgs: str='') -> str:
 
 _styleIssueRe = re.compile(r'^(\S+\.py):(\d+):\d+: .* \[([\w-]+)\]$')
 
-def expectStyleResult(res: RunResult, status: str, issues: list[tuple[str, int, str]],
+def conventionsOk(file: str) -> str:
+    return f'## OK: {file} follows the coding conventions'
+
+def conventionsViolated(file: str) -> str:
+    return f'File {file} violates the coding conventions.'
+
+def expectInOutput(res: RunResult, expected: list[str], notExpected: list[str]=[]):
+    for s in expected:
+        if s not in res.stdout:
+            fail(f'expected "{s}" in output\n\n---\n{res.stdout}\n---')
+    for s in notExpected:
+        if s in res.stdout:
+            fail(f'expected no "{s}" in output\n\n---\n{res.stdout}\n---')
+
+def expectInOrder(res: RunResult, expected: list[str]):
+    pos = 0
+    for s in expected:
+        i = res.stdout.find(s, pos)
+        if i < 0:
+            fail(f'expected "{s}" after position {pos} in output\n\n---\n{res.stdout}\n---')
+        pos = i + len(s)
+
+def expectStyleResult(res: RunResult, expected: list[str], issues: list[tuple[str, int, str]],
                       rules: list[str]=[]):
     """
-    Checks the status of the style check in the summary, that the output reports exactly
-    the given problems, as (file, line, code), and that it shows exactly the given style rules.
+    Checks that the output contains the expected strings, that it reports exactly the given
+    violations of the coding conventions, as (file, line, code), and that it shows exactly the
+    given rules.
     """
-    if f'Coding conventions: {status}' not in res.stdout:
-        fail(f'expected "Coding conventions: {status}" in output\n\n---\n{res.stdout}\n---')
+    expectInOutput(res, expected)
     found: list[tuple[str, int, str]] = []
     for l in res.stdout.split('\n'):
         m = _styleIssueRe.match(l)
@@ -167,20 +189,20 @@ def expectStyleResult(res: RunResult, status: str, issues: list[tuple[str, int, 
         fail(f'expected style rules {rules} but got {shownRules}\n\n---\n{res.stdout}\n---')
 
 def expectNoStyleCheck(res: RunResult):
-    if 'Coding conventions:' in res.stdout:
-        fail(f'expected no style check\n\n---\n{res.stdout}\n---')
+    expectInOutput(res, [], ['## Checking coding conventions', 'Coding conventions:'])
 
 def test_python_style_good():
     for d in ['camel-case', 'snake-case', 'lenient']:
         print(d)
         res = expectOk(styleCmd(), external=f'{styleTestDir}/sheet', submissionDir=f'{styleTestDir}/good/{d}')
-        expectStyleResult(res, 'OK', [])
+        expectStyleResult(res, [conventionsOk('aufgabe_01.py')], [])
 
 def test_python_style_bad():
     for d, issues, rules in badStyleTests:
         print(d)
         res = expectFail(styleCmd(), 1, external=f'{styleTestDir}/sheet', submissionDir=f'{styleTestDir}/bad/{d}')
-        expectStyleResult(res, 'ERROR', [('aufgabe_01.py', line, code) for (line, code) in issues], rules)
+        expectStyleResult(res, [conventionsViolated('aufgabe_01.py'), 'Load and student tests status: FAIL'],
+                          [('aufgabe_01.py', line, code) for (line, code) in issues], rules)
 
 def test_python_style_disabled_by_option():
     for d, _, _ in badStyleTests:
@@ -200,36 +222,66 @@ def test_python_style_per_assignment():
     # The style check is disabled for assignment 1 (aufgabe_01.py) but not for assignment 2
     sheet = f'{styleTestDir}/sheet-per-assignment'
     res = expectOk(styleCmd(), external=sheet, submissionDir=f'{styleTestDir}/per-assignment/first-bad')
-    expectStyleResult(res, 'OK', [])
+    expectStyleResult(res, [conventionsOk('aufgabe_02.py')], [])
+    expectInOutput(res, [], ['## Checking coding conventions of aufgabe_01.py'])
     res = expectFail(styleCmd(), 1, external=sheet, submissionDir=f'{styleTestDir}/per-assignment/both-bad')
-    expectStyleResult(res, 'ERROR', [('aufgabe_02.py', 3, 'invalid-name')], [namesRule])
+    expectStyleResult(res, [conventionsViolated('aufgabe_02.py')], [('aufgabe_02.py', 3, 'invalid-name')], [namesRule])
+    expectInOutput(res, [], ['## Checking coding conventions of aufgabe_01.py'])
 
 def test_python_style_without_exercise_yaml():
     res = expectOk(styleCmd('--assignment 1'), submissionDir=f'{styleTestDir}/good/camel-case')
-    expectStyleResult(res, 'OK', [])
+    expectStyleResult(res, [conventionsOk('aufgabe_01.py')], [])
     bad = f'{styleTestDir}/bad/naming-guide-example'
     res = expectFail(styleCmd('--assignment 1'), 1, submissionDir=bad)
-    expectStyleResult(res, 'ERROR', [('aufgabe_01.py', line, 'invalid-name') for line in [6, 7, 8, 9, 10, 13]],
+    expectStyleResult(res, [conventionsViolated('aufgabe_01.py'), 'aufgabe_01.py: failed'],
+                      [('aufgabe_01.py', line, 'invalid-name') for line in [6, 7, 8, 9, 10, 13]],
                       [namesRule, typeNamesRule])
     res = expectOk(styleCmd('--assignment 1 --no-style-check'), submissionDir=bad)
     expectNoStyleCheck(res)
-    # Both assignments refer to aufgabe_01.py, its problems must be reported only once
-    res = expectFail(styleCmd('--assignment 1,01'), 1, submissionDir=bad)
-    expectStyleResult(res, 'ERROR', [('aufgabe_01.py', line, 'invalid-name') for line in [6, 7, 8, 9, 10, 13]],
-                      [namesRule, typeNamesRule])
+
+def test_python_style_per_file():
+    # Each file is loaded first. Only if this succeeds, its coding conventions are checked, and a
+    # violation makes the file fail. Then the next file follows. aufgabe_01.py does not load (its
+    # violation of the conventions must not be reported), aufgabe_02.py violates the conventions,
+    # aufgabe_03.py is OK.
+    submission = f'{styleTestDir}/per-file'
+    notExpected = ['## Checking coding conventions of aufgabe_01.py', 'Coding conventions:']
+    issues = [('aufgabe_02.py', 3, 'E225')]
+    # Without exercise.yaml
+    res = expectFail(styleCmd('--assignment 1,2,3'), 1, submissionDir=submission)
+    print(res.stdout)
+    expectInOrder(res, ['Checking assignment 1', 'File aufgabe_01.py could not be loaded.',
+                        'Checking assignment 2', '## OK: aufgabe_02.py loads successfully',
+                        '## Checking coding conventions of aufgabe_02.py', conventionsViolated('aufgabe_02.py'),
+                        'Checking assignment 3', '## OK: aufgabe_03.py loads successfully',
+                        '## Checking coding conventions of aufgabe_03.py', conventionsOk('aufgabe_03.py'),
+                        'Summary', 'aufgabe_01.py: failed', 'aufgabe_02.py: failed'])
+    expectInOutput(res, [], notExpected + ['aufgabe_03.py: failed'])
+    expectStyleResult(res, [], issues, [operatorsRule])
+    # With exercise.yaml
+    res = expectFail(styleCmd(), 1, external=f'{styleTestDir}/sheet-per-file', submissionDir=submission)
+    print(res.stdout)
+    expectInOrder(res, ['Load and student tests status: FAIL',
+                        '## Checking that aufgabe_01.py loads successfully', 'File aufgabe_01.py could not be loaded.',
+                        '## Checking that aufgabe_02.py loads successfully',
+                        '## Checking coding conventions of aufgabe_02.py', conventionsViolated('aufgabe_02.py'),
+                        '## Checking that aufgabe_03.py loads successfully',
+                        '## Checking coding conventions of aufgabe_03.py', conventionsOk('aufgabe_03.py')])
+    expectInOutput(res, [], notExpected)
+    expectStyleResult(res, [], issues, [operatorsRule])
 
 def test_python_style_command():
     # The python-style command only checks the coding conventions of the given files
     def cmd(files: str) -> str:
         return f'python3 {checkScript} {checkScriptArgs} python-style {files}'
     res = expectOk(cmd('aufgabe_01.py'), submissionDir=f'{styleTestDir}/good/camel-case')
-    expectStyleResult(res, 'OK', [])
+    expectStyleResult(res, ['Coding conventions: OK'], [])
     res = expectFail(cmd('aufgabe_01.py aufgabe_02.py'), 1, submissionDir=f'{styleTestDir}/per-assignment/both-bad')
-    expectStyleResult(res, 'ERROR', [('aufgabe_01.py', 3, 'invalid-name'), ('aufgabe_02.py', 3, 'invalid-name')],
-                      [namesRule])
+    expectStyleResult(res, ['Coding conventions: ERROR'],
+                      [('aufgabe_01.py', 3, 'invalid-name'), ('aufgabe_02.py', 3, 'invalid-name')], [namesRule])
     # aufgabe_03.py has a syntax error, so it is not checked
     res = expectOk(cmd('aufgabe_01.py aufgabe_03.py'), submissionDir=localTestDir)
-    expectStyleResult(res, 'OK', [])
+    expectStyleResult(res, ['Coding conventions: OK'], [])
     if 'aufgabe_03.py: coding conventions not checked because of syntax errors' not in res.stdout:
         fail(f'expected that aufgabe_03.py is not checked\n\n---\n{res.stdout}\n---')
     expectFail(cmd('aufgabe_03.py'), 1, submissionDir=localTestDir)

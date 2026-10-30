@@ -233,7 +233,6 @@ def checkStyle(files: list[str]) -> Optional[StyleResult]:
             out.append(tr('{file}: coding conventions not checked because of syntax errors', file=f))
     if not checkedFiles:
         return None
-    out.insert(0, tr('Checking coding conventions of {files}', files=', '.join(checkedFiles)) + '\n')
     issues = runRuff(checkedFiles) + runPylint(checkedFiles)
     issues.sort(key=lambda i: (i.path, i.line, i.column, i.code))
     if not issues:
@@ -270,6 +269,7 @@ def checkStyleAndExit(files: list[str]) -> NoReturn:
     res = checkStyle(files)
     if res is None:
         abort(tr('Coding conventions not checked, because all files contain syntax errors'))
+    print(tr('Checking coding conventions of {files}', files=', '.join(files)) + '\n')
     print(res.styleOutput)
     print('\n' + tr('Coding conventions: {status}', status=res.status))
     sys.exit(1 if res.hasErrors else 0)
