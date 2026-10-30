@@ -55,15 +55,19 @@ def stripBlankLines(s: str) -> str:
         lines.pop()
     return '\n'.join(lines)
 
-def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, typecheck: bool,
-            testFile: Optional[str]=None, testEnv: Optional[dict[str, str]]=None, timeout: Optional[int]=None) -> RunResult:
+# Exit code of WYPP (>= 2.5.2) with --check if the file loaded but some checks failed. If loading the
+# file or the test file crashed, the exit code is 1.
+WYPP_CHECKS_FAILED_EXIT_CODE = 3
+
+def runWypp(studentFile: str, wyppPath: str, typecheck: bool, testFile: Optional[str]=None,
+            testEnv: Optional[dict[str, str]]=None, timeout: Optional[int]=None) -> RunResult:
     thisDir = abspath('.')
     # print('pyPath='+pyPath)
     testEnv = prepareEnv(testEnv, [wyppPath + '/python/code:', thisDir])
     args = ['python3', wyppPath + '/python/code/wypp/runYourProgram.py', '--lang', getLang()]
     if testFile:
         args = args + ['--test-file', testFile]
-    args = args + ['--check-runnable' if onlyRunnable else '--check']
+    args = args + ['--check']
     if not typecheck:
         args = args + ['--no-typechecking']
     args = args + [studentFile]
@@ -140,28 +144,23 @@ def loadStudentCode(opts: PythonOptions, p: str, checkLoad: LoadCheck, styleChec
         printOut(tr('Only checking that file {file} exists, not loading.', file=studentFile))
         return mkResult(checkConventions(studentFile))
     printOut()
-    printOut(tr('## Checking that {file} loads successfully ...', file=p))
-    typecheck = checkLoad == 'load-typecheck'
-    runRes = runWypp(studentFile, opts.wypp, onlyRunnable=True, typecheck=typecheck,
+    printOut(tr('## Loading {file} and executing its tests ...', file=p))
+    # A single run of WYPP: its exit code tells a crash while loading from failing checks
+    runRes = runWypp(studentFile, opts.wypp, typecheck=checkLoad == 'load-typecheck',
                      timeout=testTimeoutSeconds())
     printOut(runRes.stdout, emptyNewline=False)
     if runRes.exitcode == 0:
+        printOut(tr('## OK: {file} loads successfully and has no test failures', file=p))
+    elif runRes.exitcode == WYPP_CHECKS_FAILED_EXIT_CODE:
         printOut(tr('## OK: {file} loads successfully', file=p))
+        printOut(tr('File {file} contains test failures!\n'
+                    'If you cannot make a test succeed, you have to comment it out.', file=p))
+    elif runRes.exitcode == TIMEOUT_EXIT_CODE:
+        printOut(tr('Timeout while running {file}. Probably there is an infinite loop!', file=p))
+        return mkResult('fail')
     else:
         printOut(tr('File {file} could not be loaded.', file=p))
         return mkResult('fail')
-    printOut()
-    printOut(tr('## Executing tests in {file} ...', file=p))
-    testRes = runWypp(studentFile, opts.wypp, onlyRunnable=False, typecheck=typecheck,
-                      timeout=testTimeoutSeconds())
-    printOut(testRes.stdout, emptyNewline=False)
-    if testRes.exitcode == 0:
-        printOut(tr('## OK: no test failures in {file}', file=p))
-    elif testRes.exitcode == TIMEOUT_EXIT_CODE:
-        printOut(tr('Timeout for tests in {file}. Probably there is an infinite loop!', file=p))
-    else:
-        printOut(tr('File {file} contains test failures!\n'
-                    'If you cannot make a test succeed, you have to comment it out.', file=p))
     return mkResult(checkConventions(studentFile))
 
 def checkFileLoadsOk(opts: PythonOptions, p: str) -> LoadStudentCodeResult:
@@ -302,7 +301,7 @@ def checkTutorTests(opts: PythonOptions,
                 return
             if srcDir:
                 src = pjoin(srcDir, src)
-            testOut = runWypp(src, opts.wypp, onlyRunnable=False,
+            testOut = runWypp(src, opts.wypp,
                               typecheck=a.pythonConfig.typecheck,
                               testFile=testPath, testEnv=testEnv, timeout=testTimeoutSeconds())
         else:

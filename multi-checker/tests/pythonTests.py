@@ -262,10 +262,10 @@ def test_python_style_per_file():
     res = expectFail(styleCmd(), 1, external=f'{styleTestDir}/sheet-per-file', submissionDir=submission)
     print(res.stdout)
     expectInOrder(res, ['Load and student tests status: FAIL',
-                        '## Checking that aufgabe_01.py loads successfully', 'File aufgabe_01.py could not be loaded.',
-                        '## Checking that aufgabe_02.py loads successfully',
+                        '## Loading aufgabe_01.py and executing its tests', 'File aufgabe_01.py could not be loaded.',
+                        '## Loading aufgabe_02.py and executing its tests',
                         '## Checking coding conventions of aufgabe_02.py', conventionsViolated('aufgabe_02.py'),
-                        '## Checking that aufgabe_03.py loads successfully',
+                        '## Loading aufgabe_03.py and executing its tests',
                         '## Checking coding conventions of aufgabe_03.py', conventionsOk('aufgabe_03.py')])
     expectInOutput(res, [], notExpected)
     expectStyleResult(res, [], issues, [operatorsRule])
@@ -324,8 +324,8 @@ def test_python_wypp_lang():
     sheet = f'{localTestDir}/03'
     submission = f'{localTestDir}/03/solution-partial'
     english = ['Assignment 1: 1.0/3.0 points, 33% OK', 'Assignment 2: 1.0/3.0 points, 33% OK',
-               'Tutor:  6 tests, 4 errors']
-    german = ['Aufgabe 1: 1.0/3.0 Punkte, 33% OK', 'Aufgabe 2: 1.0/3.0 Punkte, 33% OK', 'Tutor:  6 Tests, 4 Fehler']
+               'Tutor:  3 tests, 2 errors']
+    german = ['Aufgabe 1: 1.0/3.0 Punkte, 33% OK', 'Aufgabe 2: 1.0/3.0 Punkte, 33% OK', 'Tutor:  3 Tests, 2 Fehler']
     for args, env, expected in [('--lang en', localeEnv(LANG='de_DE.UTF-8'), english),
                                 ('--lang de', localeEnv(LANG='en_US.UTF-8'), german),
                                 ('', localeEnv(LANG='de_DE.UTF-8'), german)]:
@@ -344,9 +344,25 @@ def test_python_wypp_output_without_blank_lines():
     banner = r'=== WELCOME to "Write Your Python Program" \([^\n]*\) ==='
     for regex in [
             # tests of the student, solution-good has none, so WYPP prints only the banner
-            rf'## Executing tests in my_solution_01\.py \.\.\.\n{banner}\n## OK: no test failures in my_solution_01\.py',
+            rf'## Loading my_solution_01\.py and executing its tests \.\.\.\n{banner}\n'
+            r'## OK: my_solution_01\.py loads successfully and has no test failures',
             # tutor tests, the empty line before the banner and after the output belong to the section
             rf'Output for test of assignment 1 \(my_tests_01\.py\)\n=+\n\n{banner}\n',
-            r'Tutor:  6 tests, all successful [^\n]*\n\n=+\nOutput for test of assignment 2']:
+            r'Tutor:  3 tests, all successful [^\n]*\n\n=+\nOutput for test of assignment 2']:
         if not re.search(regex, res.stdout):
             fail(f'expected output matching {regex}\n\n---\n{res.stdout}\n---')
+
+def test_python_wypp_runs_once():
+    # WYPP loads the file and runs its tests in a single run: with --check, WYPP (>= 2.5.2) exits with
+    # 1 if the file crashes and with 3 if checks fail. So the output of the top-level code of the
+    # student (aufgabe_01.py prints TEST) appears only once.
+    res = expectOk(f'python3 {checkScript} {checkScriptArgs} python --wypp {wyppDir} --sheet 01 --assignment 1',
+                   submissionDir=localTestDir)
+    if res.stdout.count('TEST\n') != 1:
+        fail(f'expected TEST once in output\n\n---\n{res.stdout}\n---')
+    # Failing checks of the student are only a warning
+    res = expectFail(f'python3 {checkScript} {checkScriptArgs} python --wypp {wyppDir} --sheet 03', 121,
+                     external=f'{localTestDir}/03', submissionDir=f'{localTestDir}/03/solution-with-own-test-errors')
+    expectInOrder(res, ['## Loading my_solution_01.py and executing its tests ...',
+                        '## OK: my_solution_01.py loads successfully',
+                        'File my_solution_01.py contains test failures!'])

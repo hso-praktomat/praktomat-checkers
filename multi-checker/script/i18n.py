@@ -144,13 +144,13 @@ DE: dict[str, str] = {
         'FEHLER: Die Datei {file} ist nicht Teil der Abgabe. Folgende Dateien habe ich gefunden:\n\n{files}',
     'Only checking that file {file} exists, not loading.':
         'Es wird nur geprüft, ob die Datei {file} existiert, sie wird nicht geladen.',
-    '## Checking that {file} loads successfully ...': '## Prüfe, ob {file} erfolgreich geladen werden kann ...',
+    '## Loading {file} and executing its tests ...': '## Lade {file} und führe seine Tests aus ...',
     '## OK: {file} loads successfully': '## OK: {file} kann erfolgreich geladen werden',
     'File {file} could not be loaded.': 'Die Datei {file} konnte nicht geladen werden.',
-    '## Executing tests in {file} ...': '## Führe die Tests in {file} aus ...',
-    '## OK: no test failures in {file}': '## OK: keine fehlgeschlagenen Tests in {file}',
-    'Timeout for tests in {file}. Probably there is an infinite loop!':
-        'Zeitüberschreitung bei den Tests in {file}. Wahrscheinlich gibt es eine Endlosschleife!',
+    '## OK: {file} loads successfully and has no test failures':
+        '## OK: {file} kann erfolgreich geladen werden und hat keine fehlgeschlagenen Tests',
+    'Timeout while running {file}. Probably there is an infinite loop!':
+        'Zeitüberschreitung beim Ausführen von {file}. Wahrscheinlich gibt es eine Endlosschleife!',
     'File {file} contains test failures!\nIf you cannot make a test succeed, you have to comment it out.':
         'Die Datei {file} enthält fehlgeschlagene Tests!\n'
         'Wenn du einen Test nicht zum Laufen bringst, musst du ihn auskommentieren.',
