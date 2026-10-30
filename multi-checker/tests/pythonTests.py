@@ -335,3 +335,18 @@ def test_python_wypp_lang():
             if s not in res.stdout:
                 fail(f'expected "{s}" in output\n\n---\n{res.stdout}\n---')
 
+
+def test_python_wypp_output_without_blank_lines():
+    # The checker removes blank lines at the start and the end of the output of WYPP: the 10 empty lines
+    # that WYPP prints before its banner and the empty lines at the end. The banner stays.
+    res = expectOk(f'python3 {checkScript} {checkScriptArgs} python --wypp {wyppDir} --sheet 03 --no-style-check',
+                   external=f'{localTestDir}/03', submissionDir=f'{localTestDir}/03/solution-good')
+    banner = r'=== WELCOME to "Write Your Python Program" \([^\n]*\) ==='
+    for regex in [
+            # tests of the student, solution-good has none, so WYPP prints only the banner
+            rf'## Executing tests in my_solution_01\.py \.\.\.\n{banner}\n## OK: no test failures in my_solution_01\.py',
+            # tutor tests, the empty line before the banner and after the output belong to the section
+            rf'Output for test of assignment 1 \(my_tests_01\.py\)\n=+\n\n{banner}\n',
+            r'Tutor:  6 tests, all successful [^\n]*\n\n=+\nOutput for test of assignment 2']:
+        if not re.search(regex, res.stdout):
+            fail(f'expected output matching {regex}\n\n---\n{res.stdout}\n---')

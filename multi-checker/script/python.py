@@ -44,6 +44,17 @@ def prepareEnv(testEnv: Optional[dict[str, str]], searchDirs: list[str]) -> dict
         testEnv[key] = pyPath
     return testEnv
 
+def stripBlankLines(s: str) -> str:
+    """
+    Removes blank lines at the start and the end of s.
+    """
+    lines = s.split('\n')
+    while lines and not lines[0].strip():
+        lines.pop(0)
+    while lines and not lines[-1].strip():
+        lines.pop()
+    return '\n'.join(lines)
+
 def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, typecheck: bool,
             testFile: Optional[str]=None, testEnv: Optional[dict[str, str]]=None, timeout: Optional[int]=None) -> RunResult:
     thisDir = abspath('.')
@@ -59,7 +70,8 @@ def runWypp(studentFile: str, wyppPath: str, onlyRunnable: bool, typecheck: bool
     res = runWithTimeout(args, timeout, tr('running {file} via WYPP, testFile={testFile}', file=studentFile,
                                             testFile=testFile),
                          env=testEnv)
-    return res
+    # WYPP prints 10 empty lines before its banner
+    return RunResult(stripBlankLines(res.stdout), res.stderr, res.exitcode)
 
 def runUnittest(testFile: str, searchDirs: list[str], testEnv: Optional[dict[str, str]]=None,
                 timeout: Optional[int]=None) -> RunResult:
